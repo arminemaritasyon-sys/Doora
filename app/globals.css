@@ -2155,3 +2155,33 @@ button, a, input, select, textarea { touch-action:manipulation; }
   .doora-account-page .account-transactions article>span{width:34px;height:34px;flex-basis:34px}
   .doora-account-page .account-transactions article>strong{font-size:11px}
 }
+
+
+/* Account page mobile overflow and card alignment safeguards */
+.doora-account-page,
+.doora-account-page .account-page-container,
+.doora-account-page .account-hub,
+.doora-account-page .account-section,
+.doora-account-page .account-offer-card,
+.doora-account-page .account-task-card{min-width:0;max-width:100%}
+.doora-account-page .account-section{overflow:hidden}
+.doora-account-page .account-offer-card,
+.doora-account-page .account-task-card{overflow:hidden}
+.doora-account-page .account-offer-card>*,
+.doora-account-page .account-task-card>*{min-width:0}
+.doora-account-page .account-person>div,
+.doora-account-page .account-offer-meta>*{min-width:0}
+.doora-account-page .account-offer-meta p{overflow-wrap:anywhere}
+.doora-account-page .account-reject:disabled{opacity:.6;cursor:wait}
+.doora-account-page .account-section-head h2{min-width:0}
+@media(max-width:650px){
+ .doora-account-page .account-section-head{flex-wrap:wrap}
+ .doora-account-page .account-section-head h2{flex:0 1 auto}
+ .doora-account-page .account-section-head .account-inline-create{margin-left:auto}
+ .doora-account-page .account-offer-meta{grid-template-columns:minmax(0,1fr) auto}
+ .doora-account-page .account-offer-meta span,
+ .doora-account-page .account-offer-meta small{overflow-wrap:anywhere}
+ .doora-account-page .account-offer-meta strong{max-width:42vw;text-align:right}
+ .doora-account-page .account-person b,
+ .doora-account-page .account-transactions article b{max-width:100%}
+}
