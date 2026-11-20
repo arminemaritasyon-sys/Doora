@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
+import AccountSettings from "./account-settings";
 import { getCurrentUser } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import LogoutButton from "./logout-button";
@@ -39,7 +40,7 @@ export default async function AccountPage() {
         <div className="doora-header-right"><Link href="/isler" className="header-discover">İşleri keşfet <ArrowUpRight size={15}/></Link><div className="header-logout"><LogoutButton/></div></div>
       </header>
       <div className="doora-page-container account-page-container">
-        <div className="wallet-lite-page-title"><h1>Cüzdanım</h1><span>DOORA</span></div>
+        <div className="wallet-lite-page-title"><h1>Cüzdanım</h1><span>DOORA</span><AccountSettings name={user.name || "DOORA üyesi"} email={user.email || ""}/></div>
         <AccountDashboard name={user.name || "DOORA üyesi"} email={user.email || ""} tasks={taskRows} received={receivedRows} taskCount={Number(taskTotal[0]?.count ?? 0)} receivedCount={Number(receivedTotal[0]?.count ?? 0)} pendingOfferCount={Number(pendingOffers[0]?.count ?? 0)}/>
         <div className="account-page-footer"><span>DOORA · Günlük işler, kolay çözümler.</span><Link href="/kaydedilenler">Kaydedilen işlerin <ArrowUpRight size={14}/></Link></div>
       </div>
