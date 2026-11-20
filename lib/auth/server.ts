@@ -1,19 +1,23 @@
 import "server-only";
-import { cookies } from "next/headers";
+import { createNeonAuth } from "@neondatabase/auth/next/server";
+
+export const auth = createNeonAuth({
+  baseUrl: process.env.NEON_AUTH_BASE_URL!,
+  cookies: {
+    secret: process.env.NEON_AUTH_COOKIE_SECRET!,
+    sessionDataTtl: 300,
+  },
+});
 
 export type DooraUser = { id: string; email: string; name?: string | null };
 
 export async function getCurrentUser(): Promise<DooraUser | null> {
-  const baseUrl = process.env.NEON_AUTH_BASE_URL;
-  if (!baseUrl) throw new Error("NEON_AUTH_BASE_URL tanımlı değil.");
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.getAll().map(({ name, value }) => `${name}=${value}`).join("; ");
-  const response = await fetch(`${baseUrl.replace(/\/$/, "")}/get-session`, {
-    headers: { cookie: cookieHeader },
-    cache: "no-store",
-  });
-  if (!response.ok) return null;
-  const payload = await response.json().catch(() => null);
-  const user = payload?.user ?? payload?.session?.user;
-  return user?.id && user?.email ? { id: String(user.id), email: String(user.email), name: user.name ?? null } : null;
+  const { data: session } = await auth.getSession();
+  const user = session?.user;
+  if (!user?.id || !user?.email) return null;
+  return {
+    id: String(user.id),
+    email: String(user.email),
+    name: user.name ?? null,
+  };
 }
