@@ -13,7 +13,7 @@ export default async function AccountPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/giris");
 
-  const [tasks, received, sent, saved, taskTotal, receivedTotal, sentTotal, pendingOffers] = await Promise.all([
+  const [tasks, received, taskTotal, receivedTotal, pendingOffers] = await Promise.all([
     db`SELECT t.id,t.title,t.budget,t.status,t.created_at,o.user_id AS assigned_user_id, EXISTS(SELECT 1 FROM public.task_reviews r WHERE r.task_id=t.id AND r.reviewer_id=${user.id}) AS reviewed FROM public.tasks t LEFT JOIN public.offers o ON o.id=t.assigned_offer_id WHERE t.owner_id=${user.id} ORDER BY t.created_at DESC LIMIT 30`,
     db`SELECT o.id,o.amount,o.status,o.created_at,t.id AS task_id,t.title,o.user_id AS bidder_id,
       COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS bidder,
@@ -24,17 +24,13 @@ export default async function AccountPage() {
       LEFT JOIN neon_auth.user u ON u.id::text=o.user_id
       LEFT JOIN LATERAL (SELECT avg(rating) AS rating,count(*) AS review_count FROM public.task_reviews WHERE reviewee_id=o.user_id) rv ON true
       WHERE t.owner_id=${user.id} ORDER BY o.created_at DESC LIMIT 30`,
-    db`SELECT o.id,o.amount,o.status,o.created_at,t.id AS task_id,t.title FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE o.user_id=${user.id} ORDER BY o.created_at DESC LIMIT 10`,
-    db`SELECT count(*)::int AS count FROM public.saved_tasks WHERE user_id=${user.id}`,
     db`SELECT count(*)::int AS count FROM public.tasks WHERE owner_id=${user.id}`,
     db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id}`,
-    db`SELECT count(*)::int AS count FROM public.offers WHERE user_id=${user.id}`,
     db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id} AND o.status='pending'`
   ]);
 
   const taskRows=tasks.map((x:any)=>({...x,created_at:String(x.created_at)}));
   const receivedRows=received.map((x:any)=>({...x,created_at:String(x.created_at),bidder:x.bidder==null?null:String(x.bidder)}));
-  const sentRows=sent.map((x:any)=>({...x,created_at:String(x.created_at)}));
 
   return (
     <main className="doora-page doora-account-page">
