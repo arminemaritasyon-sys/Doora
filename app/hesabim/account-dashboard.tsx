@@ -5,7 +5,7 @@ import { toast } from "sonner";
 type TaskRow={id:string;title:string;description?:string|null;category?:string|null;district?:string|null;budget:string|number;status:string;created_at:string;assigned_user_id?:string|null;assigned_user_name?:string|null;assigned_user_avatar?:string|null;reviewed?:boolean;work_started_at?:string|null;completion_requested_at?:string|null};
 type AssignedRow={id:string;title:string;description?:string|null;budget:string|number;status:string;owner_id:string;owner_name:string;avatar_url?:string|null;reviewed?:boolean;work_started_at?:string|null;completion_requested_at?:string|null};
 type OfferRow={id:string;task_id:string;amount:string|number;status:string;created_at:string;title:string;bidder:string;bidder_id:string;avatar_url?:string|null;district?:string|null;rating?:number|string|null;review_count?:number|string|null;rejection_reason?:string|null;message?:string|null};
-type Props={name:string;email:string;tasks:TaskRow[];assigned:AssignedRow[];received:OfferRow[];sentOffers:OfferRow[];taskCount:number;receivedCount:number;pendingOfferCount:number};
+type Props={name:string;email:string;walletInitialData:WalletData|null;walletInitialError:string;tasks:TaskRow[];assigned:AssignedRow[];received:OfferRow[];sentOffers:OfferRow[];taskCount:number;receivedCount:number;pendingOfferCount:number};
 type Tx={id:string;type:string;amount:string|number;status:string;description:string;created_at:string};
 type WalletData={account:{available_balance:string|number;held_balance:string|number;mode:string};transactions:Tx[]};
 type TaskForm={title:string;description:string;category:string;budget:string;district:string};
@@ -25,8 +25,8 @@ function WorkProgress({started,requested,completed,disputed}:{started:boolean;re
  </div>
 }
 
-export default function AccountDashboard({name,tasks,assigned,received,sentOffers,taskCount,pendingOfferCount}:Props){
- const [wallet,setWallet]=useState<WalletData|null>(null),[walletLoading,setWalletLoading]=useState(true),[walletError,setWalletError]=useState(""),[amount,setAmount]=useState(""),[iban,setIban]=useState(""),[busy,setBusy]=useState(false),[tab,setTab]=useState<"offers"|"sent">("offers"),[accountView,setAccountView]=useState<"home"|"offers"|"assigned"|"listings"|"activity">("home"),[modal,setModal]=useState<"topup"|"withdraw"|"task"|"edit"|null>(null),[editingTaskId,setEditingTaskId]=useState<string|null>(null);
+export default function AccountDashboard({name,walletInitialData,walletInitialError,tasks,assigned,received,sentOffers,taskCount,pendingOfferCount}:Props){
+ const [wallet,setWallet]=useState<WalletData|null>(walletInitialData),[walletLoading,setWalletLoading]=useState(false),[walletError,setWalletError]=useState(walletInitialError),[amount,setAmount]=useState(""),[iban,setIban]=useState(""),[busy,setBusy]=useState(false),[tab,setTab]=useState<"offers"|"sent">("offers"),[accountView,setAccountView]=useState<"home"|"offers"|"assigned"|"listings"|"activity">("home"),[modal,setModal]=useState<"topup"|"withdraw"|"task"|"edit"|null>(null),[editingTaskId,setEditingTaskId]=useState<string|null>(null);
  const [reviewRating,setReviewRating]=useState<Record<string,string>>({}),[reviewText,setReviewText]=useState<Record<string,string>>({}),[rejectReason,setRejectReason]=useState<Record<string,string>>({}),[listingOffersTaskId,setListingOffersTaskId]=useState<string|null>(null);
  const [taskForm,setTaskForm]=useState<TaskForm>({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});
  async function loadWallet(){
@@ -55,7 +55,6 @@ export default function AccountDashboard({name,tasks,assigned,received,sentOffer
    setWalletLoading(false);
   }
  }
- useEffect(()=>{loadWallet()},[]);
  useEffect(()=>{if(!modal&&!listingOffersTaskId)return;const body=document.body;const scrollY=window.scrollY;const old={position:body.style.position,top:body.style.top,left:body.style.left,right:body.style.right,width:body.style.width,overflow:body.style.overflow,overscroll:body.style.overscrollBehavior};body.style.position="fixed";body.style.top=`-${scrollY}px`;body.style.left="0";body.style.right="0";body.style.width="100%";body.style.overflow="hidden";body.style.overscrollBehavior="none";return()=>{body.style.position=old.position;body.style.top=old.top;body.style.left=old.left;body.style.right=old.right;body.style.width=old.width;body.style.overflow=old.overflow;body.style.overscrollBehavior=old.overscroll;window.scrollTo(0,scrollY)}},[modal,listingOffersTaskId]);
  async function walletAction(action:"test_topup"|"withdraw"){
   const value=Number(amount);
