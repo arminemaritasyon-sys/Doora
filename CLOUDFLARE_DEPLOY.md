@@ -18,17 +18,19 @@ Copy the values from the existing production environment; do not generate replac
 - `DATABASE_URL` — Neon pooled connection string.
 - `NEON_AUTH_BASE_URL` — Neon Auth base URL.
 - `NEON_AUTH_COOKIE_SECRET` — existing cookie signing secret.
+Optional email delivery:
 - `RESEND_API_KEY` — Resend API key (encrypted secret).
 - `RESEND_FROM_EMAIL` — verified sender, e.g. `DOORA <bildirim@your-domain.com>`.
-- `DOORA_ADMIN_EMAIL` — administrator email.
+
+`DOORA_ADMIN_EMAIL` is reserved for a future moderation interface; no admin page or admin API currently consumes it.
 
 Set variables needed at build time in the build environment too, if Cloudflare prompts for separate build variables and runtime variables.
 
 ## After first deployment
 
-1. Add the new `workers.dev` origin to Neon Auth's trusted/allowed origins.
+1. Verify `https://doora.arminemaritasyon.workers.dev` is already listed in Neon Auth trusted/allowed origins; add it only if missing.
 2. Test sign-in, sign-out, protected routes, listing creation, offers, wallet test top-up, escrow acceptance/completion, and email delivery.
-3. Only after these pass, point the custom domain to Cloudflare. Keep the Vercel deployment available as rollback until then.
+3. Only after these pass, keep the existing `doora.arminemaritasyon.workers.dev` route active and retain the Vercel deployment as rollback until Cloudflare is confirmed.
 
 ## Notes
 
