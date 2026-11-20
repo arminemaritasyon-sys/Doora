@@ -26,15 +26,20 @@ function WorkProgress({started,requested,completed,disputed}:{started:boolean;re
 }
 
 export default function AccountDashboard({name,tasks,assigned,received,taskCount,pendingOfferCount}:Props){
- const [wallet,setWallet]=useState<WalletData|null>(null),[amount,setAmount]=useState(""),[iban,setIban]=useState(""),[busy,setBusy]=useState(false),[tab,setTab]=useState("offers"),[modal,setModal]=useState<"topup"|"withdraw"|"task"|"edit"|null>(null),[editingTaskId,setEditingTaskId]=useState<string|null>(null);
+ const [wallet,setWallet]=useState<WalletData|null>(null),[walletLoading,setWalletLoading]=useState(true),[walletError,setWalletError]=useState(""),[amount,setAmount]=useState(""),[iban,setIban]=useState(""),[busy,setBusy]=useState(false),[tab,setTab]=useState("offers"),[modal,setModal]=useState<"topup"|"withdraw"|"task"|"edit"|null>(null),[editingTaskId,setEditingTaskId]=useState<string|null>(null);
  const [reviewRating,setReviewRating]=useState<Record<string,string>>({}),[reviewText,setReviewText]=useState<Record<string,string>>({}),[rejectReason,setRejectReason]=useState<Record<string,string>>({});
  const [taskForm,setTaskForm]=useState<TaskForm>({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});
- async function loadWallet(){const r=await fetch("/api/wallet",{cache:"no-store"});if(r.ok)setWallet(await r.json())}
+ async function loadWallet(){setWalletLoading(true);try{const r=await fetch("/api/wallet",{cache:"no-store"});const d=await r.json();if(!r.ok)throw new Error(d.error||"Cüzdan bilgileri alınamadı.");if(!d?.account)throw new Error("Cüzdan verileri beklenen biçimde gelmedi.");setWallet(d);setWalletError("")}catch(e){setWalletError(e instanceof Error?e.message:"Cüzdan bilgileri alınamadı.")}finally{setWalletLoading(false)}}
  useEffect(()=>{loadWallet()},[]);
  useEffect(()=>{if(!modal)return;const oldOverflow=document.body.style.overflow;const oldOverscroll=document.body.style.overscrollBehavior;document.body.style.overflow="hidden";document.body.style.overscrollBehavior="none";return()=>{document.body.style.overflow=oldOverflow;document.body.style.overscrollBehavior=oldOverscroll}},[modal]);
  async function walletAction(action:"test_topup"|"withdraw"){
+  const value=Number(amount);
+  if(!Number.isFinite(value)||value<=0||value>50000){toast.error("1 ₺ ile 50.000 ₺ arasında geçerli bir tutar gir.");return}
+  const normalizedIban=iban.replace(/\s/g,"").toUpperCase();
+  if(action==="withdraw"&&!/^TR[0-9]{24}$/.test(normalizedIban)){toast.error("Geçerli bir TR IBAN gir. IBAN 26 karakter olmalı.");return}
+  if(action==="withdraw"&&value>available){toast.error("Çekmek istediğin tutar kullanılabilir bakiyenden fazla.");return}
   setBusy(true);try{
-   const payload=action==="test_topup"?{action,amount:Number(amount),idempotencyKey:crypto.randomUUID()}:{action,amount:Number(amount),iban:iban.replace(/\s/g,"").toUpperCase()};
+   const payload=action==="test_topup"?{action,amount:value,idempotencyKey:crypto.randomUUID()}:{action,amount:value,iban:normalizedIban};
    const r=await fetch("/api/wallet",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)}),d=await r.json();
    if(!r.ok)throw new Error(d.error||"İşlem başarısız");
    toast.success(action==="test_topup"?"Test bakiyesi eklendi":"Para çekme talebin alındı");setModal(null);setAmount("");setIban("");await loadWallet();
@@ -70,10 +75,10 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
 
  const available=Number(wallet?.account?.available_balance||0),held=Number(wallet?.account?.held_balance||0);
  return <div className="account-hub">
-  <section className="account-wallet-card"><div className="account-wallet-top"><span><i>d</i> DOORA WALLET</span><span className="account-test-pill">TEST MODU</span></div><small>KULLANILABİLİR BAKİYE</small><strong>{money(available)}</strong><div className="account-wallet-foot"><span><ShieldCheck size={15}/> Emanette: {money(held)}</span><span>{name||"DOORA üyesi"}</span></div></section>
+  <section className="account-wallet-card"><div className="account-wallet-top"><span><i>d</i> DOORA WALLET</span><span className="account-test-pill">TEST MODU</span></div><small>KULLANILABİLİR BAKİYE</small><strong>{walletLoading?"Yükleniyor…":walletError?"—":money(available)}</strong><div className="account-wallet-foot"><span><ShieldCheck size={15}/> Emanette: {walletLoading?"—":walletError?"—":money(held)}</span><span>{name||"DOORA üyesi"}</span></div>{walletError?<div className="account-wallet-error" role="alert"><span>{walletError}</span><button type="button" onClick={loadWallet} disabled={walletLoading}>Tekrar dene</button></div>:null}</section>
   <section className="account-wallet-actions account-wallet-actions-clean">
-   <button disabled={busy} onClick={()=>{setAmount("");setModal("topup")}}><Plus/> Bakiye yükle</button>
-   <button className="secondary" disabled={busy} onClick={()=>{setAmount("");setModal("withdraw")}}><ArrowUpRight/> Para çek</button>
+   <button disabled={busy||walletLoading||!!walletError} onClick={()=>{setAmount("");setModal("topup")}}><Plus/> Bakiye yükle</button>
+   <button className="secondary" disabled={busy||walletLoading||!!walletError} onClick={()=>{setAmount("");setModal("withdraw")}}><ArrowUpRight/> Para çek</button>
    <button className="create-listing-action" disabled={busy} onClick={()=>{setTaskForm({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});setEditingTaskId(null);setModal("task")}}><Plus/> İlan oluştur</button>
   </section>
   <section className="account-section">
