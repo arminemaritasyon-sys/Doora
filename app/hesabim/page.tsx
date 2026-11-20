@@ -14,7 +14,7 @@ export default async function AccountPage() {
   if (!user) redirect("/giris");
 
   const [tasks, received, taskTotal, receivedTotal, pendingOffers] = await Promise.all([
-    db`SELECT t.id,t.title,t.budget,t.status,t.created_at,o.user_id AS assigned_user_id, EXISTS(SELECT 1 FROM public.task_reviews r WHERE r.task_id=t.id AND r.reviewer_id=${user.id}) AS reviewed FROM public.tasks t LEFT JOIN public.offers o ON o.id=t.assigned_offer_id WHERE t.owner_id=${user.id} ORDER BY t.created_at DESC LIMIT 30`,
+    db`SELECT t.id,t.title,t.description,t.category,t.district,t.budget,t.status,t.created_at,o.user_id AS assigned_user_id, EXISTS(SELECT 1 FROM public.task_reviews r WHERE r.task_id=t.id AND r.reviewer_id=${user.id}) AS reviewed FROM public.tasks t LEFT JOIN public.offers o ON o.id=t.assigned_offer_id WHERE t.owner_id=${user.id} ORDER BY t.created_at DESC LIMIT 30`,
     db`SELECT o.id,o.amount,o.status,o.created_at,t.id AS task_id,t.title,o.user_id AS bidder_id,
       COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS bidder,
       p.avatar_url,p.district,
