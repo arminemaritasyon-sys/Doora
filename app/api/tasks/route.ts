@@ -16,10 +16,11 @@ export async function GET(request: NextRequest) {
       t.district AS location,
       COALESCE(to_char(t.scheduled_at, 'DD.MM.YYYY HH24:MI'), 'Yeni ilan') AS time,
       t.created_at, t.status,
-      COALESCE(p.display_name, 'DOORA üyesi') AS owner,
+      COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS owner,
       (SELECT count(*)::int FROM public.offers o WHERE o.task_id=t.id) AS offers
     FROM public.tasks t
     LEFT JOIN public.user_profiles p ON p.user_id = t.owner_id
+    LEFT JOIN neon_auth.user u ON u.id::text = t.owner_id
     WHERE t.status = 'open'
       AND (${category}::text IS NULL OR t.category = ${category})
       AND (${district}::text IS NULL OR t.district ILIKE ${district ? `%${district}%` : null})
@@ -44,6 +45,13 @@ export async function POST(request: NextRequest) {
   const parsed = taskSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "İlan bilgilerini kontrol et." }, { status: 400 });
   const { title, description, category, budget, district } = parsed.data;
+  await db`
+    INSERT INTO public.user_profiles (user_id, display_name)
+    VALUES (${user.id}, ${user.name || null})
+    ON CONFLICT (user_id) DO UPDATE SET
+      display_name = COALESCE(EXCLUDED.display_name, public.user_profiles.display_name),
+      updated_at = now()
+  `;
   const [task] = await db`
     INSERT INTO public.tasks (owner_id,title,description,category,budget,district)
     VALUES (${user.id},${title},${description},${category},${budget},${district})
