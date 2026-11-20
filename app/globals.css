@@ -2538,3 +2538,41 @@ body{overflow-x:clip}
 .notification-empty{padding:28px 16px;text-align:center;font-size:12px;color:#858a93}
 .notification-error{padding:14px;font-size:12px;color:#a43d3d}
 @media(max-width:520px){.notification-panel{position:fixed;right:12px;top:72px;width:calc(100vw - 24px);max-height:min(70vh,520px)}}
+
+
+/* Account page: reserve real scroll space above the fixed mobile dock.
+   Keep this scoped to /hesabim so other pages retain their own spacing. */
+@media (max-width:650px){
+  .doora-account-page{
+    min-height:100svh;
+    padding-bottom:calc(88px + env(safe-area-inset-bottom));
+  }
+  .doora-account-page .doora-page-container.account-page-container{
+    padding-bottom:18px !important;
+  }
+  .doora-account-page .account-hub{
+    padding-bottom:14px !important;
+  }
+  .doora-account-page .account-page-footer{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:9px 14px;
+    margin:14px 0 0;
+    padding:15px 2px 12px;
+    line-height:1.5;
+  }
+  .doora-account-page .doora-bottom-nav{
+    height:calc(66px + env(safe-area-inset-bottom));
+    padding-bottom:max(6px,env(safe-area-inset-bottom));
+    padding-top:6px;
+  }
+  .doora-account-page .doora-bottom-nav a{
+    min-height:44px;
+    padding:4px 0;
+  }
+}
+@media (min-width:651px){
+  .doora-account-page{padding-bottom:0}
+}
