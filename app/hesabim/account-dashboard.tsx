@@ -18,7 +18,8 @@ export default function AccountDashboard({name,tasks,received,taskCount,pendingO
  const [reviewRating,setReviewRating]=useState<Record<string,string>>({}),[reviewText,setReviewText]=useState<Record<string,string>>({});
  const [taskForm,setTaskForm]=useState<TaskForm>({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});
  async function loadWallet(){const r=await fetch("/api/wallet",{cache:"no-store"});if(r.ok)setWallet(await r.json())}
- useEffect(()=>{loadWallet()},[]);\n useEffect(()=>{if(!modal)return;const oldOverflow=document.body.style.overflow;const oldOverscroll=document.body.style.overscrollBehavior;document.body.style.overflow="hidden";document.body.style.overscrollBehavior="none";return()=>{document.body.style.overflow=oldOverflow;document.body.style.overscrollBehavior=oldOverscroll}},[modal]);
+ useEffect(()=>{loadWallet()},[]);
+ useEffect(()=>{if(!modal)return;const oldOverflow=document.body.style.overflow;const oldOverscroll=document.body.style.overscrollBehavior;document.body.style.overflow="hidden";document.body.style.overscrollBehavior="none";return()=>{document.body.style.overflow=oldOverflow;document.body.style.overscrollBehavior=oldOverscroll}},[modal]);
  async function walletAction(action:"test_topup"|"withdraw"){
   setBusy(true);try{
    const payload=action==="test_topup"?{action,amount:Number(amount),idempotencyKey:crypto.randomUUID()}:{action,amount:Number(amount),iban:iban.replace(/\s/g,"").toUpperCase()};
@@ -64,7 +65,8 @@ export default function AccountDashboard({name,tasks,received,taskCount,pendingO
      {t.status==="open"?<button className="pause-action" onClick={()=>taskAction(t.id,"pause")}><Pause size={15}/> Pasife al</button>:null}
      {t.status==="paused"?<button className="publish-action" onClick={()=>taskAction(t.id,"publish")}><Play size={15}/> Aktife al</button>:null}
      {t.status==="assigned"?<button className="complete" onClick={()=>taskAction(t.id,"complete")}><Check size={15}/> İşi tamamlandı</button>:null}
-     {(t.status==="open"||t.status==="paused")?<button className="edit-action" onClick={()=>openEditTask(t)}><Pencil size={14}/> Düzenle</button>:null}\n     <a href={"/ilan/"+t.id}>İlanı gör <ArrowUpRight size={14}/></a>
+     {(t.status==="open"||t.status==="paused")?<button className="edit-action" onClick={()=>openEditTask(t)}><Pencil size={14}/> Düzenle</button>:null}
+     <a href={"/ilan/"+t.id}>İlanı gör <ArrowUpRight size={14}/></a>
     </div>
     {t.status==="completed"&&t.assigned_user_id&&!t.reviewed?<form className="account-review-form" onSubmit={e=>{e.preventDefault();submitReview(t.id)}}><b>İşi yapan kişiyi değerlendir</b><select aria-label="Puan" value={reviewRating[t.id]||"5"} onChange={e=>setReviewRating(v=>({...v,[t.id]:e.target.value}))}><option value="5">★★★★★ · 5</option><option value="4">★★★★ · 4</option><option value="3">★★★ · 3</option><option value="2">★★ · 2</option><option value="1">★ · 1</option></select><input value={reviewText[t.id]||""} onChange={e=>setReviewText(v=>({...v,[t.id]:e.target.value}))} maxLength={1000} placeholder="Kısa bir değerlendirme yaz (isteğe bağlı)"/><button>Değerlendirmeyi gönder</button></form>:null}
    </article>):<p className="account-muted">Henüz ilan oluşturmadın.</p>}
