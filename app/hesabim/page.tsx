@@ -14,8 +14,16 @@ export default async function AccountPage() {
   if (!user) redirect("/giris");
 
   const [tasks, received, sent, saved, taskTotal, receivedTotal, sentTotal] = await Promise.all([
-    db`SELECT id,title,budget,status,created_at FROM public.tasks WHERE owner_id=${user.id} ORDER BY created_at DESC LIMIT 10`,
-    db`SELECT o.id,o.amount,o.status,o.created_at,t.id AS task_id,t.title,u.name AS bidder FROM public.offers o JOIN public.tasks t ON t.id=o.task_id LEFT JOIN neon_auth.user u ON u.id::text=o.user_id WHERE t.owner_id=${user.id} ORDER BY o.created_at DESC LIMIT 10`,
+    db`SELECT id,title,budget,status,created_at FROM public.tasks WHERE owner_id=${user.id} ORDER BY created_at DESC LIMIT 30`,
+    db`SELECT o.id,o.amount,o.status,o.created_at,t.id AS task_id,t.title,o.user_id AS bidder_id,
+      COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS bidder,
+      p.avatar_url,p.district,
+      COALESCE(rv.rating,0)::numeric AS rating,COALESCE(rv.review_count,0)::int AS review_count
+      FROM public.offers o JOIN public.tasks t ON t.id=o.task_id
+      LEFT JOIN public.user_profiles p ON p.user_id=o.user_id
+      LEFT JOIN neon_auth.user u ON u.id::text=o.user_id
+      LEFT JOIN LATERAL (SELECT avg(rating) AS rating,count(*) AS review_count FROM public.task_reviews WHERE reviewee_id=o.user_id) rv ON true
+      WHERE t.owner_id=${user.id} ORDER BY o.created_at DESC LIMIT 30`,
     db`SELECT o.id,o.amount,o.status,o.created_at,t.id AS task_id,t.title FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE o.user_id=${user.id} ORDER BY o.created_at DESC LIMIT 10`,
     db`SELECT count(*)::int AS count FROM public.saved_tasks WHERE user_id=${user.id}`,
     db`SELECT count(*)::int AS count FROM public.tasks WHERE owner_id=${user.id}`,
