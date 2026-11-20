@@ -77,8 +77,8 @@ export default function AccountDashboard({name,email,tasks,received,sent,taskCou
         </Tabs.List>
         <Tabs.Content value="overview" className="wallet-tab-panel">
           <div className="wallet-recent-grid">
-            <section className="wallet-list-card"><div className="wallet-list-heading"><div><h3>Son ilanların</h3><p>Yayınladığın işler</p></div><BriefcaseBusiness size={20}/></div><TaskList items={tasks.slice(0,3)}/><Tabs.Trigger className="wallet-text-link" value="tasks">Tüm ilanlar <ArrowRight size={16}/></Tabs.Trigger></section>
-            <section className="wallet-list-card"><div className="wallet-list-heading"><div><h3>Gelen teklifler</h3><p>İşlerin için gelen teklifler</p></div><MessageCircle size={20}/></div><OfferList items={received.slice(0,3)} received/><Tabs.Trigger className="wallet-text-link" value="received">Tüm teklifler <ArrowRight size={16}/></Tabs.Trigger></section>
+            <section className="wallet-list-card"><div className="wallet-list-heading"><div><h3>Son ilanların</h3><p>Yayınladığın işler</p></div><BriefcaseBusiness size={20}/></div><TaskList items={tasks.slice(0,3)}/><Link className="wallet-text-link" href="/isler">İşlerini gör <ArrowRight size={16}/></Link></section>
+            <section className="wallet-list-card"><div className="wallet-list-heading"><div><h3>Gelen teklifler</h3><p>İşlerin için gelen teklifler</p></div><MessageCircle size={20}/></div><OfferList items={received.slice(0,3)} received/><Link className="wallet-text-link" href="/isler">Tüm tekliflerini gör <ArrowRight size={16}/></Link></section>
           </div>
         </Tabs.Content>
         <Tabs.Content value="tasks" className="wallet-tab-panel"><div className="wallet-list-card"><div className="wallet-list-heading"><div><h3>Oluşturduğun ilanlar</h3><p>{taskCount} ilan kaydı</p></div><BriefcaseBusiness size={20}/></div><TaskList items={tasks}/></div></Tabs.Content>
