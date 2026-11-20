@@ -1,12 +1,11 @@
 import { auth } from "@/lib/auth/server";
 
-// Next.js 16 request proxy: let Neon Auth validate and hydrate the
-// session cookie before protected Server Components and Route Handlers run.
+// Refresh and validate Neon Auth only on pages that require a signed-in user.
+// Public pages (including the home page and sign-in page) stay accessible.
 export default auth.middleware({
   loginUrl: "/giris",
-  publicRoutes: ["/", "/giris"],
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/kaydedilenler/:path*", "/hesabim/:path*"],
 };
