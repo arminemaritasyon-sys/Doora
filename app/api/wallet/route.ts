@@ -29,12 +29,7 @@ export async function POST(request: NextRequest) {
       const [result] = await db`SELECT * FROM public.doora_test_topup(${user.id},${parsed.data.amount},${parsed.data.idempotencyKey})`;
       return NextResponse.json({ success: true, testMode: true, account: result });
     }
-    const amount = parsed.data.amount;
-    const [account] = await db`SELECT available_balance FROM public.wallet_accounts WHERE user_id=${user.id} FOR UPDATE`;
-    if (!account || Number(account.available_balance) < amount) return NextResponse.json({ error: "Kullanılabilir bakiye yetersiz." }, { status: 400 });
-    const [withdrawal] = await db`INSERT INTO public.wallet_withdrawals(user_id,amount,mode) VALUES(${user.id},${amount},'test') RETURNING id,amount,status,created_at`;
-    await db`UPDATE public.wallet_accounts SET available_balance=available_balance-${amount},updated_at=now() WHERE user_id=${user.id}`;
-    await db`INSERT INTO public.wallet_transactions(user_id,type,amount,status,description,metadata) VALUES(${user.id},'withdrawal_request',${amount},'pending','Test çekim talebi',jsonb_build_object('withdrawalId',${withdrawal.id}))`;
+    const [withdrawal] = await db`SELECT * FROM public.doora_test_withdraw(${user.id},${parsed.data.amount})`;
     return NextResponse.json({ success: true, testMode: true, withdrawal }, { status: 201 });
   } catch (error) {
     console.error("[wallet] action failed", error);
