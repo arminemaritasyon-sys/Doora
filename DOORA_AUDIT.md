@@ -28,9 +28,9 @@ Durum: Devam ediyor. Tamamlanan inceleme ve düzeltmeler, canlı ortamda onay be
 | Orta | Kaydedilenler sekmelerinde Radix roving-focus bileşeni kullanılıyordu. | Yerel butonlara taşındı; Radix sekme bağımlılığı kaldırıldı. |
 
 ## Henüz tamamlanmamış / doğrulanması gerekenler
-- Şifre sıfırlama ve doğrulama kodunu yeniden gönderme akışı kaynakta eklendi; Neon Auth üzerinde uçtan uca e-posta testi bekliyor.
+- Şifre sıfırlama, doğrulama kodunu yeniden gönderme ve giriş sonrası hedef sayfaya dönme akışları kaynakta eklendi; Neon Auth üzerinde uçtan uca e-posta testi bekliyor.
 - Bildirim tercihleri kayıt ediliyor ve ilan, teklif, iş akışı ile test cüzdanı bildirimlerinde artık uygulanıyor; bildirim merkezi / okunmamış bildirim arayüzü hâlâ eksik.
-- Bildirim merkezi / okunmamış bildirim listesi kullanıcı arayüzü bulunmuyor.
+- Hesap ekranına bildirim merkezi, okunmamış sayacı ve okundu işaretleme eklendi; son commit Vercel build-rate-limit nedeniyle henüz derlenmedi.
 - Şikâyet ve anlaşmazlıkları inceleyecek yönetici ekranı ve çözüm API'si bulunmuyor.
 - Engellenen kullanıcıları listeleme ve engeli kaldırma akışı bulunmuyor.
 - Değerlendirme oluşturma var; değerlendirmeleri listeleme / profil puanını gösterme akışı tamamlanmalı.
@@ -61,3 +61,11 @@ Durum: Devam ediyor. Tamamlanan inceleme ve düzeltmeler, canlı ortamda onay be
 - `/giris`, `/isler`, `/ilan/[id]`: 200 HTML.
 - Oturumsuz `/hesabim` ve `/kaydedilenler`: beklenen şekilde `/giris` sayfasına yönleniyor.
 - Bu testler Vercel üretim alan adında yapıldı; Cloudflare Worker üzerinde aynı testler henüz yapılamadı. Giriş gerektiren işlemler gerçek bir test hesabıyla doğrulanmadı.
+
+
+## Son dağıtım durumu
+
+- Ana dalda son commit: `3ffbb4122c4c62c8654a6f2d3748a1d9e7673545`.
+- Vercel'de son başarılı üretim derlemesi, bu son commit'ten önceki kaynakta. Daha yeni commit'ler Vercel `build-rate-limit` nedeniyle derlemeye alınmadı; bu bir TypeScript/build hatası olarak doğrulanmadı.
+- Cloudflare Workers dağıtımı bu oturumdaki bağlı araçlarla görüntülenemedi. Wrangler yapılandırması mevcut `doora` Worker adına ayarlandı; canlı Worker sürümü doğrulanmadı.
+- Son bildirim merkezi ve auth dönüş akışı henüz başarılı bir üretim derlemesinde doğrulanmadı.
