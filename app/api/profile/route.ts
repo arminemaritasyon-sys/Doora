@@ -25,7 +25,7 @@ const schema = z.object({
   name: z.string().trim().min(2).max(100),
   district: z.string().trim().max(100).default(""),
   bio: z.string().trim().max(500).default(""),
-  avatarUrl: z.string().max(1_000_000).default(""),
+  avatarUrl: z.string().max(5_000_000).default(""),
   notifications: z.object({
     taskUpdates: z.boolean(), offerUpdates: z.boolean(), walletUpdates: z.boolean(), productUpdates: z.boolean()
   })
