@@ -14,14 +14,21 @@ export default async function AccountPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/giris");
 
+  // Keep account rendering independent from a stalled Neon query.
+  const withTimeout = <T,>(query: Promise<T>, label: string): Promise<T> =>
+    Promise.race([
+      query,
+      new Promise<T>((_, reject) => setTimeout(() => reject(new Error(`[account] ${label} query timed out after 8s`)), 8000))
+    ]);
+
   const queryResults = await Promise.allSettled([
-    db`SELECT t.id,t.title,t.description,t.category,t.district,t.budget,t.status,t.created_at,t.work_started_at,t.completion_requested_at,o.user_id AS assigned_user_id,
+    withTimeout(db`SELECT t.id,t.title,t.description,t.category,t.district,t.budget,t.status,t.created_at,t.work_started_at,t.completion_requested_at,o.user_id AS assigned_user_id,
       COALESCE(NULLIF(ap.display_name,''),NULLIF(au.name,''),'DOORA üyesi') AS assigned_user_name,ap.avatar_url AS assigned_user_avatar,
       EXISTS(SELECT 1 FROM public.task_reviews r WHERE r.task_id=t.id AND r.reviewer_id=${user.id}) AS reviewed
       FROM public.tasks t LEFT JOIN public.offers o ON o.id=t.assigned_offer_id
       LEFT JOIN public.user_profiles ap ON ap.user_id=o.user_id LEFT JOIN neon_auth.user au ON au.id::text=o.user_id
-      WHERE t.owner_id=${user.id} ORDER BY t.created_at DESC LIMIT 30`,
-    db`SELECT o.id,o.amount,o.status,o.rejection_reason,o.message,o.created_at,t.id AS task_id,t.title,o.user_id AS bidder_id,
+      WHERE t.owner_id=${user.id} ORDER BY t.created_at DESC LIMIT 30`, "owned tasks"),
+    withTimeout(db`SELECT o.id,o.amount,o.status,o.rejection_reason,o.message,o.created_at,t.id AS task_id,t.title,o.user_id AS bidder_id,
       COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS bidder,
       p.avatar_url,p.district,
       COALESCE(rv.rating,0)::numeric AS rating,COALESCE(rv.review_count,0)::int AS review_count
@@ -29,16 +36,16 @@ export default async function AccountPage() {
       LEFT JOIN public.user_profiles p ON p.user_id=o.user_id
       LEFT JOIN neon_auth.user u ON u.id::text=o.user_id
       LEFT JOIN LATERAL (SELECT avg(rating) AS rating,count(*) AS review_count FROM public.task_reviews WHERE reviewee_id=o.user_id) rv ON true
-      WHERE t.owner_id=${user.id} ORDER BY o.created_at DESC LIMIT 30`,
-    db`SELECT t.id,t.title,t.description,t.category,t.district,t.budget,t.status,t.created_at,t.work_started_at,t.completion_requested_at,t.owner_id AS owner_id,
+      WHERE t.owner_id=${user.id} ORDER BY o.created_at DESC LIMIT 30`, "received offers"),
+    withTimeout(db`SELECT t.id,t.title,t.description,t.category,t.district,t.budget,t.status,t.created_at,t.work_started_at,t.completion_requested_at,t.owner_id AS owner_id,
       COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS owner_name,p.avatar_url,
       EXISTS(SELECT 1 FROM public.task_reviews r WHERE r.task_id=t.id AND r.reviewer_id=${user.id}) AS reviewed
       FROM public.tasks t JOIN public.offers o ON o.id=t.assigned_offer_id
       LEFT JOIN public.user_profiles p ON p.user_id=t.owner_id LEFT JOIN neon_auth.user u ON u.id::text=t.owner_id
-      WHERE o.user_id=${user.id} ORDER BY t.updated_at DESC LIMIT 30`,
-    db`SELECT count(*)::int AS count FROM public.tasks WHERE owner_id=${user.id}`,
-    db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id}`,
-    db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id} AND o.status='pending'`
+      WHERE o.user_id=${user.id} ORDER BY t.updated_at DESC LIMIT 30`, "assigned tasks"),
+    withTimeout(db`SELECT count(*)::int AS count FROM public.tasks WHERE owner_id=${user.id}`, "task count"),
+    withTimeout(db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id}`, "offer count"),
+    withTimeout(db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id} AND o.status='pending'`, "pending offer count")
   ]);
 
   const [tasksResult, receivedResult, assignedResult, taskTotalResult, receivedTotalResult, pendingOffersResult] = queryResults;
