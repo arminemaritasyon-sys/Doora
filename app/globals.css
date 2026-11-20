@@ -2460,3 +2460,28 @@ button, a, input, select, textarea { touch-action:manipulation; }
  .doora-account-page .account-section{gap:10px}
  .doora-account-page .account-offer-card,.doora-account-page .account-task-card{padding:12px;border-radius:15px}
 }
+
+
+/* Listing-specific incoming offers bottom sheet */
+.doora-account-page .listing-offers-trigger{display:flex;align-items:center;justify-content:flex-start;gap:7px;width:100%;min-height:39px;padding:0 11px;border:1px solid #e8eee4;border-radius:11px;background:#f7faf5;color:#40563a;font-size:11px;font-weight:800}
+.doora-account-page .listing-offers-trigger span{display:grid;min-width:21px;height:21px;place-items:center;margin-left:auto;padding:0 5px;border-radius:7px;background:#e9f0e4;color:#526c48;font-size:10px}
+.doora-account-page .listing-offers-trigger:active{background:#edf3e9}
+.doora-account-page .listing-offers-backdrop{position:fixed;inset:0;z-index:1200;display:flex;align-items:flex-end;justify-content:center;background:rgba(19,27,17,.42);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.doora-account-page .listing-offers-sheet{display:flex;width:min(100%,620px);max-height:min(82dvh,760px);flex-direction:column;overflow:hidden;border:1px solid rgba(255,255,255,.75);border-bottom:0;border-radius:25px 25px 0 0;background:#fbfcf9;box-shadow:0 -16px 55px rgba(20,31,17,.18);animation:listingSheetIn .24s ease-out}
+.doora-account-page .listing-offers-sheet-head{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:22px 20px 15px;border-bottom:1px solid #edf0e9;background:rgba(255,255,255,.94)}
+.doora-account-page .listing-offers-sheet-head:before{position:absolute;top:8px;left:calc(50% - 18px);width:36px;height:4px;border-radius:9px;background:#dce3d7;content:""}
+.doora-account-page .listing-offers-sheet-head small{color:#91a087;font-size:9px;font-weight:850;letter-spacing:1.3px}
+.doora-account-page .listing-offers-sheet-head h2{max-width:430px;margin:5px 0 3px;color:#273525;font-size:17px;font-weight:850;line-height:1.3}
+.doora-account-page .listing-offers-sheet-head p{margin:0;color:#929b8c;font-size:11px}
+.doora-account-page .listing-offers-sheet-head>button{display:grid;width:35px;height:35px;flex:none;place-items:center;border:0;border-radius:50%;background:#f0f4ed;color:#52664a}
+.doora-account-page .listing-offers-sheet-body{display:grid;gap:10px;overflow-y:auto;overscroll-behavior:contain;padding:13px 15px max(22px,env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+.doora-account-page .listing-sheet-offer{width:100%;max-width:none;gap:11px;padding:13px;border:1px solid #e8eee5;border-radius:16px;background:#fff;box-shadow:0 3px 13px rgba(35,53,29,.035)}
+.doora-account-page .listing-sheet-offer .account-offer-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.doora-account-page .listing-sheet-offer .account-offer-meta>strong{margin-right:auto;font-size:18px}
+.doora-account-page .listing-sheet-offer .offer-reject-reason{width:100%}
+.doora-account-page .listing-offers-empty{display:grid;justify-items:center;gap:8px;padding:35px 15px;color:#82917a;text-align:center}
+.doora-account-page .listing-offers-empty b{color:#40513a;font-size:13px}
+.doora-account-page .listing-offers-empty span{font-size:11px}
+@keyframes listingSheetIn{from{transform:translateY(28px);opacity:.65}to{transform:translateY(0);opacity:1}}
+@media(min-width:700px){.doora-account-page .listing-offers-backdrop{align-items:center;padding:24px}.doora-account-page .listing-offers-sheet{max-height:min(78vh,760px);border-bottom:1px solid rgba(255,255,255,.75);border-radius:24px}.doora-account-page .listing-offers-sheet-head:before{display:none}}
+@media(prefers-reduced-motion:reduce){.doora-account-page .listing-offers-sheet{animation:none}}
