@@ -459,3 +459,108 @@ button, a, input, select, textarea { touch-action:manipulation; }
   .category-pill svg, .filter-control svg { width:16px; height:16px; }
   .task-meta svg { width:16px; height:16px; }
 }
+
+
+/* DOORA header refresh */
+.app-header{
+  height:78px;
+  background:rgba(255,255,255,.94);
+  border-bottom:1px solid #e8eee2;
+  box-shadow:0 4px 20px rgba(27,39,20,.035);
+  backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
+}
+.header-inner{
+  max-width:1320px;
+  padding:0 34px;
+  gap:34px;
+}
+.brand{flex:0 0 auto;gap:10px;font-size:29px;letter-spacing:-1.7px;font-weight:850}
+.brand-mark{width:38px;height:38px;border-radius:12px;font-size:28px}
+.main-nav{
+  margin:0 auto;
+  gap:8px;
+  align-self:stretch;
+  align-items:center;
+}
+.main-nav a{
+  position:relative;
+  padding:11px 15px;
+  border-radius:11px;
+  color:#697064;
+  font-size:14px;
+  font-weight:650;
+}
+.main-nav a:hover{background:#f4f7f0;color:#1d2818}
+.main-nav a.active{background:#eff5e9;color:#26391d}
+.main-nav a.active:after{display:none}
+.header-actions{gap:13px;flex:0 0 auto}
+.header-account{
+  min-height:46px;
+  padding:0 17px;
+  border:1px solid #e5ebdf;
+  border-radius:13px;
+  color:#273321;
+  background:#fff;
+  font-size:13px;
+  font-weight:750;
+}
+.header-account:hover{background:#f6f9f2;border-color:#d7e4ca}
+.header-create{
+  min-height:48px;
+  padding:0 20px;
+  border-radius:13px;
+  font-size:13px;
+  font-weight:800;
+  gap:8px;
+}
+.header-create svg{width:19px;height:19px}
+.mobile-menu-toggle{display:none}
+.mobile-menu{
+  top:77px;
+  padding:12px 20px 17px;
+  border:1px solid #e8eee2;
+  border-top:0;
+  border-radius:0 0 18px 18px;
+  box-shadow:0 18px 35px rgba(24,35,18,.1);
+}
+.mobile-menu a{
+  padding:14px 10px;
+  border-radius:10px;
+  font-size:14px;
+}
+.mobile-menu a:hover{background:#f3f7ee}
+@media(max-width:900px){
+  .header-inner{padding:0 22px;gap:20px}
+  .main-nav{gap:2px}
+  .main-nav a{padding:10px 11px;font-size:13px}
+  .header-actions{gap:9px}
+}
+@media(max-width:650px){
+  .app-header{height:66px}
+  .header-inner{padding:0 16px;gap:10px}
+  .brand{font-size:25px;gap:8px}
+  .brand-mark{width:34px;height:34px;border-radius:11px;font-size:25px}
+  .main-nav{display:none}
+  .header-actions{margin-left:auto;gap:8px}
+  .header-account{display:none}
+  .header-create{
+    min-height:42px;
+    padding:0 13px;
+    border-radius:12px;
+    font-size:12px;
+    gap:6px;
+    white-space:nowrap;
+  }
+  .header-create svg{width:17px;height:17px}
+  .mobile-menu-toggle{
+    display:grid;
+    width:42px;height:42px;
+    border:1px solid #e6ecdf;
+    border-radius:12px;
+    background:#fff;
+    color:#20291b;
+  }
+  .mobile-menu{top:65px;left:10px;right:10px;padding:10px 12px 14px}
+  .mobile-menu a{font-size:14px;padding:13px 12px}
+}
