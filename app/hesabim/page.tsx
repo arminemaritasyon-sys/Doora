@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AccountPage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/giris");
+  if (!user) redirect("/giris?next=%2Fhesabim");
 
   // Keep account rendering independent from a stalled Neon query.
   const withTimeout = <T,>(query: Promise<T>, label: string): Promise<T> =>

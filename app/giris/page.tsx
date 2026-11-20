@@ -8,6 +8,12 @@ import { authClient } from "@/lib/auth/client";
 
 type ResetStep = "request" | "verify" | null;
 
+function getSafeNextPath() {
+  if (typeof window === "undefined") return "/";
+  const candidate = new URLSearchParams(window.location.search).get("next");
+  return candidate && candidate.startsWith("/") && !candidate.startsWith("//") ? candidate : "/";
+}
+
 export default function SignInPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -86,7 +92,7 @@ export default function SignInPage() {
         if (result.error) throw new Error(result.error.message || "Kod doğrulanamadı.");
         const login = await authClient.signIn.email({ email, password });
         if (login.error) throw new Error(login.error.message || "E-posta doğrulandı. Şimdi giriş yapabilirsin.");
-        router.replace("/");
+        router.replace(getSafeNextPath());
         router.refresh();
       } else if (mode === "signup") {
         if (password !== confirmPassword) throw new Error("Şifreler birbiriyle eşleşmiyor.");
@@ -97,7 +103,7 @@ export default function SignInPage() {
       } else {
         const result = await authClient.signIn.email({ email, password });
         if (result.error) throw new Error(result.error.message || "Giriş yapılamadı.");
-        router.replace("/");
+        router.replace(getSafeNextPath());
         router.refresh();
       }
     } catch (error) {

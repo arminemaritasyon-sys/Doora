@@ -51,16 +51,16 @@ export default function JobsPage(){
   const visible=useMemo(()=>tasks.filter(t=>(category==="Tümü"||t.category===category)&&((t.title+" "+t.description+" "+t.location).toLocaleLowerCase("tr").includes(query.toLocaleLowerCase("tr")))).sort((a,b)=>sort==="low"?Number(a.budget)-Number(b.budget):sort==="high"?Number(b.budget)-Number(a.budget):new Date(b.created_at||0).getTime()-new Date(a.created_at||0).getTime()),[tasks,category,query,sort]);
 
   async function toggleSave(id:string){
-    if(!signedIn){window.location.href="/giris";return}
-    try{const r=await fetch("/api/saved",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({taskId:id})});const d=await r.json();if(r.status===401){window.location.href="/giris";return}if(!r.ok)throw new Error(d.error||"Kaydedilemedi");setSaved(v=>d.saved?[...v,id]:v.filter(x=>x!==id));toast.success(d.saved?"İş kaydedildi":"Kayıtlardan çıkarıldı")}catch(e){toast.error(e instanceof Error?e.message:"İşlem tamamlanamadı")}
+    if(!signedIn){window.location.href="/giris?next="+encodeURIComponent("/isler");return}
+    try{const r=await fetch("/api/saved",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({taskId:id})});const d=await r.json();if(r.status===401){window.location.href="/giris?next="+encodeURIComponent("/isler");return}if(!r.ok)throw new Error(d.error||"Kaydedilemedi");setSaved(v=>d.saved?[...v,id]:v.filter(x=>x!==id));toast.success(d.saved?"İş kaydedildi":"Kayıtlardan çıkarıldı")}catch(e){toast.error(e instanceof Error?e.message:"İşlem tamamlanamadı")}
   }
   async function submitOffer(amount:string,message:string){
     if(!offerTask)return;setBusy(true);
-    try{const r=await fetch("/api/offers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({taskId:offerTask.id,amount:Number(amount),message})});const d=await r.json();if(r.status===401){window.location.href="/giris";return}if(!r.ok)throw new Error(d.error||"Teklif gönderilemedi");setOfferTask(null);toast.success("Teklifin ilan sahibine iletildi")}catch(e){toast.error(e instanceof Error?e.message:"Teklif gönderilemedi")}finally{setBusy(false)}
+    try{const r=await fetch("/api/offers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({taskId:offerTask.id,amount:Number(amount),message})});const d=await r.json();if(r.status===401){window.location.href="/giris?next="+encodeURIComponent("/isler");return}if(!r.ok)throw new Error(d.error||"Teklif gönderilemedi");setOfferTask(null);toast.success("Teklifin ilan sahibine iletildi")}catch(e){toast.error(e instanceof Error?e.message:"Teklif gönderilemedi")}finally{setBusy(false)}
   }
 
   return <main className="jobs-page">
-    <header className="jobs-topbar"><a className="brand" href="/" aria-label="DOORA ana sayfa"><span className="brand-mark">d</span><span>doora<span className="brand-dot">.</span></span></a><a className="jobs-top-account" href={signedIn?"/hesabim":"/giris"}>{signedIn?"Hesabım":"Giriş yap"} <ArrowUpRight size={15}/></a></header>
+    <header className="jobs-topbar"><a className="brand" href="/" aria-label="DOORA ana sayfa"><span className="brand-mark">d</span><span>doora<span className="brand-dot">.</span></span></a><a className="jobs-top-account" href={signedIn?"/hesabim":"/giris?next=%2Fhesabim"}>{signedIn?"Hesabım":"Giriş yap"} <ArrowUpRight size={15}/></a></header>
     <section className="jobs-content">
       <div className="jobs-intro"><h1>İşler</h1><span className="jobs-total">{tasks.length} açık iş</span></div>
       <div className="jobs-search"><Search size={18}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="İş veya konum ara..." aria-label="İş ara"/>{query&&<button onClick={()=>setQuery("")} aria-label="Aramayı temizle"><X size={17}/></button>}</div>
@@ -75,7 +75,7 @@ export default function JobsPage(){
         <div className="job-row-bottom"><div><small>Bütçe</small><strong>{money(task.budget)}</strong></div><button onClick={()=>setOfferTask(task)}>Teklif ver <ArrowUpRight size={16}/></button></div>
       </motion.article>)}</div>}
     </section>
-    <nav className="mobile-dock jobs-dock"><a href="/#kesfet"><Compass/><span>Keşfet</span></a><a className="dock-active" href="/isler"><span className="dock-money-icon">₺</span><span>İşler</span></a><a href={signedIn?"/kaydedilenler":"/giris"}><Bookmark/><span>Kaydedilen</span></a><a href={signedIn?"/hesabim":"/giris"}><UserRound/><span>Hesabım</span></a></nav>
+    <nav className="mobile-dock jobs-dock"><a href="/#kesfet"><Compass/><span>Keşfet</span></a><a className="dock-active" href="/isler"><span className="dock-money-icon">₺</span><span>İşler</span></a><a href={signedIn?"/kaydedilenler":"/giris?next=%2Fkaydedilenler"}><Bookmark/><span>Kaydedilen</span></a><a href={signedIn?"/hesabim":"/giris?next=%2Fhesabim"}><UserRound/><span>Hesabım</span></a></nav>
     <AnimatePresence>{offerTask&&<OfferSheet task={offerTask} onClose={()=>setOfferTask(null)} onSubmit={submitOffer} busy={busy}/>}</AnimatePresence>
   </main>
 }
