@@ -52,12 +52,11 @@ function TaskCard({ task, saved, onSave, onOffer }: { task: Task; saved: boolean
       <div className="task-bottom">
         <div className="person">
           <span className="avatar">{task.owner.split(" ").map((part) => part[0]).join("")}</span>
-          <span><b>{task.owner}</b><small><Star size={12} fill="currentColor" /> Yeni üye</small></span>
+          <span><b>{task.owner || "DOORA üyesi"}</b><small>DOORA üyesi</small></span>
         </div>
-        <div className="price"><strong>{money(task.budget)}</strong><small>{task.offers} teklif</small></div>
+        <div className="price"><strong>{money(Number(task.budget))}</strong><small>{task.offers} teklif</small></div>
       </div>
       <button className="offer-button" onClick={onOffer}>Teklif ver <ArrowUpRight size={16} /></button>
-      <span className="sample-label">Örnek ilan</span>
     </article>
   );
 }
@@ -173,7 +172,7 @@ export default function Home() {
           <div className="category-list">
             {categories.map(({ name, icon: Icon }) => <button key={name} className={category === name ? "category-chip selected" : "category-chip"} onClick={() => setCategory(name)}><Icon size={16} />{name}</button>)}
           </div>
-          <div className="results-heading"><div><h3>Öne çıkan işler</h3><span>{visibleTasks.length} ilan listeleniyor</span></div><span className="sample-caption">Örnek içerikler</span></div>
+          <div className="results-heading"><div><h3>Öne çıkan işler</h3><span>{visibleTasks.length} ilan listeleniyor</span></div><span className="sample-caption">Güncel ilanlar</span></div>
           {loadingTasks ? <div className="empty-state"><p>İlanlar yükleniyor…</p></div> : visibleTasks.length ? <div className="task-grid">{visibleTasks.map((task) => <TaskCard key={task.id} task={task} saved={saved.includes(task.id)} onSave={() => { fetch("/api/saved", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskId: task.id }) }).then(async (response) => { const data = await response.json(); if (response.status === 401) { window.location.href = "/giris"; return; } if (response.ok) setSaved((current) => data.saved ? [...current, task.id] : current.filter((id) => id !== task.id)); else setNotice(data.error || "İlan kaydedilemedi."); }); }} onOffer={() => { const amount = window.prompt("Teklif tutarını TL olarak gir:"); if (!amount || Number(amount) <= 0) return; fetch("/api/offers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskId: task.id, amount: Number(amount) }) }).then(async (response) => { const data = await response.json(); if (response.status === 401) { window.location.href = "/giris"; return; } setNotice(response.ok ? "Teklifin gönderildi." : data.error || "Teklif gönderilemedi."); }); }} />)}</div> : <div className="empty-state"><span><Search size={22} /></span><h3>Aradığın ilanı bulamadık</h3><p>Farklı bir kelime veya kategori deneyebilirsin.</p><button className="button button-outline" onClick={() => { setQuery(""); setCategory("Tümü"); setDistrict("Tüm Antalya"); }}>Filtreleri temizle</button></div>}
           <div className="marketplace-foot"><span>Aradığın işi bulamadın mı?</span><button onClick={() => setCreateOpen(true)}>Kendi ilanını oluştur <ArrowRight size={15} /></button></div>
         </div>
