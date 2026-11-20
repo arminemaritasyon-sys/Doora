@@ -14,13 +14,18 @@ export async function POST(request: NextRequest) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Bildirim bilgilerini kontrol et." }, { status: 400 });
   const data = parsed.data;
-  if (data.action === "block") {
-    if (data.userId === user.id) return NextResponse.json({ error: "Kendini engelleyemezsin." }, { status: 400 });
-    await db`INSERT INTO public.user_blocks(blocker_id,blocked_id) VALUES(${user.id},${data.userId}) ON CONFLICT DO NOTHING`;
-    return NextResponse.json({ success: true, blocked: true });
+  try {
+    if (data.action === "block") {
+      if (data.userId === user.id) return NextResponse.json({ error: "Kendini engelleyemezsin." }, { status: 400 });
+      await db`INSERT INTO public.user_blocks(blocker_id,blocked_id) VALUES(${user.id},${data.userId}) ON CONFLICT DO NOTHING`;
+      return NextResponse.json({ success: true, blocked: true });
+    }
+    if (!data.userId && !data.taskId) return NextResponse.json({ error: "Şikâyet edilecek kullanıcı veya ilan seç." }, { status: 400 });
+    if (data.userId === user.id) return NextResponse.json({ error: "Kendini şikâyet edemezsin." }, { status: 400 });
+    await db`INSERT INTO public.user_reports(reporter_id,reported_user_id,task_id,category,details) VALUES(${user.id},${data.userId || null},${data.taskId || null},${data.category},${data.details})`;
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[safety] action failed", error);
+    return NextResponse.json({ error: "Güvenlik işlemi kaydedilemedi. Tekrar dene." }, { status: 500 });
   }
-  if (!data.userId && !data.taskId) return NextResponse.json({ error: "Şikâyet edilecek kullanıcı veya ilan seç." }, { status: 400 });
-  if (data.userId === user.id) return NextResponse.json({ error: "Kendini şikâyet edemezsin." }, { status: 400 });
-  await db`INSERT INTO public.user_reports(reporter_id,reported_user_id,task_id,category,details) VALUES(${user.id},${data.userId || null},${data.taskId || null},${data.category},${data.details})`;
-  return NextResponse.json({ success: true });
 }

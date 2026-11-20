@@ -16,6 +16,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (!rows.length) return NextResponse.json({ error: "İlan bulunamadı veya bu işlem için uygun değil." }, { status: 404 });
     return NextResponse.json({ success: true, task: rows[0] });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "İlan güncellenemedi." }, { status: 400 });
+    console.error("[task manage] update failed", error);
+    return NextResponse.json({ error: error instanceof Error ? error.message : "İlan güncellenemedi." }, { status: 500 });
   }
 }

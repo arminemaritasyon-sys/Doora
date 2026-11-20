@@ -88,6 +88,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return NextResponse.json({ success: true, status: "disputed" });
   } catch (error) {
     console.error("[task workflow] failed", error);
-    return NextResponse.json({ error: error instanceof Error ? error.message : "İşlem tamamlanamadı." }, { status: 400 });
+    const code = typeof error === "object" && error !== null && "code" in error
+      ? String((error as { code?: unknown }).code)
+      : "";
+    return NextResponse.json({ error: error instanceof Error ? error.message : "İşlem tamamlanamadı." }, { status: code === "P0001" ? 409 : 500 });
   }
 }

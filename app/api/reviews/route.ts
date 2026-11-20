@@ -17,7 +17,14 @@ export async function POST(request: NextRequest) {
   try {
     const [result] = await db`INSERT INTO public.task_reviews(task_id,reviewer_id,reviewee_id,rating,comment) VALUES(${taskId},${user.id},${reviewee},${rating},${comment}) RETURNING id,rating,comment,created_at`;
     return NextResponse.json({ review: result }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Bu iş için daha önce değerlendirme yapmışsın." }, { status: 409 });
+  } catch (error) {
+    const code = typeof error === "object" && error !== null && "code" in error
+      ? String((error as { code?: unknown }).code)
+      : "";
+    if (code === "23505") {
+      return NextResponse.json({ error: "Bu iş için daha önce değerlendirme yapmışsın." }, { status: 409 });
+    }
+    console.error("[reviews] create failed", error);
+    return NextResponse.json({ error: "Değerlendirme kaydedilemedi. Tekrar dene." }, { status: 500 });
   }
 }

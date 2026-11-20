@@ -27,6 +27,13 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
     }
     return NextResponse.json({ success: true, escrow: result });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Teklif kabul edilemedi." }, { status: 400 });
+    console.error("[offers] accept failed", error);
+    const code = typeof error === "object" && error !== null && "code" in error
+      ? String((error as { code?: unknown }).code)
+      : "";
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Teklif kabul edilemedi." },
+      { status: code === "P0001" ? 409 : 500 }
+    );
   }
 }
