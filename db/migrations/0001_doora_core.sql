@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   district varchar(100) NOT NULL,
   address_label varchar(180),
   scheduled_at timestamptz,
-  status varchar(20) NOT NULL DEFAULT 'open' CHECK (status IN ('open','assigned','completed','cancelled')),
+  status varchar(20) NOT NULL DEFAULT 'open' CHECK (status IN ('open','paused','assigned','completed','disputed','cancelled')),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );

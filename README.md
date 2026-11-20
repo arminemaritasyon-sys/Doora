@@ -1,6 +1,6 @@
 # DOORA
 
-Mobile-first local task marketplace built with Next.js 15, React 19 and Neon Postgres.
+Mobile-first local task marketplace built with Next.js 16.4, React 19 and Neon Postgres.
 
 ## Infrastructure
 - Neon Postgres via Vercel integration (`DATABASE_URL`)
@@ -12,7 +12,7 @@ Mobile-first local task marketplace built with Next.js 15, React 19 and Neon Pos
 Vercel Neon integration supplies the database and auth URLs. Add `RESEND_API_KEY` and a verified sender address as encrypted Vercel environment variables for production, preview and development.
 
 ## Database
-Apply `db/migrations/0001_doora_core.sql` to the production Neon main branch after reviewing the migration preview.
+Apply `db/migrations/0001_doora_core.sql` through `0007_task_dispute_status.sql` in order. Test schema changes on a Neon branch first; never apply production migrations without reviewing the SQL and current data.
 
 ## Local development
 ```bash

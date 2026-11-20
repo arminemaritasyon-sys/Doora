@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import * as Tabs from "@radix-ui/react-tabs";
 import { toast } from "sonner";
 import {
   ArrowUpRight, Bookmark, BookmarkCheck, CalendarDays, Check,
@@ -67,11 +66,11 @@ export default function SavedExplorer({ initialTasks }: { initialTasks: SavedTas
         <label className="saved-search"><Search size={18}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Kaydettiğin işlerde ara..." aria-label="Kaydedilenlerde ara"/>{query && <button type="button" onClick={()=>setQuery("")} aria-label="Aramayı temizle"><X size={16}/></button>}</label>
         <label className="saved-sort"><span>Sırala</span><select value={sort} onChange={e=>setSort(e.target.value)} aria-label="Sıralama"><option value="newest">En yeni</option><option value="low">Bütçe: düşük</option><option value="high">Bütçe: yüksek</option></select></label>
       </div>
-      {tasks.length > 0 && <Tabs.Root value={category} onValueChange={setCategory} className="saved-tabs">
-        <Tabs.List className="saved-tabs-list" aria-label="Kategori filtresi">
-          {categories.map(item => <Tabs.Trigger key={item} value={item} className="saved-tab">{item}{item === "Tümü" && <span>{tasks.length}</span>}</Tabs.Trigger>)}
-        </Tabs.List>
-      </Tabs.Root>}
+      {tasks.length > 0 && <div className="saved-tabs">
+        <div className="saved-tabs-list" role="group" aria-label="Kategori filtresi">
+          {categories.map(item => <button key={item} type="button" aria-pressed={category === item} data-state={category === item ? "active" : "inactive"} onClick={() => setCategory(item)} className="saved-tab">{item}{item === "Tümü" && <span>{tasks.length}</span>}</button>)}
+        </div>
+      </div>}
       {tasks.length === 0 ? <motion.section className="saved-zero" initial={{opacity:0,y:12}} animate={{opacity:1,y:0}}>
         <div className="saved-zero-art"><span/><BookmarkCheck size={34}/></div>
         <span className="saved-overline">KİŞİSEL LİSTEN</span><h2>İlk favori işini keşfet.</h2>
@@ -94,7 +93,7 @@ export default function SavedExplorer({ initialTasks }: { initialTasks: SavedTas
                 {task.district && <span><MapPin size={14}/>{task.district}</span>}
                 <span><CalendarDays size={14}/>{dateLabel(task.created_at)}</span>
               </div>
-              <div className="saved-item-footer"><div><small>İlan bütçesi</small><strong>{money(task.budget)}</strong></div><a href="/isler">İlanı incele <ArrowUpRight size={16}/></a></div>
+              <div className="saved-item-footer"><div><small>İlan bütçesi</small><strong>{money(task.budget)}</strong></div><a href={"/ilan/"+task.id}>İlanı incele <ArrowUpRight size={16}/></a></div>
             </motion.article>
           })}
         </AnimatePresence>
