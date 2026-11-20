@@ -46,7 +46,7 @@ export default function AccountDashboard({name,tasks,received,taskCount,pendingO
   <section className="account-wallet-actions account-wallet-actions-clean">
    <button disabled={busy} onClick={()=>{setAmount("");setModal("topup")}}><Plus/> Bakiye yükle</button>
    <button className="secondary" disabled={busy} onClick={()=>{setAmount("");setModal("withdraw")}}><ArrowUpRight/> Para çek</button>
-   
+   <button className="create-listing-action" disabled={busy} onClick={()=>{setTaskForm({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});setEditingTaskId(null);setModal("task")}}><Plus/> İlan oluştur</button>
   </section>
   <section className="account-section">
    <div className="account-section-head"><h2>Tekliflerim</h2><span>{pendingOfferCount} yeni</span></div>
