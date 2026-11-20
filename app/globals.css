@@ -2220,3 +2220,69 @@ button, a, input, select, textarea { touch-action:manipulation; }
 .job-owner>span:last-child{display:grid;gap:3px;min-width:0}
 .job-owner small{color:#9aa393;font-size:9px;font-weight:800;letter-spacing:.55px}
 .job-owner b{overflow:hidden;color:#34432f;font-size:11px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}
+
+
+/* Account: compact app-like section switcher and horizontal task decks */
+.doora-account-page .account-view-switch{
+ display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;
+ padding:3px 1px 5px;margin:2px 0 0;scrollbar-width:none;
+ -webkit-overflow-scrolling:touch;
+}
+.doora-account-page .account-view-switch::-webkit-scrollbar{display:none}
+.doora-account-page .account-view-switch button{
+ display:flex;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;
+ min-height:42px;padding:0 14px;border:1px solid #e8ede4;border-radius:13px;
+ background:#fff;color:#788273;font-size:12px;font-weight:750;
+}
+.doora-account-page .account-view-switch button span{
+ display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;
+ border-radius:7px;background:#f1f4ed;color:#718365;font-size:10px;
+}
+.doora-account-page .account-view-switch button.active{
+ border-color:#314a2b;background:#314a2b;color:#fff;
+ box-shadow:0 4px 12px rgba(49,74,43,.14);
+}
+.doora-account-page .account-view-switch button.active span{background:#ffffff22;color:#fff}
+.doora-account-page .account-section.is-hidden{display:none!important}
+.doora-account-page .account-section-offers .account-offers,
+.doora-account-page .account-section-assigned,
+.doora-account-page .account-section-listings{min-width:0}
+.doora-account-page .account-section-offers .account-offers{
+ display:flex;flex-direction:row;align-items:stretch;gap:12px;
+ overflow-x:auto;padding:2px 2px 8px;margin:0 -2px;
+ scroll-snap-type:x mandatory;scrollbar-width:none;
+ -webkit-overflow-scrolling:touch;
+}
+.doora-account-page .account-section-offers .account-offers::-webkit-scrollbar{display:none}
+.doora-account-page .account-section-offers .account-offer-card{
+ flex:0 0 min(86%,390px);width:min(86%,390px);scroll-snap-align:start;
+}
+.doora-account-page .account-section-assigned .account-task-card,
+.doora-account-page .account-section-listings .account-task-card{
+ width:min(86%,390px);flex:0 0 min(86%,390px);scroll-snap-align:start;
+}
+.doora-account-page .account-section-assigned,
+.doora-account-page .account-section-listings{overflow:hidden}
+.doora-account-page .account-section-assigned:has(.account-task-card),
+.doora-account-page .account-section-listings:has(.account-task-card){
+ display:flex;flex-direction:column;
+}
+.doora-account-page .account-section-assigned .account-task-card,
+.doora-account-page .account-section-listings .account-task-card{
+ align-self:flex-start;
+}
+.doora-account-page .account-section-assigned .account-task-card~.account-task-card,
+.doora-account-page .account-section-listings .account-task-card~.account-task-card{margin-top:0}
+.doora-account-page .account-section-assigned:has(.account-task-card),
+.doora-account-page .account-section-listings:has(.account-task-card){
+ display:block;
+}
+.doora-account-page .account-section-assigned .account-task-card,
+.doora-account-page .account-section-listings .account-task-card{display:inline-grid;vertical-align:top;margin:2px 10px 8px 0}
+@media(max-width:650px){
+ .doora-account-page .account-view-switch{gap:7px}
+ .doora-account-page .account-view-switch button{min-height:40px;padding:0 12px;font-size:11px}
+ .doora-account-page .account-section-offers .account-offer-card,
+ .doora-account-page .account-section-assigned .account-task-card,
+ .doora-account-page .account-section-listings .account-task-card{flex-basis:88%;width:88%;max-width:350px}
+}
