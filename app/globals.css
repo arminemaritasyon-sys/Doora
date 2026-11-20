@@ -1814,3 +1814,14 @@ button, a, input, select, textarea { touch-action:manipulation; }
  .work-progress-actions{gap:8px}
  .work-progress-actions button{min-height:43px;flex:1;justify-content:center;font-size:12px}
 }
+
+/* Round profile photos for both sides of a task */
+.account-person img,.account-person-avatar{width:46px;height:46px;flex:0 0 46px;border-radius:50%;object-fit:cover}
+.account-person-avatar{border-radius:50%}
+.account-person.compact-person{gap:9px;margin-top:10px}
+.account-person.compact-person img,.account-person.compact-person .account-person-avatar{width:36px;height:36px;flex-basis:36px;font-size:15px}
+.account-person.compact-person>div{gap:2px}
+.account-person.compact-person b{font-size:12px}
+.account-person.compact-person small{font-size:10px}
+.task-detail-avatar{overflow:hidden;border-radius:50%}
+.task-detail-avatar img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover}
