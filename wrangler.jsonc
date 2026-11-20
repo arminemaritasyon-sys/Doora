@@ -2,6 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "doora-app",
   "main": ".open-next/worker.js",
+  "upload_source_maps": true,
   "compatibility_date": "2026-11-20",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
