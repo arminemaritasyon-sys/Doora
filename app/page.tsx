@@ -10,6 +10,7 @@ import {
   ListFilter, LoaderCircle, Mail, LockKeyhole, Camera, Trash2, CircleHelp
 } from "lucide-react";
 import { z } from "zod";
+import type { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
@@ -168,11 +169,12 @@ export default function Home() {
   useEffect(() => {
     if (!supabase) return;
     let alive = true;
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then((result: { data: { user: User | null } }) => {
+      const data = result.data;
       if (!alive || !data.user) return;
       setUser({ id: data.user.id, email: data.user.email, name: data.user.user_metadata?.display_name || data.user.email?.split("@")[0] || "DOORA üyesi" });
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
       if (!alive) return;
       if (session?.user) setUser({ id: session.user.id, email: session.user.email, name: session.user.user_metadata?.display_name || session.user.email?.split("@")[0] || "DOORA üyesi" });
       else setUser(null);
