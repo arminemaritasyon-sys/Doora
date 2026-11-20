@@ -33,7 +33,7 @@ export default function TaskDetailOffer({ taskId, taskTitle }: { taskId: string;
       });
       const data = await response.json().catch(() => ({}));
       if (response.status === 401) {
-        router.push("/giris");
+        router.push("/giris?next="+encodeURIComponent(window.location.pathname));
         return;
       }
       if (!response.ok) throw new Error(data.error || "Teklif gönderilemedi.");
