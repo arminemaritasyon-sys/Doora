@@ -2491,3 +2491,24 @@ button, a, input, select, textarea { touch-action:manipulation; }
 html,body{min-height:100%;overscroll-behavior-x:none}
 body{overflow-x:clip}
 @media(max-width:900px){html{scroll-behavior:auto!important}}
+
+
+/* Account page interaction recovery: keep the page and controls in their own
+   predictable stacking context; modal backdrops are the only click blockers. */
+.doora-account-page{position:relative;isolation:isolate;pointer-events:auto}
+.doora-account-page .doora-app-header,
+.doora-account-page .account-page-container,
+.doora-account-page .account-hub,
+.doora-account-page .account-page-footer,
+.doora-account-page .doora-bottom-nav{position:relative;pointer-events:auto}
+.doora-account-page .account-hub{z-index:1}
+.doora-account-page .account-hub button,
+.doora-account-page .account-hub a,
+.doora-account-page .account-hub input,
+.doora-account-page .account-hub select,
+.doora-account-page .account-hub textarea,
+.doora-account-page .doora-app-header a,
+.doora-account-page .doora-app-header button,
+.doora-account-page .doora-bottom-nav a{pointer-events:auto;touch-action:manipulation}
+.doora-account-page .account-modal-backdrop,
+.doora-account-page .listing-offers-backdrop{z-index:1200;pointer-events:auto}
