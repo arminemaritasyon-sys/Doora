@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import * as Tabs from "@radix-ui/react-tabs";
 import { toast } from "sonner";
 import {
-  ArrowUpRight, Bookmark, BookmarkCheck, CalendarDays, Check, Clock3,
+  ArrowUpRight, BookmarkCheck, CalendarDays, Check,
   Home, MapPin, Package, Search, ShoppingBag, Truck, Wrench, X, BriefcaseBusiness
 } from "lucide-react";
 
