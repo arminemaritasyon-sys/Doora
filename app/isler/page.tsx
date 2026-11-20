@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 type Task = {
   id:string; title:string; description:string; category:string; budget:number;
-  location:string; time:string; owner:string; offers:number; created_at?:string;
+  location:string; time:string; owner:string; owner_avatar?:string|null; offers:number; created_at?:string;
 };
 const categories=["Tümü","Alışveriş","Teslimat","Ev işleri","Taşıma","Tamir","Diğer"];
 const money=(v:number)=>new Intl.NumberFormat("tr-TR").format(Number(v))+" ₺";
@@ -71,6 +71,7 @@ export default function JobsPage(){
         <div className="job-row-top"><span className="job-category">{task.category}</span><button className={saved.includes(task.id)?"job-save saved":"job-save"} onClick={()=>toggleSave(task.id)} aria-label="İşi kaydet"><Bookmark size={18} fill={saved.includes(task.id)?"currentColor":"none"}/></button></div>
         <h3>{task.title}</h3><p className="job-description">{task.description}</p>
         <div className="job-details"><span><MapPin size={15}/>{task.location}</span><span><Clock3 size={15}/>{task.time||"Yeni ilan"}</span><span>{task.offers} teklif</span></div>
+        <div className="job-owner"><span className="job-owner-avatar">{task.owner_avatar?<img src={task.owner_avatar} alt=""/>:(task.owner||"D").slice(0,1).toLocaleUpperCase("tr")}</span><span><small>İLAN SAHİBİ</small><b>{task.owner||"DOORA üyesi"}</b></span></div>
         <div className="job-row-bottom"><div><small>Bütçe</small><strong>{money(task.budget)}</strong></div><button onClick={()=>setOfferTask(task)}>Teklif ver <ArrowUpRight size={16}/></button></div>
       </motion.article>)}</div>}
     </section>
