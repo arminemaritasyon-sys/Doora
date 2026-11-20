@@ -57,10 +57,12 @@ export async function POST(request: NextRequest) {
     VALUES (${user.id},${title},${description},${category},${budget},${district})
     RETURNING id,title,description,category,budget,district AS location,status,created_at
   `;
+  try {
   await db`
     INSERT INTO public.notifications (user_id,type,title,body,href)
     VALUES (${user.id},'task_created','İlanın yayınlandı',${title},${`/ilan/${task.id}`})
   `;
+  } catch (error) { console.error("[notifications] Could not create notification:", error); }
   try {
   await sendDooraEmail({ to:user.email, userId:user.id, template:"task_created", subject:"İlanın DOORA'da yayında", html:`<h2>Merhaba ${escapeHtml(user.name || "DOORA üyesi")},</h2><p><strong>${escapeHtml(title)}</strong> ilanını aldık. İlanın DOORA'da yayınlandı.</p><p>Teklif geldikçe seni bilgilendireceğiz.</p>` });
   } catch (error) { console.error("[mail] Delivery failed; marketplace action remains successful:", error); }
