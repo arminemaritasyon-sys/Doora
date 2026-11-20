@@ -380,3 +380,67 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     appearance:none;
   }
 }
+
+
+/* DOORA usability pass: larger type, touch targets and iOS form zoom guard */
+html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+body { font-size:16px; }
+button, a, input, select, textarea { touch-action:manipulation; }
+.button { min-height:48px; padding-inline:19px; font-size:14px; }
+.button-large { min-height:56px; padding-inline:24px; font-size:15px; }
+.button-full { min-height:54px; }
+.icon-button { width:46px; height:46px; }
+.header-create { min-height:48px; font-size:14px; }
+.header-account { min-height:46px; font-size:14px; }
+.main-nav a { font-size:15px; }
+.eyebrow { font-size:11px; }
+.quick-points>div { font-size:14px; }
+.section-title-row p { font-size:14px; }
+.search-field input, .district-field select, .sort-control select { font-size:14px; }
+.category-pill { min-height:44px; font-size:13px; padding-inline:17px; }
+.listing-heading h3 { font-size:21px; }
+.listing-heading>div span, .sort-label { font-size:12px; }
+.task-card { padding:23px; }
+.task-category { font-size:11px; }
+.task-card h3 { font-size:19px; }
+.task-description { font-size:13px; }
+.task-meta { font-size:12px; }
+.task-owner b { font-size:12px; }
+.task-owner small { font-size:11px; }
+.task-price { font-size:20px; }
+.task-offer { min-height:46px; font-size:13px; }
+.how-grid h3 { font-size:18px; }
+.how-grid p { font-size:13px; }
+.task-form label, .auth-form label>span { font-size:13px; }
+.task-form input, .task-form select, .task-form textarea, .auth-input input { font-size:16px; }
+.task-form input, .task-form select { min-height:50px; }
+.auth-input { min-height:53px; }
+.auth-input input { height:100%; }
+.account-welcome p, .account-stats small { font-size:13px; }
+.account-list b { font-size:14px; }
+.account-list small { font-size:12px; }
+.mobile-dock a, .mobile-dock button { font-size:10px; }
+.mobile-dock svg { width:22px; height:22px; }
+@media(max-width:650px) {
+  input, textarea, select, .task-form input, .task-form textarea, .task-form select,
+  .auth-input input, .search-field input, .district-field select, .sort-control select {
+    font-size:16px !important; line-height:1.35;
+  }
+  .button { min-height:46px; padding-inline:15px; font-size:13px; }
+  .button-large { min-height:50px; padding-inline:17px; font-size:13px; }
+  .button-full { min-height:50px; }
+  .icon-button { width:42px; height:42px; }
+  .header-create { min-height:42px; font-size:12px; }
+  .category-pill { min-height:39px; padding-inline:12px; font-size:11px; }
+  .task-card { padding:17px; }
+  .task-card h3 { font-size:17px; }
+  .task-description { font-size:12px; }
+  .task-meta { font-size:11px; }
+  .task-owner b { font-size:11px; }
+  .task-owner small { font-size:10px; }
+  .task-price { font-size:17px; }
+  .task-offer { min-height:43px; font-size:12px; }
+  .quick-points>div { font-size:10px; }
+  .mobile-dock svg { width:21px; height:21px; }
+  .mobile-dock a, .mobile-dock button { font-size:9px; }
+}
