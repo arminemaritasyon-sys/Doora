@@ -90,6 +90,6 @@ export default function NotificationCenter() {
             <span className="notification-item-content"><strong>{item.title}</strong><span>{item.body}</span><small>{formatDate(item.created_at)}</small></span>
           </button>)}
       </div>
-    </section>}
+    </section></>}
   </div>;
 }
