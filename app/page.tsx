@@ -1,207 +1,101 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowRight, ArrowUpRight, Bookmark, BriefcaseBusiness, Check, ChevronDown,
-  Clock3, Compass, Filter, Heart, MapPin, Menu, Plus, Search, ShieldCheck,
-  ShoppingBag, Sparkles, Star, Truck, Wrench, X, Zap
+  ArrowDownUp, ArrowRight, ArrowUpRight, Bookmark, BriefcaseBusiness, Check,
+  ChevronDown, Clock3, Compass, Filter, Heart, MapPin, Menu, Plus, Search,
+  ShieldCheck, ShoppingBag, Truck, UserRound, Wrench, X, Zap
 } from "lucide-react";
+import { toast } from "sonner";
 
 type Task = {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  budget: number;
-  location: string;
-  time: string;
-  owner: string;
-  offers: number;
+  id: string; title: string; description: string; category: string; budget: number;
+  location: string; time: string; owner: string; offers: number;
 };
-
 const categories = [
-  { name: "Tümü", icon: Compass },
-  { name: "Alışveriş", icon: ShoppingBag },
-  { name: "Teslimat", icon: Truck },
-  { name: "Ev işleri", icon: ShieldCheck },
-  { name: "Taşıma", icon: BriefcaseBusiness },
-  { name: "Tamir", icon: Wrench },
-  { name: "Diğer", icon: Sparkles },
+  { name: "Tümü", icon: Compass }, { name: "Alışveriş", icon: ShoppingBag },
+  { name: "Teslimat", icon: Truck }, { name: "Ev işleri", icon: BriefcaseBusiness },
+  { name: "Taşıma", icon: ArrowDownUp }, { name: "Tamir", icon: Wrench }, { name: "Diğer", icon: Zap },
 ];
-
 const money = (value: number) => new Intl.NumberFormat("tr-TR").format(value) + " ₺";
 
 function Brand() {
-  return <a className="brand" href="#top" aria-label="DOORA ana sayfa"><span className="brand-mark">d</span><span>doora<span className="brand-dot">.</span></span></a>;
+  return <a className="brand" href="/" aria-label="DOORA ana sayfa"><span className="brand-mark">d</span><span>doora<span className="brand-dot">.</span></span></a>;
 }
-
 function TaskCard({ task, saved, onSave, onOffer }: { task: Task; saved: boolean; onSave: () => void; onOffer: () => void }) {
-  return (
-    <article className="task-card">
-      <div className="task-topline">
-        <span className="category-label">{task.category}</span>
-        <button className={`save-button ${saved ? "saved" : ""}`} onClick={onSave} aria-label="İlanı kaydet"><Bookmark size={18} fill={saved ? "currentColor" : "none"} /></button>
-      </div>
-      <h3>{task.title}</h3>
-      <p className="task-description">{task.description}</p>
-      <div className="task-details">
-        <span><MapPin size={15} />{task.location}</span>
-        <span><Clock3 size={15} />{task.time}</span>
-      </div>
-      <div className="task-separator" />
-      <div className="task-bottom">
-        <div className="person">
-          <span className="avatar">{task.owner.split(" ").map((part) => part[0]).join("")}</span>
-          <span><b>{task.owner || "DOORA üyesi"}</b><small>DOORA üyesi</small></span>
-        </div>
-        <div className="price"><strong>{money(Number(task.budget))}</strong><small>{task.offers} teklif</small></div>
-      </div>
-      <button className="offer-button" onClick={onOffer}>Teklif ver <ArrowUpRight size={16} /></button>
-    </article>
-  );
+  return <motion.article className="task-card" layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -3 }}>
+    <div className="task-card-top"><span className="task-category">{task.category}</span><button className={`icon-button save-button ${saved ? "is-saved" : ""}`} onClick={onSave} aria-label="Kaydet"><Bookmark size={18} fill={saved ? "currentColor" : "none"} /></button></div>
+    <h3>{task.title}</h3><p className="task-description">{task.description}</p>
+    <div className="task-meta"><span><MapPin size={15}/>{task.location}</span><span><Clock3 size={15}/>{task.time || "Yeni ilan"}</span></div>
+    <div className="task-card-bottom"><div className="task-owner"><span className="avatar">{(task.owner || "D").slice(0,1).toLocaleUpperCase("tr")}</span><span><b>{task.owner || "DOORA üyesi"}</b><small>{task.offers} teklif</small></span></div><strong className="task-price">{money(Number(task.budget))}</strong></div>
+    <button className="task-offer" onClick={onOffer}>Teklif ver <ArrowUpRight size={16}/></button>
+  </motion.article>;
 }
-
+function TaskDialog({ onClose, onSubmit, busy }: { onClose: () => void; onSubmit: (data: {title:string;description:string;category:string;budget:string;district:string}) => void; busy: boolean }) {
+  const [form, setForm] = useState({ title:"", description:"", category:"Alışveriş", budget:"", district:"Muratpaşa" });
+  const set = (key: keyof typeof form, value: string) => setForm(current => ({...current,[key]:value}));
+  return <div className="dialog-backdrop" onMouseDown={e => { if(e.target === e.currentTarget) onClose(); }}>
+    <motion.section className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="task-dialog-title" initial={{opacity:0,y:20,scale:.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:10,scale:.98}}>
+      <div className="dialog-heading"><div><span className="eyebrow">YENİ İLAN</span><h2 id="task-dialog-title">Ne yapılmasını istersin?</h2></div><button className="icon-button" onClick={onClose} aria-label="Kapat"><X/></button></div>
+      <form className="task-form" onSubmit={e => {e.preventDefault();onSubmit(form);}}>
+        <label>İlan başlığı<input value={form.title} onChange={e=>set("title",e.target.value)} placeholder="Örn. Market alışverişi" minLength={5} maxLength={100} required /></label>
+        <label>Kategori<select value={form.category} onChange={e=>set("category",e.target.value)}>{categories.filter(c=>c.name!=="Tümü").map(c=><option key={c.name}>{c.name}</option>)}</select></label>
+        <label>İşin detayı<textarea value={form.description} onChange={e=>set("description",e.target.value)} placeholder="İhtiyacını kısaca anlat..." minLength={10} rows={3} required /></label>
+        <div className="form-two"><label>Bütçe (₺)<input type="number" min="1" value={form.budget} onChange={e=>set("budget",e.target.value)} placeholder="500" required /></label><label>İlçe<input value={form.district} onChange={e=>set("district",e.target.value)} placeholder="Muratpaşa" required /></label></div>
+        <button className="button button-primary button-full" disabled={busy}>{busy ? "Yayınlanıyor…" : "İlanı yayınla"}<ArrowRight size={17}/></button>
+      </form>
+    </motion.section>
+  </div>;
+}
+function OfferDialog({ task, onClose, onSubmit, busy }: { task: Task; onClose: () => void; onSubmit: (amount: string, message: string) => void; busy: boolean }) {
+  const [amount,setAmount]=useState(""); const [message,setMessage]=useState("");
+  return <div className="dialog-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><motion.section className="dialog-card" role="dialog" aria-modal="true" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:10}}>
+    <div className="dialog-heading"><div><span className="eyebrow">TEKLİFİNİ GÖNDER</span><h2>{task.title}</h2></div><button className="icon-button" onClick={onClose}><X/></button></div>
+    <form className="task-form" onSubmit={e=>{e.preventDefault();onSubmit(amount,message);}}>
+      <label>Teklif tutarı (₺)<input type="number" min="1" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="Teklifin" required /></label>
+      <label>Mesaj <span className="optional-label">İsteğe bağlı</span><textarea rows={3} value={message} onChange={e=>setMessage(e.target.value)} placeholder="Kısaca kendinden ve çözümünden bahset..." maxLength={1000}/></label>
+      <button className="button button-primary button-full" disabled={busy}>{busy?"Gönderiliyor…":"Teklifi gönder"}<ArrowRight size={17}/></button>
+    </form>
+  </motion.section></div>;
+}
 export default function Home() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loadingTasks, setLoadingTasks] = useState(true);
-  const [category, setCategory] = useState("Tümü");
-  const [query, setQuery] = useState("");
-  const [district, setDistrict] = useState("Tüm Antalya");
-  const [saved, setSaved] = useState<string[]>([]);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [mobileMenu, setMobileMenu] = useState(false);
-  const [notice, setNotice] = useState("");
-  const [form, setForm] = useState({ title: "", description: "", category: "Alışveriş", budget: "", location: "Muratpaşa, Antalya" });
-
-  useEffect(() => {
-    let active = true;
-    fetch("/api/tasks").then((response) => response.ok ? response.json() : Promise.reject()).then((data) => { if (active) setTasks(data.tasks ?? []); }).catch(() => { if (active) setNotice("İlanlar şu anda yüklenemiyor."); }).finally(() => { if (active) setLoadingTasks(false); });
-    return () => { active = false; };
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/saved").then((response) => response.ok ? response.json() : null).then((data) => { if (data?.taskIds) setSaved(data.taskIds); }).catch(() => undefined);
-  }, []);
-
-  const visibleTasks = useMemo(() => tasks.filter((task) => {
-    const matchesCategory = category === "Tümü" || task.category === category;
-    const matchesDistrict = district === "Tüm Antalya" || task.location.toLocaleLowerCase("tr").includes(district.toLocaleLowerCase("tr"));
-    const text = (task.title + " " + task.description + " " + task.location).toLocaleLowerCase("tr");
-    return matchesCategory && matchesDistrict && text.includes(query.toLocaleLowerCase("tr"));
-  }), [tasks, category, district, query]);
-
-  const submitTask = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const response = await fetch("/api/tasks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: form.title, description: form.description, category: form.category, budget: form.budget, district: form.location.split(",")[0].trim() }) });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) { setNotice(data.error || "İlan oluşturulamadı. Giriş yaptığından emin ol."); if (response.status === 401) window.location.href = "/giris"; return; }
-    setCategory("Tümü"); setQuery(""); setCreateOpen(false);
-    setForm({ title: "", description: "", category: "Alışveriş", budget: "", location: "Muratpaşa, Antalya" });
-    setTasks((current) => [data.task, ...current]); setNotice("İlanın yayınlandı.");
-  };
-
-  return (
-    <main id="top">
-      <header className="site-header">
-        <div className="header-inner">
-          <Brand />
-          <nav className="desktop-nav">
-            <a className="active" href="#kesfet">Keşfet</a>
-            <a href="#nasil-calisir">Nasıl çalışır?</a>
-            <a href="#guven">Güvenli alışveriş</a>
-          </nav>
-          <div className="header-actions">
-            <button className="header-login" onClick={() => window.location.href = "/giris"}>Giriş yap</button>
-            <button className="button button-dark header-cta" onClick={() => setCreateOpen(true)}><Plus size={17} /> İlan oluştur</button>
-            <button className="mobile-menu-button" onClick={() => setMobileMenu(!mobileMenu)} aria-label="Menüyü aç">{mobileMenu ? <X /> : <Menu />}</button>
-          </div>
-        </div>
-        {mobileMenu && <div className="mobile-menu"><a href="#kesfet" onClick={() => setMobileMenu(false)}>Keşfet</a><a href="#nasil-calisir" onClick={() => setMobileMenu(false)}>Nasıl çalışır?</a><a href="#guven" onClick={() => setMobileMenu(false)}>Güvenli alışveriş</a><button onClick={() => { setMobileMenu(false); window.location.href = "/giris"; }}>Giriş yap</button></div>}
-      </header>
-
-      {notice && <div className="notice" role="status"><span>{notice}</span><button onClick={() => setNotice("")} aria-label="Bildirimi kapat"><X size={16} /></button></div>}
-
-      <section className="hero">
-        <div className="hero-inner">
-          <div className="hero-copy">
-            <span className="eyebrow"><span className="eyebrow-dot" /> GÜNLÜK İŞLER, KOLAY ÇÖZÜMLER</span>
-            <h1>Sen iste.<br /><em>Birisi halleder.</em></h1>
-            <p>Günlük işlerini kolayca paylaş. Yakınındaki insanlar yardımcı olsun, sen de zamanını kendine ayır.</p>
-            <div className="hero-actions">
-              <button className="button button-dark button-large" onClick={() => setCreateOpen(true)}>Bir iş paylaş <ArrowRight size={18} /></button>
-              <a className="button button-outline button-large" href="#kesfet">İşleri keşfet</a>
-            </div>
-            <div className="hero-trust"><span className="trust-avatars"><i>E</i><i>M</i><i>A</i></span><span><b>Birlikte daha kolay.</b><small>İşini paylaş, çözümünü bul.</small></span></div>
-          </div>
-          <div className="hero-art" aria-label="DOORA iş paylaşımı görseli">
-            <div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" />
-            <div className="art-card">
-              <div className="art-card-head"><span className="art-icon"><ShoppingBag size={19} /></span><span className="art-status"><i /> Yardım aranıyor</span></div>
-              <small className="art-kicker">YENİ İŞ</small>
-              <h2>Market alışverişime<br />yardım eder misin?</h2>
-              <div className="art-meta"><span><MapPin size={14} /> Yakınında</span><span><Clock3 size={14} /> Bugün</span></div>
-              <div className="art-card-foot"><strong>250 ₺</strong><span>Teklifler bekleniyor <ArrowUpRight size={15} /></span></div>
-            </div>
-            <div className="floating-note note-top"><span className="note-check"><Check size={15} /></span><span><b>İşin tamam!</b><small>Birlikte çözüldü</small></span></div>
-            <div className="floating-note note-bottom"><span className="note-spark"><Zap size={17} /></span><span><b>Yakınındaki insanlar</b><small>Yardım etmeye hazır</small></span></div>
-            <div className="art-sparkle sparkle-one">✳</div><div className="art-sparkle sparkle-two">✳</div>
-          </div>
-        </div>
-      </section>
-
-      <section className="benefits">
-        <div className="benefits-inner">
-          <div><span className="benefit-icon"><Zap size={19} /></span><span><b>Hızlı çözüm</b><small>Beklemeden yardım bul</small></span></div>
-          <div><span className="benefit-icon"><ShieldCheck size={19} /></span><span><b>Kontrol sende</b><small>Teklifleri sen değerlendir</small></span></div>
-          <div><span className="benefit-icon"><Heart size={19} /></span><span><b>Birlikte kolay</b><small>Günlük işlerini paylaş</small></span></div>
-        </div>
-      </section>
-
-      <section className="marketplace" id="kesfet">
-        <div className="marketplace-inner">
-          <div className="section-heading">
-            <div><span className="eyebrow">DOORA’DA NELER OLUYOR?</span><h2>Yakınındaki işleri <em>keşfet.</em></h2><p>Birinin yardıma ihtiyacı olabilir. Belki de aradığı kişi sensin.</p></div>
-            <button className="button button-dark create-desktop" onClick={() => setCreateOpen(true)}><Plus size={17} /> İşini paylaş</button>
-          </div>
-          <div className="search-panel">
-            <div className="search-input"><Search size={19} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Ne arıyorsun?" aria-label="İş ara" /></div>
-            <span className="search-divider" />
-            <div className="location-select"><MapPin size={18} /><select value={district} onChange={(event) => setDistrict(event.target.value)} aria-label="Bölge seç"><option>Tüm Antalya</option><option>Muratpaşa</option><option>Konyaaltı</option><option>Kepez</option><option>Lara</option></select><ChevronDown size={15} /></div>
-            <button className="filter-button" onClick={() => setNotice("Filtreleri kategori ve konum alanlarından kullanabilirsin.")}><Filter size={17} /><span>Filtrele</span></button>
-          </div>
-          <div className="category-list">
-            {categories.map(({ name, icon: Icon }) => <button key={name} className={category === name ? "category-chip selected" : "category-chip"} onClick={() => setCategory(name)}><Icon size={16} />{name}</button>)}
-          </div>
-          <div className="results-heading"><div><h3>Öne çıkan işler</h3><span>{visibleTasks.length} ilan listeleniyor</span></div><span className="sample-caption">Güncel ilanlar</span></div>
-          {loadingTasks ? <div className="empty-state"><p>İlanlar yükleniyor…</p></div> : visibleTasks.length ? <div className="task-grid">{visibleTasks.map((task) => <TaskCard key={task.id} task={task} saved={saved.includes(task.id)} onSave={() => { fetch("/api/saved", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskId: task.id }) }).then(async (response) => { const data = await response.json(); if (response.status === 401) { window.location.href = "/giris"; return; } if (response.ok) setSaved((current) => data.saved ? [...current, task.id] : current.filter((id) => id !== task.id)); else setNotice(data.error || "İlan kaydedilemedi."); }); }} onOffer={() => { const amount = window.prompt("Teklif tutarını TL olarak gir:"); if (!amount || Number(amount) <= 0) return; fetch("/api/offers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskId: task.id, amount: Number(amount) }) }).then(async (response) => { const data = await response.json(); if (response.status === 401) { window.location.href = "/giris"; return; } setNotice(response.ok ? "Teklifin gönderildi." : data.error || "Teklif gönderilemedi."); }); }} />)}</div> : <div className="empty-state"><span><Search size={22} /></span><h3>Aradığın ilanı bulamadık</h3><p>Farklı bir kelime veya kategori deneyebilirsin.</p><button className="button button-outline" onClick={() => { setQuery(""); setCategory("Tümü"); setDistrict("Tüm Antalya"); }}>Filtreleri temizle</button></div>}
-          <div className="marketplace-foot"><span>Aradığın işi bulamadın mı?</span><button onClick={() => setCreateOpen(true)}>Kendi ilanını oluştur <ArrowRight size={15} /></button></div>
-        </div>
-      </section>
-
-      <section className="how" id="nasil-calisir">
-        <div className="how-inner">
-          <div className="center-heading"><span className="eyebrow">ÜÇ KÜÇÜK ADIM</span><h2>Bu kadar <em>kolay.</em></h2><p>İhtiyacını paylaş, teklifleri değerlendir, işini hallet.</p></div>
-          <div className="steps">
-            <article><span className="step-number">01</span><span className="step-icon"><Plus size={20} /></span><h3>İşini paylaş</h3><p>Yapılmasını istediğin işi ve bütçeni birkaç adımda anlat.</p></article>
-            <article><span className="step-number">02</span><span className="step-icon"><MessageIcon /></span><h3>Teklifleri değerlendir</h3><p>Sana yardımcı olmak isteyen kişilerin tekliflerini incele.</p></article>
-            <article><span className="step-number">03</span><span className="step-icon"><Check size={20} /></span><h3>Birlikte tamamlayın</h3><p>Sana uygun kişiyi seç ve günlük işini kolayca çöz.</p></article>
-          </div>
-        </div>
-      </section>
-
-      <section className="safety" id="guven">
-        <div className="safety-inner"><span className="safety-icon"><ShieldCheck size={26} /></span><div><span className="eyebrow">İÇİN RAHAT OLSUN</span><h2>Kontrol her zaman sende.</h2><p>İşini kimin üstleneceğine sen karar ver. Teklifleri incele, sana en uygun çözümü seç.</p></div><button className="button button-outline" onClick={() => setNotice("DOORA’da teklifleri sen değerlendirir, seçimini sen yaparsın.")}>Daha fazla bilgi <ArrowUpRight size={16} /></button></div>
-      </section>
-
-      <footer className="footer"><div className="footer-inner"><div><Brand /><p>Günlük işler, kolay çözümler.</p></div><div className="footer-links"><a href="#kesfet">Keşfet</a><a href="#nasil-calisir">Nasıl çalışır?</a><a href="#guven">Güvenli alışveriş</a></div><small>© 2026 DOORA. Tüm hakları saklıdır.</small></div></footer>
-
-      <nav className="mobile-bottom-nav"><a className="active" href="#kesfet"><Compass size={20} /><span>Keşfet</span></a><button onClick={() => setCreateOpen(true)}><span className="nav-plus"><Plus size={19} /></span><span>İlan ver</span></button><button onClick={() => window.location.href = "/giris"}><Bookmark size={20} /><span>Kaydedilen</span></button><button onClick={() => window.location.href = "/giris"}><span className="nav-user">D</span><span>Profil</span></button></nav>
-
-      {createOpen && <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setCreateOpen(false); }}><section className="create-modal" role="dialog" aria-modal="true" aria-labelledby="create-title"><div className="modal-head"><div><span className="eyebrow">YENİ BİR BAŞLANGIÇ</span><h2 id="create-title">Nasıl bir yardıma ihtiyacın var?</h2><p>İşini kısaca anlat, sana yardımcı olabilecek kişiler görsün.</p></div><button className="modal-close" onClick={() => setCreateOpen(false)} aria-label="Kapat"><X size={19} /></button></div><form onSubmit={submitTask}><label>İlan başlığı<input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Örn. Market alışverişime yardım eder misin?" maxLength={90} required /></label><label>Kategori<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>{categories.filter((item) => item.name !== "Tümü").map((item) => <option key={item.name}>{item.name}</option>)}</select></label><label>İşin detayları<textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Yapılmasını istediğin işi biraz anlat..." rows={4} required /></label><div className="form-row"><label>Belirlediğin bütçe (₺)<input type="number" min="1" value={form.budget} onChange={(event) => setForm({ ...form, budget: event.target.value })} placeholder="250" required /></label><label>Konum<input value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} required /></label></div><div className="modal-note"><ShieldCheck size={17} /><span>İlanın hesabınla birlikte kaydedilir. Teklif geldikçe bilgilendirilirsin.</span></div><button className="button button-dark modal-submit" type="submit">İlan önizlemesini oluştur <ArrowRight size={17} /></button></form></section></div>}
-    </main>
-  );
-}
-
-function MessageIcon() {
-  return <span className="message-icon"><ArrowUpRight size={20} /></span>;
+  const [tasks,setTasks]=useState<Task[]>([]); const [saved,setSaved]=useState<string[]>([]);
+  const [loading,setLoading]=useState(true); const [query,setQuery]=useState("");
+  const [category,setCategory]=useState("Tümü"); const [district,setDistrict]=useState("Tüm Antalya");
+  const [createOpen,setCreateOpen]=useState(false); const [offerTask,setOfferTask]=useState<Task|null>(null);
+  const [busy,setBusy]=useState(false); const [menuOpen,setMenuOpen]=useState(false);
+  const [signedIn,setSignedIn]=useState(false);
+  useEffect(()=>{let active=true;Promise.all([
+    fetch("/api/tasks").then(r=>{if(!r.ok)throw new Error("İlanlar yüklenemedi");return r.json();}),
+    fetch("/api/saved").then(r=>r.ok?r.json():null).catch(()=>null),
+    fetch("/api/auth/get-session").then(r=>r.ok?r.json():null).catch(()=>null)
+  ]).then(([taskData,savedData,session])=>{if(!active)return;setTasks(taskData.tasks??[]);setSaved(savedData?.taskIds??[]);setSignedIn(Boolean(session?.user));}).catch(()=>toast.error("İlanlar şu anda yüklenemiyor.")).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
+  const visible=useMemo(()=>tasks.filter(t=>{
+    const text=(t.title+" "+t.description+" "+t.location).toLocaleLowerCase("tr");
+    return (category==="Tümü"||t.category===category)&&(district==="Tüm Antalya"||t.location.toLocaleLowerCase("tr").includes(district.toLocaleLowerCase("tr")))&&text.includes(query.toLocaleLowerCase("tr"));
+  }),[tasks,category,district,query]);
+  async function saveTask(taskId:string){if(!signedIn){window.location.href="/giris";return;}try{const r=await fetch("/api/saved",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({taskId})});const data=await r.json();if(r.status===401){window.location.href="/giris";return;}if(!r.ok)throw new Error(data.error);setSaved(s=>data.saved?[...s,taskId]:s.filter(id=>id!==taskId));toast.success(data.saved?"Kaydedilenlere eklendi":"Kaydedilenlerden çıkarıldı");}catch(e){toast.error(e instanceof Error?e.message:"İşlem tamamlanamadı");}}
+  async function createTask(data:{title:string;description:string;category:string;budget:string;district:string}){setBusy(true);try{const r=await fetch("/api/tasks",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});const result=await r.json();if(r.status===401){window.location.href="/giris";return;}if(!r.ok)throw new Error(result.error||"İlan oluşturulamadı");setTasks(current=>[result.task,...current]);setCreateOpen(false);toast.success("İlanın yayınlandı");}catch(e){toast.error(e instanceof Error?e.message:"İlan oluşturulamadı");}finally{setBusy(false);}}
+  async function sendOffer(amount:string,message:string){if(!offerTask)return;setBusy(true);try{const r=await fetch("/api/offers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({taskId:offerTask.id,amount:Number(amount),message})});const data=await r.json();if(r.status===401){window.location.href="/giris";return;}if(!r.ok)throw new Error(data.error||"Teklif gönderilemedi");setOfferTask(null);toast.success("Teklifin gönderildi");}catch(e){toast.error(e instanceof Error?e.message:"Teklif gönderilemedi");}finally{setBusy(false);}}
+  return <main className="app-shell">
+    <header className="app-header"><div className="header-inner"><Brand/><nav className="main-nav"><a className="active" href="#kesfet">Keşfet</a><a href="#nasil-calisir">Nasıl çalışır?</a></nav><div className="header-actions"><a className="header-account" href={signedIn?"/hesabim":"/giris"}><UserRound size={17}/><span>{signedIn?"Hesabım":"Giriş yap"}</span></a><button className="button button-primary header-create" onClick={()=>setCreateOpen(true)}><Plus size={17}/>İlan oluştur</button><button className="icon-button mobile-menu-toggle" onClick={()=>setMenuOpen(v=>!v)} aria-label="Menü">{menuOpen?<X/>:<Menu/>}</button></div></div>
+      <AnimatePresence>{menuOpen&&<motion.div className="mobile-menu" initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}}><a href="#kesfet" onClick={()=>setMenuOpen(false)}>Keşfet</a><a href="#nasil-calisir" onClick={()=>setMenuOpen(false)}>Nasıl çalışır?</a><a href={signedIn?"/hesabim":"/giris"}>Hesabım</a></motion.div>}</AnimatePresence>
+    </header>
+    <section className="hero-section"><div className="hero-inner"><div className="hero-copy"><span className="eyebrow"><span className="status-dot"/> GÜNLÜK İŞLER İÇİN YENİ BİR YOL</span><h1>İşin mi var?<br/><span>DOORA var.</span></h1><p>İhtiyacını paylaş. Yakınındaki insanlar yardımcı olsun. Günlük işler, kolayca çözülsün.</p><div className="hero-buttons"><button className="button button-primary button-large" onClick={()=>setCreateOpen(true)}>İşini paylaş<ArrowRight size={18}/></button><a className="button button-secondary button-large" href="#kesfet">İşleri keşfet</a></div><div className="hero-proof"><span className="proof-icon"><ShieldCheck size={17}/></span><span>Teklifleri sen değerlendirirsin.</span></div></div>
+      <div className="hero-visual" aria-hidden="true"><div className="visual-grid"/><div className="visual-ring ring-a"/><div className="visual-ring ring-b"/><div className="visual-card"><div className="visual-card-top"><span className="visual-tag">YENİ İLAN</span><span className="visual-live"><i/>Yayında</span></div><span className="visual-icon"><ShoppingBag size={23}/></span><h2>Market alışverişi</h2><p>Bugün · Muratpaşa</p><div className="visual-card-bottom"><strong>350 ₺</strong><span>Teklif bekliyor <ArrowUpRight size={15}/></span></div></div><div className="visual-floating float-one"><span><Check size={16}/></span><b>İşin tamamlandı</b></div><div className="visual-floating float-two"><span><Zap size={16}/></span><b>Yakınında çözüm var</b></div></div>
+    </div></section>
+    <section className="quick-points"><div><span><Zap size={18}/></span><b>Hızlı paylaşım</b></div><div><span><ShieldCheck size={18}/></span><b>Seçim sende</b></div><div><span><Heart size={18}/></span><b>Kolay iletişim</b></div></section>
+    <section className="market-section" id="kesfet"><div className="section-wrap"><div className="section-title-row"><div><span className="eyebrow">DOORA PAZARYERİ</span><h2>İşleri <span>keşfet.</span></h2><p>Yakınındaki güncel ilanlara göz at.</p></div><button className="button button-primary desktop-create" onClick={()=>setCreateOpen(true)}><Plus size={17}/>İlan oluştur</button></div>
+      <div className="search-toolbar"><div className="search-field"><Search size={19}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="İlanlarda ara..." aria-label="İlanlarda ara"/></div><span className="toolbar-divider"/><div className="district-field"><MapPin size={17}/><select value={district} onChange={e=>setDistrict(e.target.value)} aria-label="İlçe seç"><option>Tüm Antalya</option><option>Muratpaşa</option><option>Konyaaltı</option><option>Kepez</option><option>Aksu</option><option>Döşemealtı</option></select><ChevronDown size={15}/></div><button className="filter-control" onClick={()=>{setCategory("Tümü");setDistrict("Tüm Antalya");setQuery("");}}><Filter size={17}/><span>Temizle</span></button></div>
+      <div className="category-row">{categories.map(({name,icon:Icon})=><button key={name} className={category===name?"category-pill selected":"category-pill"} onClick={()=>setCategory(name)}><Icon size={16}/>{name}</button>)}</div>
+      <div className="listing-heading"><div><h3>Güncel ilanlar</h3><span>{visible.length} sonuç</span></div><span className="sort-label">En yeni ilanlar <ChevronDown size={14}/></span></div>
+      {loading?<div className="loading-grid">{[1,2,3].map(n=><div className="skeleton-card" key={n}/>)}</div>:visible.length?<motion.div className="task-grid" layout>{visible.map(task=><TaskCard key={task.id} task={task} saved={saved.includes(task.id)} onSave={()=>saveTask(task.id)} onOffer={()=>setOfferTask(task)}/>)}</motion.div>:<div className="empty-state"><span><Search size={23}/></span><h3>Burada henüz ilan yok</h3><p>Aramanı değiştirebilir veya ilk ilanı sen oluşturabilirsin.</p><button className="button button-primary" onClick={()=>setCreateOpen(true)}>İlan oluştur<Plus size={16}/></button></div>}
+    </div></section>
+    <section className="how-section" id="nasil-calisir"><div className="section-wrap"><div className="how-heading"><span className="eyebrow">ÜÇ ADIMDA</span><h2>Bu kadar <span>kolay.</span></h2></div><div className="how-grid"><article><span className="how-number">01</span><span className="how-icon"><Plus/></span><h3>İşini paylaş</h3><p>İhtiyacını ve bütçeni yaz, ilanını yayınla.</p></article><article><span className="how-number">02</span><span className="how-icon"><ArrowUpRight/></span><h3>Teklifleri incele</h3><p>Sana yardımcı olmak isteyenleri değerlendir.</p></article><article><span className="how-number">03</span><span className="how-icon"><Check/></span><h3>İşini tamamla</h3><p>Sana uygun kişiyle anlaş, işini çöz.</p></article></div></div></section>
+    <footer className="app-footer"><div className="footer-inner"><div><Brand/><span>Günlük işler, kolay çözümler.</span></div><div className="footer-links"><a href="#kesfet">Keşfet</a><a href="#nasil-calisir">Nasıl çalışır?</a><a href="/giris">Hesap</a></div><small>© 2026 DOORA</small></div></footer>
+    <nav className="mobile-dock"><a className="dock-active" href="#kesfet"><Compass/><span>Keşfet</span></a><button onClick={()=>setCreateOpen(true)}><span className="dock-add"><Plus/></span><span>İlan ver</span></button><a href="/kaydedilenler"><Bookmark/><span>Kaydedilen</span></a><a href={signedIn?"/hesabim":"/giris"}><UserRound/><span>Hesabım</span></a></nav>
+    <AnimatePresence>{createOpen&&<TaskDialog onClose={()=>setCreateOpen(false)} onSubmit={createTask} busy={busy}/>}</AnimatePresence>
+    <AnimatePresence>{offerTask&&<OfferDialog task={offerTask} onClose={()=>setOfferTask(null)} onSubmit={sendOffer} busy={busy}/>}</AnimatePresence>
+  </main>;
 }
