@@ -5,3 +5,80 @@
 @media(max-width:650px){body{padding-bottom:66px}.site-header{height:64px}.header-inner{padding:0 17px}.brand{font-size:24px}.brand-symbol{width:29px;height:29px;font-size:22px}.desktop-nav,.header-login,.notification-button{display:none}.header-actions{gap:7px}.header-post{min-height:37px;padding:0 13px;font-size:10px}.mobile-menu-button{display:grid}.mobile-menu-panel{display:grid;position:absolute;top:63px;left:0;right:0;background:#fff;border-bottom:1px solid var(--line);padding:10px 17px 15px;box-shadow:0 12px 20px #1a25100b}.mobile-menu-panel button{display:flex;align-items:center;gap:10px;padding:12px 5px;border:0;background:#fff;text-align:left;font-size:12px}.demo-notice{font-size:8px;gap:5px;line-height:1.4}.hero-inner{grid-template-columns:1fr;padding:43px 20px 20px;gap:0}.hero-copy h1{font-size:53px;letter-spacing:-3.2px;margin:18px 0 13px}.hero-copy>p{font-size:12px;max-width:340px}.hero-buttons{margin-top:22px;gap:8px}.button-large{height:45px;padding:0 15px;font-size:10px}.hero-proof{margin-top:26px}.hero-visual{height:300px;margin-top:4px}.visual-grid{width:260px;height:260px}.ring-a{width:280px;height:280px}.ring-b{width:225px;height:225px}.visual-task-card{width:260px;padding:20px;border-radius:19px}.visual-task-card h3{font-size:17px;margin:17px 0}.visual-meta{font-size:8px;gap:10px}.visual-bottom strong{font-size:19px}.visual-bottom span{font-size:8px}.float-safe{top:17px;right:0}.visual-float{font-size:8px;padding:9px 10px}.float-people{bottom:8px;left:0}.visual-star{right:12px;bottom:17px}.benefit-inner{padding:17px 20px;grid-template-columns:repeat(2,1fr);gap:16px 9px}.benefit-icon{width:32px;height:32px}.benefit-inner b{font-size:9px}.benefit-inner small{font-size:8px}.marketplace-section{padding:48px 0 55px}.marketplace-inner{padding:0 18px}.market-heading{align-items:start;gap:10px}.market-heading h2{font-size:27px;letter-spacing:-1.3px}.market-heading p{font-size:10px;line-height:1.5;max-width:260px}.market-heading>.button{font-size:0;width:38px;height:38px;min-height:38px;padding:0;flex:none}.market-heading>.button svg{width:18px}.search-panel{min-height:55px;padding:6px 7px 6px 11px;gap:8px;margin-top:23px;border-radius:12px}.search-field{gap:7px}.search-field svg{width:16px}.search-field input{font-size:10px}.search-divider{height:26px}.district-field{gap:4px}.district-field svg:first-child{width:14px}.district-field select{font-size:9px;max-width:91px}.filter-trigger{width:35px;height:36px;justify-content:center;padding:0}.filter-trigger span{display:none}.filter-trigger svg{width:16px}.filter-panel{display:grid;grid-template-columns:1fr 1fr;gap:9px}.filter-panel select{min-width:0;width:100%;font-size:9px}.filter-panel button{grid-column:1/-1;text-align:left}.category-scroller{margin-right:-18px;padding:14px 18px 3px 0;gap:6px}.category-pill{height:33px;padding:0 11px;font-size:9px}.category-pill svg{width:13px}.results-heading{margin:27px 0 13px}.results-heading h3{font-size:14px}.results-heading>div>span,.results-note{font-size:8px}.task-grid{grid-template-columns:1fr;gap:10px}.task-card{padding:16px;border-radius:14px}.task-title-button{margin:11px 0 5px}.task-title-button h3{font-size:15px;min-height:0}.task-description{font-size:9px;min-height:0;-webkit-line-clamp:2}.task-meta-list{display:flex;flex-wrap:wrap;gap:9px 15px;margin-top:13px;font-size:8px}.task-card-divider{margin:13px 0 11px}.task-card-actions .button{height:36px;min-height:36px}.personal-stats{gap:7px}.personal-stats>div{padding:11px}.personal-stats span{font-size:8px}.personal-stats strong{font-size:19px}.saved-intro{font-size:9px;line-height:1.5}.profile-panel{padding:16px}.profile-main h3{font-size:14px}.profile-actions{flex-wrap:wrap}.profile-actions .button{font-size:9px}.how-section{padding:55px 0}.how-inner{padding:0 18px}.center-heading h2{font-size:25px}.center-heading p{font-size:9px}.steps-grid{grid-template-columns:1fr;gap:9px;margin-top:25px}.step-card{min-height:unset;padding:17px}.step-icon{margin:12px 0}.step-card h3{font-size:12px}.step-card p{font-size:9px}.safety-section{padding-bottom:40px}.safety-inner{margin:0 18px;padding:17px;display:grid;grid-template-columns:40px 1fr;gap:10px}.safety-icon{width:39px;height:39px;border-radius:12px}.safety-icon svg{width:21px}.safety-inner h2{font-size:16px}.safety-inner p{font-size:9px}.safety-inner>.button{grid-column:1/-1;justify-self:start;min-height:36px;font-size:9px}.footer-inner{padding:22px 18px;grid-template-columns:1fr}.footer-links{flex-wrap:wrap;gap:12px}.copyright{grid-column:auto}.bottom-nav{height:66px;position:fixed;z-index:35;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:5px 5px max(5px,env(safe-area-inset-bottom))}.bottom-nav-item{border:0;background:transparent;color:#858d7f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:7px;font-weight:600}.bottom-nav-item.active{color:#6f8737}.bottom-nav-item.active svg{stroke-width:2.5}.standalone-market{min-height:calc(100vh - 130px);padding-top:37px}.modal-overlay{padding:10px;align-items:end}.dialog{padding:21px 17px;border-radius:20px 20px 15px 15px;max-height:92vh}.dialog-header h2{font-size:20px}.dialog-header p{font-size:9px}.form-label{font-size:9px;margin-bottom:12px}.form-label input,.form-label textarea,.form-label select{font-size:10px;padding:11px}.form-columns{gap:8px}.dialog-note{font-size:8px}.dialog-submit{min-height:43px;font-size:10px}.auth-dialog{align-self:center;border-radius:20px;padding:27px 21px}.auth-dialog h2{font-size:23px}.detail-dialog{align-self:end}.detail-description{font-size:10px}.detail-facts{font-size:9px}.detail-price-row>strong{font-size:19px}}
 @media(min-width:651px) and (max-width:900px){.bottom-nav{display:none}.task-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero-inner{min-height:480px}.hero-copy h1{font-size:52px}.hero-visual{height:340px}.visual-task-card{width:290px}.benefit-inner{grid-template-columns:repeat(2,1fr)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+/* DOORA accessibility and touch-target refinement */
+body{font-size:15px}
+.site-header{height:82px}
+.brand{font-size:30px}
+.brand-symbol{width:36px;height:36px;font-size:27px;border-radius:12px}
+.desktop-nav{gap:34px}
+.nav-link{font-size:14px}
+.button{min-height:48px;padding-inline:20px;font-size:14px;gap:10px}
+.button-large{min-height:54px;padding-inline:24px;font-size:15px}
+.icon-button{width:46px;height:46px}
+.icon-button svg{width:21px;height:21px}
+.profile-chip{font-size:13px;min-height:44px}
+.hero-copy>p{font-size:16px}
+.hero-copy h1{line-height:1.08}
+.eyebrow{font-size:11px;letter-spacing:1.6px}
+.hero-proof b{font-size:13px}
+.hero-proof span{font-size:12px}
+.benefit-inner>div b{font-size:13px}
+.benefit-inner>div small{font-size:11px}
+.market-heading h2{font-size:34px}
+.market-heading p{font-size:14px}
+.search-field input{font-size:14px}
+.search-field svg,.district-field svg{width:20px;height:20px}
+.district-field select{font-size:13px}
+.filter-trigger{min-height:48px;font-size:13px}
+.filter-trigger svg{width:19px;height:19px}
+.category-pill{height:43px;padding-inline:17px;font-size:12px;gap:9px}
+.category-pill svg{width:18px;height:18px}
+.results-heading h3{font-size:20px}
+.results-heading>div>span,.results-note{font-size:12px}
+.task-card{padding:21px}
+.task-title-button h3{font-size:18px;min-height:50px}
+.task-description{font-size:12px;line-height:1.7;min-height:61px}
+.task-meta-list{font-size:11px;gap:10px}
+.task-meta-list svg{width:17px;height:17px}
+.category-tag{font-size:11px;padding:7px 11px}
+.sample-tag,.posted-at{font-size:11px}
+.save-button{width:38px;height:38px}
+.save-button svg{width:19px;height:19px}
+.owner-mini b{font-size:11px}
+.owner-mini small{font-size:10px}
+.task-budget strong{font-size:18px}
+.task-budget small{font-size:11px}
+.task-card-actions .button{min-height:45px;font-size:12px}
+.bottom-nav-item{font-size:10px;gap:5px}
+.bottom-nav-item svg{width:22px;height:22px}
+.modal-overlay .dialog{font-size:14px}
+.dialog-header h2{font-size:25px}
+.dialog-header p,.form-label{font-size:13px}
+.form-label input,.form-label textarea,.form-label select{font-size:14px;min-height:46px}
+.dialog-submit{min-height:50px;font-size:14px}
+.legal-note{font-size:11px}
+@media(max-width:650px){
+ .site-header{height:70px}
+ .brand{font-size:28px}
+ .header-inner{padding-inline:17px}
+ .header-actions{gap:6px}
+ .button{min-height:46px;padding-inline:15px;font-size:13px}
+ .icon-button{width:42px;height:42px}
+ .hero-inner{padding:43px 20px 38px}
+ .hero-copy h1{font-size:clamp(43px,12vw,58px);letter-spacing:-2.8px}
+ .hero-copy>p{font-size:15px}
+ .hero-buttons .button{font-size:13px}
+ .marketplace-inner{padding-inline:17px}
+ .market-heading h2{font-size:29px}
+ .market-heading p{font-size:13px}
+ .search-field input{font-size:13px}
+ .category-pill{height:42px;font-size:12px}
+ .task-card{padding:17px}
+ .task-title-button h3{font-size:17px}
+ .task-description{font-size:11px}
+ .task-meta-list{font-size:10px}
+ .task-card-actions .button{font-size:11px;min-height:43px;padding-inline:12px}
+ .bottom-nav{height:72px;padding-bottom:max(7px,env(safe-area-inset-bottom))}
+ .bottom-nav-item{font-size:9px}
+ .bottom-nav-item svg{width:21px;height:21px}
+}

@@ -68,6 +68,15 @@ const formatDate = (value: string | null) => {
   if (Number.isNaN(date.getTime())) return "Zaman belirtilmedi";
   return new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(date);
 };
+type EmailEvent = "welcome" | "task_created" | "offer_received" | "offer_accepted" | "offer_rejected";
+const notifyEmail = (type: EmailEvent, entityId: string) => {
+  void fetch("/api/notifications/email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type, entityId }),
+  }).catch(() => undefined);
+};
+
 const relativeDate = (value: string) => {
   const minutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60000));
   if (minutes < 1) return "Az önce";
@@ -183,7 +192,7 @@ export default function Home() {
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
       if (!alive) return;
-      if (session?.user) setUser({ id: session.user.id, email: session.user.email, name: session.user.user_metadata?.display_name || session.user.email?.split("@")[0] || "DOORA üyesi" });
+      if (session?.user) { setUser({ id: session.user.id, email: session.user.email, name: session.user.user_metadata?.display_name || session.user.email?.split("@")[0] || "DOORA üyesi" }); if (_event === "SIGNED_IN") notifyEmail("welcome", session.user.id); }
       else setUser(null);
     });
     return () => { alive = false; listener.subscription.unsubscribe(); };
@@ -299,6 +308,7 @@ export default function Home() {
         const created: Task = { id: data.id, title: data.title, description: data.description, category: data.category, budget: data.budget, location: data.location_text, scheduledAt: data.scheduled_at, createdAt: data.created_at, ownerId: user.id, ownerName: user.name, ownerInitials: initials(user.name), status: data.status, offersCount: 0, imageUrl, isDemo: false };
         setTasks((current) => [created, ...current.filter((task) => !task.isDemo)]);
         setMyTasks((current) => [created, ...current]);
+        notifyEmail("task_created", created.id);
       } else {
         const created: Task = { id: "local-" + crypto.randomUUID(), title: parsed.data.title, description: parsed.data.description, category: parsed.data.category, budget: parsed.data.budget, location: parsed.data.location, scheduledAt: parsed.data.scheduledAt || null, createdAt: new Date().toISOString(), ownerName: "Sen", ownerInitials: "S", status: "open", offersCount: 0, isDemo: true };
         setTasks((current) => [created, ...current]);
@@ -322,8 +332,9 @@ export default function Home() {
     setBusy(true);
     try {
       if (supabase && user && !offerTask.isDemo) {
-        const { error } = await supabase.from("offers").insert({ task_id: offerTask.id, sender_id: user.id, amount: parsed.data.amount, message: parsed.data.message });
+        const { data: createdOffer, error } = await supabase.from("offers").insert({ task_id: offerTask.id, sender_id: user.id, amount: parsed.data.amount, message: parsed.data.message }).select("id").single();
         if (error) throw error;
+        notifyEmail("offer_received", createdOffer.id);
       } else {
         setMyOffers((current) => [{ id: "offer-" + crypto.randomUUID(), taskId: offerTask.id, amount: parsed.data.amount, message: parsed.data.message, createdAt: new Date().toISOString(), status: "pending" }, ...current]);
       }
