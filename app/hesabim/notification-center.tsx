@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell } from "lucide-react";
+import { Bell, X } from "lucide-react";
 
 type Notification = {
   id: string;
@@ -45,6 +45,20 @@ export default function NotificationCenter() {
 
   useEffect(() => { void load(); }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
   async function markRead(item: Notification) {
     if (!item.read_at) {
       const response = await fetch("/api/notifications", {
@@ -79,17 +93,27 @@ export default function NotificationCenter() {
       <Bell/>
       {unreadCount > 0 && <span className="notification-count">{unreadCount > 99 ? "99+" : unreadCount}</span>}
     </button>
-    {open && <section className="notification-panel" aria-label="Bildirimler">
-      <div className="notification-panel-head"><strong>Bildirimler</strong>{unreadCount > 0 && <button type="button" onClick={markAllRead}>Tümünü okundu işaretle</button>}</div>
-      <div className="notification-list">
-        {loading && items.length === 0 ? <div className="notification-empty">Yükleniyor…</div>
-          : error ? <div className="notification-error">{error}</div>
-          : items.length === 0 ? <div className="notification-empty">Henüz bildirimin yok.</div>
-          : items.map(item => <button type="button" key={item.id} className={"notification-item"+(!item.read_at?" is-unread":"")} onClick={() => void markRead(item)}>
-            {!item.read_at && <span className="notification-item-dot"/>}
-            <span className="notification-item-content"><strong>{item.title}</strong><span>{item.body}</span><small>{formatDate(item.created_at)}</small></span>
-          </button>)}
-      </div>
-    </section></>}
+    {open && <>
+      <button type="button" className="notification-backdrop" aria-label="Bildirimleri kapat" onClick={() => setOpen(false)}/>
+      <section className="notification-panel" aria-label="Bildirimler" role="dialog" aria-modal="true">
+        <div className="notification-panel-grab" aria-hidden="true"><span/></div>
+        <div className="notification-panel-head">
+          <div><small>DOORA</small><strong>Bildirimler</strong></div>
+          <div className="notification-panel-actions">
+            {unreadCount > 0 && <button type="button" onClick={markAllRead}>Tümünü okundu işaretle</button>}
+            <button type="button" className="notification-close" aria-label="Kapat" onClick={() => setOpen(false)}><X size={18}/></button>
+          </div>
+        </div>
+        <div className="notification-list">
+          {loading && items.length === 0 ? <div className="notification-empty">Yükleniyor…</div>
+            : error ? <div className="notification-error">{error}</div>
+            : items.length === 0 ? <div className="notification-empty">Henüz bildirimin yok.</div>
+            : items.map(item => <button type="button" key={item.id} className={"notification-item"+(!item.read_at?" is-unread":"")} onClick={() => void markRead(item)}>
+              {!item.read_at && <span className="notification-item-dot"/>}
+              <span className="notification-item-content"><strong>{item.title}</strong><span>{item.body}</span><small>{formatDate(item.created_at)}</small></span>
+            </button>)}
+        </div>
+      </section>
+    </>}
   </div>;
 }
