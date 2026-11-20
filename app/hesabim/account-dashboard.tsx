@@ -4,7 +4,7 @@ import { ArrowDownLeft, ArrowUpRight, Bookmark, BriefcaseBusiness, Check, Clock3
 import Link from "next/link";
 import { toast } from "sonner";
 
-type TaskRow={id:string;title:string;budget:string|number;status:string;created_at:string};
+type TaskRow={id:string;title:string;budget:string|number;status:string;created_at:string;assigned_user_id?:string|null;reviewed?:boolean};
 type OfferRow={id:string;task_id:string;amount:string|number;status:string;created_at:string;title:string;bidder:string;bidder_id:string;avatar_url?:string|null;district?:string|null;rating?:number|string|null;review_count?:number|string|null};
 type Props={name:string;email:string;tasks:TaskRow[];received:OfferRow[];sent:OfferRow[];taskCount:number;receivedCount:number;sentCount:number;savedCount:number};
 type Tx={id:string;type:string;amount:string|number;status:string;description:string;created_at:string};
@@ -14,11 +14,12 @@ const dates=(v:string)=>new Intl.DateTimeFormat("tr-TR",{day:"numeric",month:"sh
 const taskLabel:Record<string,string>={open:"Yayında",paused:"Pasif",assigned:"Devam ediyor",completed:"Tamamlandı",cancelled:"İptal"};
 const txIcon:Record<string,any>={test_topup:ArrowDownLeft,escrow_lock:ShieldCheck,escrow_release:ArrowUpRight,escrow_refund:ArrowDownLeft,withdrawal_request:ArrowUpRight,withdrawal_rejected:X};
 export default function AccountDashboard({name,tasks,received,taskCount,receivedCount,savedCount}:Props){
- const [wallet,setWallet]=useState<WalletData|null>(null); const [amount,setAmount]=useState("1000"); const [busy,setBusy]=useState(false); const [tab,setTab]=useState("offers");
+ const [wallet,setWallet]=useState<WalletData|null>(null); const [amount,setAmount]=useState("1000"); const [busy,setBusy]=useState(false); const [tab,setTab]=useState("offers"); const [reviewRating,setReviewRating]=useState<Record<string,string>>({}); const [reviewText,setReviewText]=useState<Record<string,string>>({});
  async function loadWallet(){const r=await fetch("/api/wallet",{cache:"no-store"});if(r.ok)setWallet(await r.json())}
  useEffect(()=>{loadWallet()},[]);
  async function walletAction(action:"test_topup"|"withdraw"){setBusy(true);try{const r=await fetch("/api/wallet",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(action==="test_topup"?{action,amount:Number(amount),idempotencyKey:crypto.randomUUID()}:{action,amount:Number(amount)})});const d=await r.json();if(!r.ok)throw new Error(d.error||"İşlem başarısız");toast.success(action==="test_topup"?"Test bakiyesi eklendi":"Test çekim talebi oluşturuldu");await loadWallet()}catch(e){toast.error(e instanceof Error?e.message:"İşlem başarısız")}finally{setBusy(false)}}
  async function taskAction(id:string,action:"pause"|"publish"|"complete"){try{const r=await fetch("/api/tasks/"+id+"/manage",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({action})});const d=await r.json();if(!r.ok)throw new Error(d.error);toast.success(action==="complete"?"İş tamamlandı, emanet ödeme serbest bırakıldı":"İlan durumu güncellendi");location.reload()}catch(e){toast.error(e instanceof Error?e.message:"İşlem başarısız")}}
+ async function submitReview(taskId:string){try{const r=await fetch("/api/reviews",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({taskId,rating:Number(reviewRating[taskId]||5),comment:reviewText[taskId]||""})});const d=await r.json();if(!r.ok)throw new Error(d.error);toast.success("Değerlendirmen kaydedildi");location.reload()}catch(e){toast.error(e instanceof Error?e.message:"Değerlendirme kaydedilemedi")}}
  async function acceptOffer(id:string){try{const r=await fetch("/api/offers/"+id+"/accept",{method:"POST"});const d=await r.json();if(!r.ok)throw new Error(d.error);toast.success("Teklif kabul edildi. Tutar emanet bakiyeye alındı.");await loadWallet();location.reload()}catch(e){toast.error(e instanceof Error?e.message:"Teklif kabul edilemedi")}}
  const available=Number(wallet?.account?.available_balance||0),held=Number(wallet?.account?.held_balance||0);
  return <div className="account-hub">
@@ -42,6 +43,7 @@ export default function AccountDashboard({name,tasks,received,taskCount,received
      {t.status==="assigned"?<button className="complete" onClick={()=>taskAction(t.id,"complete")}><Check size={15}/> İşi tamamlandı</button>:null}
      <Link href={"/ilan/"+t.id}>İlanı gör <ArrowUpRight size={14}/></Link>
     </div>
+    {t.status==="completed"&&t.assigned_user_id&&!t.reviewed?<form className="account-review-form" onSubmit={e=>{e.preventDefault();submitReview(t.id)}}><b>İşi yapan kişiyi değerlendir</b><select aria-label="Puan" value={reviewRating[t.id]||"5"} onChange={e=>setReviewRating(v=>({...v,[t.id]:e.target.value}))}><option value="5">★★★★★ · 5</option><option value="4">★★★★ · 4</option><option value="3">★★★ · 3</option><option value="2">★★ · 2</option><option value="1">★ · 1</option></select><input value={reviewText[t.id]||""} onChange={e=>setReviewText(v=>({...v,[t.id]:e.target.value}))} maxLength={1000} placeholder="Kısa bir değerlendirme yaz (isteğe bağlı)"/><button>Değerlendirmeyi gönder</button></form>:null}
    </article>):<p className="account-muted">Henüz ilan oluşturmadın.</p>}
   </section>
   <section className="account-section">
