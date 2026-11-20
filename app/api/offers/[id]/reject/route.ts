@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/server";
+import { createNotification } from "@/lib/notifications";
 
 const schema = z.object({ reason: z.string().trim().max(500).default("") });
 
@@ -34,23 +35,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       );
     }
 
-    // Bildirim hatası, tamamlanmış teklif reddetme işlemini başarısız göstermemeli.
-    try {
-      await db`
-        INSERT INTO public.notifications(user_id, type, title, body, href)
-        VALUES (
-          ${offer.user_id},
-          'offer_rejected',
-          'Teklifin yanıtlandı',
-          ${parsed.data.reason
-            ? "Teklifin reddedildi. Neden: " + parsed.data.reason
-            : "İlan sahibi teklifini reddetti."},
-          ${"/ilan/" + offer.task_id}
-        )
-      `;
-    } catch (notificationError) {
-      console.error("[offers] rejection notification failed", notificationError);
-    }
+    await createNotification({
+      userId: offer.user_id,
+      preference: "offer_updates",
+      type: "offer_rejected",
+      title: "Teklifin yanıtlandı",
+      body: parsed.data.reason ? "Teklifin reddedildi. Neden: " + parsed.data.reason : "İlan sahibi teklifini reddetti.",
+      href: "/ilan/" + offer.task_id
+    });
 
     return NextResponse.json({ success: true, offerId: offer.id });
   } catch (error) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/server";
+import { createNotification } from "@/lib/notifications";
 
 const schema = z.object({
   action: z.enum(["start", "mark_done", "confirm_complete", "not_done"]),
@@ -31,21 +32,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       if (action === "start") {
         const rows = await db`UPDATE public.tasks SET work_started_at=COALESCE(work_started_at,now()),updated_at=now() WHERE id=${id}::uuid AND status='assigned' AND work_started_at IS NULL RETURNING id`;
         if (!rows.length) return NextResponse.json({ error: "İş başlatma aşamasında değil." }, { status: 409 });
-        try {
-          await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.owner_id},'work_started','İş başladı',${task.title + " işi hizmet veren tarafından başlatıldı."},${"/hesabim"})`;
-        } catch (notificationError) {
-          console.error("[task workflow] start notification failed", notificationError);
-        }
+        await createNotification({ userId: task.owner_id, preference: "task_updates", type: "work_started", title: "İş başladı", body: task.title + " işi hizmet veren tarafından başlatıldı.", href: "/hesabim" });
         return NextResponse.json({ success: true, status: "assigned", workStarted: true });
       }
       if (!task.work_started_at) return NextResponse.json({ error: "Önce işe başladığını bildirmen gerekiyor." }, { status: 409 });
       const rows = await db`UPDATE public.tasks SET completion_requested_at=now(),updated_at=now() WHERE id=${id}::uuid AND status='assigned' AND completion_requested_at IS NULL RETURNING id`;
       if (!rows.length) return NextResponse.json({ error: "İş tamamlandı olarak işaretlenemiyor." }, { status: 409 });
-      try {
-        await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.owner_id},'work_done','İş tamamlandı olarak bildirildi',${task.title + " işi için tamamlanma onayı bekleniyor."},${"/hesabim"})`;
-      } catch (notificationError) {
-        console.error("[task workflow] completion-request notification failed", notificationError);
-      }
+      await createNotification({ userId: task.owner_id, preference: "task_updates", type: "work_done", title: "İş tamamlandı olarak bildirildi", body: task.title + " işi için tamamlanma onayı bekleniyor.", href: "/hesabim" });
       return NextResponse.json({ success: true, status: "assigned", awaitingConfirmation: true });
     }
 
@@ -53,11 +46,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     if (action === "confirm_complete") {
       if (task.status !== "assigned" || !task.completion_requested_at) return NextResponse.json({ error: "Hizmet veren henüz işi tamamlandı olarak bildirmedi." }, { status: 409 });
       const [released] = await db`SELECT * FROM public.doora_complete_task(${user.id},${id}::uuid)`;
-      try {
-        await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.provider_id},'work_approved','İşin onaylandı',${task.title + " işi onaylandı, emanet ödeme cüzdanına aktarıldı."},${"/hesabim"})`;
-      } catch (notificationError) {
-        console.error("[task workflow] completion notification failed after escrow release", notificationError);
-      }
+      await createNotification({ userId: task.provider_id, preference: "wallet_updates", type: "work_approved", title: "İşin onaylandı", body: task.title + " işi onaylandı, emanet ödeme cüzdanına aktarıldı.", href: "/hesabim" });
       return NextResponse.json({ success: true, released });
     }
 
@@ -80,11 +69,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       SELECT task_id FROM upserted_dispute
     `;
     if (!dispute) return NextResponse.json({ error: "İşin durumu değişti. Sayfayı yenileyip tekrar kontrol et." }, { status: 409 });
-    try {
-      await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.provider_id},'work_disputed','İş için sorun bildirildi',${task.title + " işi için tamamlanmadı bildirimi yapıldı: " + reason},${"/hesabim"})`;
-    } catch (notificationError) {
-      console.error("[task workflow] dispute notification failed", notificationError);
-    }
+    await createNotification({ userId: task.provider_id, preference: "task_updates", type: "work_disputed", title: "İş için sorun bildirildi", body: task.title + " işi için tamamlanmadı bildirimi yapıldı: " + reason, href: "/hesabim" });
     return NextResponse.json({ success: true, status: "disputed" });
   } catch (error) {
     console.error("[task workflow] failed", error);

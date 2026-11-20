@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/server";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -13,17 +14,23 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
     if (blocked.length) return NextResponse.json({ error: "Bu kullanıcıyla aranızda engelleme bulunduğu için teklif kabul edilemez." }, { status: 403 });
     const otherOffers = await db`SELECT user_id FROM public.offers WHERE task_id=${offer.task_id}::uuid AND status='pending' AND id<>${id}::uuid`;
     const [result] = await db`SELECT * FROM public.doora_accept_offer(${user.id},${id}::uuid)`;
-    try {
-      await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${offer.user_id},'offer_accepted','Teklifin kabul edildi',${offer.title + " ilanındaki teklifin kabul edildi. İş detaylarını hesabından takip edebilirsin."},'/hesabim')`;
-    } catch (notificationError) {
-      console.error("[offers] accepted notification failed after escrow commit", notificationError);
-    }
+    await createNotification({
+      userId: offer.user_id,
+      preference: "offer_updates",
+      type: "offer_accepted",
+      title: "Teklifin kabul edildi",
+      body: offer.title + " ilanındaki teklifin kabul edildi. İş detaylarını hesabından takip edebilirsin.",
+      href: "/hesabim"
+    });
     for (const other of otherOffers) {
-      try {
-        await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${other.user_id},'offer_not_selected','Teklif sonucu',${offer.title + " ilanında başka bir teklif kabul edildi."},${"/ilan/" + offer.task_id})`;
-      } catch (notificationError) {
-        console.error("[offers] non-selected notification failed", notificationError);
-      }
+      await createNotification({
+        userId: other.user_id,
+        preference: "offer_updates",
+        type: "offer_not_selected",
+        title: "Teklif sonucu",
+        body: offer.title + " ilanında başka bir teklif kabul edildi.",
+        href: "/ilan/" + offer.task_id
+      });
     }
     return NextResponse.json({ success: true, escrow: result });
   } catch (error) {
