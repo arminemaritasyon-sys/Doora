@@ -2308,3 +2308,28 @@ button, a, input, select, textarea { touch-action:manipulation; }
 .offer-status-rejected{display:inline-flex!important;width:max-content;padding:5px 9px;border-radius:999px;background:#fff0f0;color:#c43b3b!important;font-weight:750}
 .offer-status-accepted{display:inline-flex!important;width:max-content;padding:5px 9px;border-radius:999px;background:#edf7ef;color:#27834b!important;font-weight:750}
 .offer-status-pending{display:inline-flex!important;width:max-content;padding:5px 9px;border-radius:999px;background:#f5f3e9;color:#8b7130!important;font-weight:750}
+
+/* Account information architecture: clear single-level navigation and readable lists */
+.doora-account-page .account-view-switch{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;overflow:visible;padding:0;margin:4px 0}
+.doora-account-page .account-view-switch button{min-width:0;min-height:46px;padding:0 10px;font-size:11px;border-radius:12px}
+.doora-account-page .account-section-head>div{display:grid;gap:4px}
+.doora-account-page .account-section-head p{margin:0;color:#929b8d;font-size:11px;line-height:1.45}
+.doora-account-page .account-tabs{width:max-content;max-width:100%;padding:4px;border:1px solid #edf0e9;border-radius:12px;background:#f7f8f5}
+.doora-account-page .account-tabs button{padding:0 13px;border-radius:9px}
+.doora-account-page .account-tabs button.active{background:#fff;color:#344a2d;box-shadow:0 2px 8px rgba(30,45,25,.07)}
+.doora-account-page .account-section-offers .account-offers{display:grid;grid-template-columns:1fr;gap:10px;overflow:visible;padding:0;margin:0}
+.doora-account-page .account-section-offers .account-offer-card{width:100%;max-width:none;min-width:0;flex:auto}
+.doora-account-page .account-card-deck{display:grid;grid-template-columns:1fr;gap:10px;overflow:visible;padding:0;margin:0}
+.doora-account-page .account-card-deck>.account-task-card{width:100%;max-width:none;min-width:0;flex:auto;margin:0}
+.doora-account-page .account-section-assigned .account-task-card,
+.doora-account-page .account-section-listings .account-task-card{display:grid;width:100%;max-width:none;margin:0}
+.doora-account-page .account-section-activity{display:flex;flex-direction:column;gap:12px}
+@media(max-width:650px){
+ .doora-account-page .account-view-switch{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .doora-account-page .account-view-switch button{justify-content:center;min-height:44px;padding:0 8px;font-size:11px}
+ .doora-account-page .account-section-head{align-items:flex-start}
+ .doora-account-page .account-tabs{width:100%;display:grid;grid-template-columns:1fr 1fr}
+ .doora-account-page .account-tabs button{min-width:0;padding:0 8px;font-size:10px}
+ .doora-account-page .account-section-offers .account-offer-card,
+ .doora-account-page .account-card-deck>.account-task-card{width:100%;max-width:none}
+}
