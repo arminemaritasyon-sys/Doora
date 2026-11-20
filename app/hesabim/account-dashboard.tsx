@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowDownLeft, ArrowUpRight, Check, Clock3, Pause, Play, Plus, ShieldCheck, Star, X, BriefcaseBusiness } from "lucide-react";
 import { toast } from "sonner";
 type TaskRow={id:string;title:string;budget:string|number;status:string;created_at:string;assigned_user_id?:string|null;reviewed?:boolean};
@@ -27,7 +27,7 @@ export default function AccountDashboard({name,tasks,received,taskCount,pendingO
    toast.success(action==="test_topup"?"Test bakiyesi eklendi":"Para çekme talebin alındı");setModal(null);setAmount("");setIban("");await loadWallet();
   }catch(e){toast.error(e instanceof Error?e.message:"İşlem başarısız")}finally{setBusy(false)}
  }
- async function createTask(e:React.FormEvent){
+ async function createTask(e:FormEvent){
   e.preventDefault();setBusy(true);try{
    const r=await fetch("/api/tasks",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...taskForm,budget:Number(taskForm.budget)})}),d=await r.json();
    if(!r.ok)throw new Error(d.error||"İlan oluşturulamadı");
