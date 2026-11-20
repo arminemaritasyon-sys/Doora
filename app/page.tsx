@@ -29,7 +29,7 @@ function TaskCard({ task, saved, onSave, onOffer }: { task: Task; saved: boolean
     <h3><a className="task-title-link" href={"/ilan/"+task.id}>{task.title}</a></h3><p className="task-description">{task.description}</p>
     <div className="task-meta"><span><MapPin size={15}/>{task.location}</span><span><Clock3 size={15}/>{task.time || "Yeni ilan"}</span></div>
     <div className="task-card-bottom"><div className="task-owner">{task.owner_avatar ? <img className="avatar task-owner-photo" src={task.owner_avatar} alt="" loading="lazy" decoding="async" /> : <span className="avatar">{(task.owner || "D").slice(0,1).toLocaleUpperCase("tr")}</span>}<span><b>{task.owner || "DOORA üyesi"}</b><small>{task.offers} teklif</small></span></div><strong className="task-price">{money(Number(task.budget))}</strong></div>
-    <button className="task-offer" onClick={onOffer}>Teklif ver <ArrowUpRight size={16}/></button>
+    <button className="task-offer" onClick={onOffer} >Ben yaparım <ArrowUpRight size={16}/></button>
   </motion.article>;
 }
 function TaskDialog({ onClose, onSubmit, busy }: { onClose: () => void; onSubmit: (data: {title:string;description:string;category:string;budget:string;district:string}) => void; busy: boolean }) {
