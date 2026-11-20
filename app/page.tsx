@@ -28,7 +28,7 @@ function TaskCard({ task, saved, onSave, onOffer }: { task: Task; saved: boolean
     <div className="task-card-top"><span className="task-category">{task.category}</span><button className={`icon-button save-button ${saved ? "is-saved" : ""}`} onClick={onSave} aria-label="Kaydet"><Bookmark size={18} fill={saved ? "currentColor" : "none"} /></button></div>
     <h3><a className="task-title-link" href={"/ilan/"+task.id}>{task.title}</a></h3><p className="task-description">{task.description}</p>
     <div className="task-meta"><span><MapPin size={15}/>{task.location}</span><span><Clock3 size={15}/>{task.time || "Yeni ilan"}</span></div>
-    <div className="task-card-bottom"><div className="task-owner">{task.owner_avatar ? <img className="avatar task-owner-photo" src={task.owner_avatar} alt="" /> : <span className="avatar">{(task.owner || "D").slice(0,1).toLocaleUpperCase("tr")}</span>}<span><b>{task.owner || "DOORA üyesi"}</b><small>{task.offers} teklif</small></span></div><strong className="task-price">{money(Number(task.budget))}</strong></div>
+    <div className="task-card-bottom"><div className="task-owner">{task.owner_avatar ? <img className="avatar task-owner-photo" src={task.owner_avatar} alt="" loading="lazy" decoding="async" /> : <span className="avatar">{(task.owner || "D").slice(0,1).toLocaleUpperCase("tr")}</span>}<span><b>{task.owner || "DOORA üyesi"}</b><small>{task.offers} teklif</small></span></div><strong className="task-price">{money(Number(task.budget))}</strong></div>
     <button className="task-offer" onClick={onOffer}>Teklif ver <ArrowUpRight size={16}/></button>
   </motion.article>;
 }

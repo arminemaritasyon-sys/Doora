@@ -15,7 +15,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
     const rows = await db`
       SELECT t.id,t.owner_id,t.title,t.description,t.category,t.budget,t.city,t.district,t.status,t.created_at,t.scheduled_at,
         COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS owner_name,
-        p.avatar_url
+        CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || extract(epoch from p.updated_at)::bigint::text END AS avatar_url
       FROM public.tasks t
       LEFT JOIN public.user_profiles p ON p.user_id=t.owner_id
       LEFT JOIN neon_auth.user u ON u.id::text=t.owner_id
@@ -42,7 +42,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
         <div className="task-detail-meta"><span><MapPin size={16}/>{task.district||task.city||"Konum belirtilmemiş"}</span><span><CalendarDays size={16}/>{date}</span></div>
         <div className="task-detail-description">{task.description}</div>
         <div className="task-detail-bottom"><div><small>İŞ BÜTÇESİ</small><strong>{new Intl.NumberFormat("tr-TR",{maximumFractionDigits:2}).format(Number(task.budget))} ₺</strong></div><span><ShieldCheck size={16}/> DOORA güvencesiyle</span></div>
-        <div className="task-detail-owner"><span className="task-detail-avatar">{task.avatar_url?<img src={task.avatar_url} alt=""/>:String(task.owner_name||"D").slice(0,1).toLocaleUpperCase("tr")}</span><div><small>İLAN SAHİBİ</small><b>{task.owner_name}</b></div></div>
+        <div className="task-detail-owner"><span className="task-detail-avatar">{task.avatar_url?<img src={task.avatar_url} alt="" loading="lazy" decoding="async"/>:String(task.owner_name||"D").slice(0,1).toLocaleUpperCase("tr")}</span><div><small>İLAN SAHİBİ</small><b>{task.owner_name}</b></div></div>
         {isOwner?<Link className="task-detail-primary" href="/hesabim">İlanını hesabından yönet <ArrowUpRight size={17}/></Link>:task.status==="open"?user?<TaskDetailOffer taskId={String(task.id)} taskTitle={String(task.title)}/>:<Link className="task-detail-primary" href="/giris">Giriş yap ve teklif ver <ArrowUpRight size={17}/></Link>:<p className="task-detail-closed">Bu ilan şu anda yeni teklif kabul etmiyor.</p>}{user&&!isOwner?<TaskSafetyActions taskId={String(task.id)} ownerId={String(task.owner_id)}/>:null}
       </article>
       <Link className="task-detail-back" href="/isler"><ArrowLeft size={15}/> Diğer işleri keşfet</Link>
