@@ -708,3 +708,80 @@ button, a, input, select, textarea { touch-action:manipulation; }
  .job-details{gap:8px}
  .job-row-bottom strong{font-size:18px}
 }
+
+/* Consistent, understated lira mark in every mobile bottom navigation */
+.mobile-dock .dock-money-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:24px;
+  height:24px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:currentColor;
+  font-family:Manrope,"DM Sans",sans-serif;
+  font-size:21px;
+  font-weight:600;
+  line-height:1;
+  letter-spacing:-1.2px;
+}
+.mobile-dock a:not(.dock-active) .dock-money-icon{color:#858d7f}
+.mobile-dock .dock-active .dock-money-icon{color:#557b3c}
+.mobile-dock .dock-add{background:transparent!important;color:inherit!important}
+.jobs-intro{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 0 17px;
+}
+.jobs-intro h1{
+  margin:0;
+  color:#20271c;
+  font:750 27px/1.2 Manrope,sans-serif;
+  letter-spacing:-1.1px;
+}
+.jobs-total{
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:#87917e;
+  font-size:11px;
+  font-weight:650;
+}
+.jobs-search{box-shadow:none;border-color:#e9eee5}
+.jobs-category-scroll{padding-top:12px;padding-bottom:13px;gap:6px}
+.jobs-category-scroll button{
+  height:32px;
+  padding:0 12px;
+  border-color:transparent;
+  background:#f0f3ed;
+  color:#697363;
+  font-size:10px;
+  font-weight:650;
+}
+.jobs-category-scroll button.active{
+  background:#c5e4a5;
+  border-color:#c5e4a5;
+  color:#26351f;
+}
+.jobs-list-head{
+  justify-content:flex-end;
+  margin:0 0 10px;
+}
+.jobs-list-head label{
+  padding:0;
+  border:0;
+  background:transparent;
+}
+.jobs-list-head select{font-size:11px;color:#7b8573}
+@media(max-width:520px){
+  .jobs-content{padding-top:21px}
+  .jobs-intro{margin-bottom:14px}
+  .jobs-intro h1{font-size:26px}
+  .jobs-total{font-size:10px}
+  .jobs-category-scroll{padding-top:10px;padding-bottom:11px}
+}
