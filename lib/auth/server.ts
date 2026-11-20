@@ -12,12 +12,11 @@ export const auth = createNeonAuth({
 export type DooraUser = { id: string; email: string; name?: string | null };
 
 export async function getCurrentUser(): Promise<DooraUser | null> {
-  // Always validate the current request's cookie with Neon Auth.
-  // A stale signed session_data cache can otherwise make a valid browser
-  // session appear anonymous to Server Components and Route Handlers.
-  const { data: session } = await auth.getSession({
-    query: { disableCookieCache: "true" },
-  } as any);
+  const { data: session, error } = await auth.getSession();
+  if (error) {
+    console.error("[auth] Session lookup failed:", error.message);
+    return null;
+  }
   const user = session?.user;
   if (!user?.id || !user?.email) return null;
   return {
