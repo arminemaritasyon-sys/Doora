@@ -1,38 +1,40 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Bookmark, Compass, UserRound } from "lucide-react";
+import { ArrowUpRight, BookmarkCheck } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/server";
 import { db } from "@/lib/db";
+import AppBottomNav from "@/components/app-bottom-nav";
+import SavedExplorer, { type SavedTask } from "./saved-explorer";
 
 export const dynamic = "force-dynamic";
-
-const money = (value: string | number) => new Intl.NumberFormat("tr-TR").format(Number(value)) + " ₺";
 
 export default async function SavedPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/giris");
-  const tasks = await db`SELECT t.id,t.title,t.description,t.category,t.budget,t.district,t.created_at FROM public.saved_tasks s JOIN public.tasks t ON t.id=s.task_id WHERE s.user_id=${user.id} ORDER BY s.created_at DESC LIMIT 100`;
+  const rows = await db`SELECT t.id,t.title,t.description,t.category,t.budget,t.district,t.created_at FROM public.saved_tasks s JOIN public.tasks t ON t.id=s.task_id WHERE s.user_id=${user.id} ORDER BY s.created_at DESC LIMIT 100`;
+  const tasks: SavedTask[] = rows.map((task:any) => ({
+    id:String(task.id), title:String(task.title), description:task.description == null ? null : String(task.description),
+    category:task.category == null ? null : String(task.category), budget:task.budget,
+    district:task.district == null ? null : String(task.district), created_at:String(task.created_at)
+  }));
+
   return (
-    <main className="account-page saved-page">
-      <header className="account-topbar"><Link className="brand" href="/"><span className="brand-mark">d</span><span>doora<span className="brand-dot">.</span></span></Link><Link className="account-home" href="/isler">İşleri keşfet</Link></header>
-      <div className="account-shell saved-shell">
-        <div className="saved-heading">
-          <div><span className="eyebrow">SANA AYIRDIKLARIN</span><h1>Kaydedilenler</h1><p>İlgini çeken işler, tekrar bakman için burada.</p></div>
-          <span className="saved-count">{tasks.length} kayıt</span>
-        </div>
-        {tasks.length ? <div className="saved-grid">{tasks.map((task:any)=><article className="saved-card" key={task.id}>
-          <div className="saved-card-meta"><span>{task.category}</span><small>{task.district}</small></div>
-          <h2>{task.title}</h2><p>{task.description}</p>
-          <div className="saved-card-bottom"><strong>{money(task.budget)}</strong><Link href="/isler">İşi görüntüle <span>↗</span></Link></div>
-        </article>)}</div> : <div className="saved-empty">
-          <span className="saved-empty-icon"><Bookmark size={22}/></span><h2>Henüz kaydettiğin bir iş yok</h2>
-          <p>Beğendiğin işleri yer imi simgesiyle kaydet. İstediğin zaman buradan ulaşabilirsin.</p>
-          <Link href="/isler">İşleri keşfet <span>↗</span></Link>
-        </div>}
+    <main className="doora-page doora-saved-page">
+      <header className="doora-app-header">
+        <Link className="doora-brand" href="/"><span className="doora-brand-mark">d</span><span>doora<span>.</span></span></Link>
+        <div className="doora-header-right"><span className="header-context"><BookmarkCheck size={15}/> Kişisel listen</span><Link href="/isler" className="header-discover">İşleri keşfet <ArrowUpRight size={15}/></Link></div>
+      </header>
+      <div className="doora-page-container">
+        <section className="saved-page-hero">
+          <div className="saved-hero-copy"><span className="doora-section-kicker"><i/> SENİN SEÇİMLERİN</span><h1>Kaydettiklerin,<br/><em>hep elinin altında.</em></h1><p>İlgini çeken işleri bir arada tut. Hazır olduğunda kaldığın yerden devam et.</p></div>
+          <div className="saved-hero-visual" aria-hidden="true"><div className="saved-visual-ring ring-large"/><div className="saved-visual-ring ring-small"/><div className="saved-visual-bookmark"><BookmarkCheck size={34}/></div><span className="saved-visual-dot dot-a"/><span className="saved-visual-dot dot-b"/></div>
+          <div className="saved-hero-count"><strong>{tasks.length.toString().padStart(2,"0")}</strong><span>kaydedilmiş iş</span></div>
+        </section>
+        <section className="saved-content-section"><div className="saved-content-heading"><div><span className="doora-section-kicker">KOLEKSİYONUN</span><h2>Kaydedilen işler</h2></div><span className="saved-private-label"><span/> Yalnızca sana özel</span></div>
+          <SavedExplorer initialTasks={tasks}/>
+        </section>
       </div>
-      <nav className="mobile-dock account-dock" aria-label="Ana gezinme">
-        <Link href="/#kesfet"><Compass/><span>Keşfet</span></Link><Link href="/isler"><span className="dock-money-icon" aria-hidden="true">₺</span><span>İşler</span></Link><Link className="dock-active" href="/kaydedilenler"><Bookmark/><span>Kaydedilen</span></Link><Link href="/hesabim"><UserRound/><span>Hesabım</span></Link>
-      </nav>
+      <AppBottomNav active="saved"/>
     </main>
   );
 }
