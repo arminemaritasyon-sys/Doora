@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     let recipientId = actor.id;
     let title = "DOORA'ya hoş geldin";
     let amount: number | undefined;
-    let eventKey = `${payload.type}:${payload.entityId}`;
+    const eventKey = `${payload.type}:${payload.entityId}`;
 
     if (payload.type === "task_created") {
       const { data, error } = await admin.from("tasks").select("id,owner_id,title,budget").eq("id", payload.entityId).single();
