@@ -2624,3 +2624,12 @@ body{overflow-x:clip}
   .notification-item-content strong{font-size:13px}
   .notification-item-content span{font-size:12px}
 }
+
+
+/* Bottom navigation icons: consistent black icon color in every state. */
+.doora-bottom-nav a svg,
+.doora-bottom-nav a .dock-money-icon,
+.mobile-dock a svg{color:#000!important;stroke:#000!important}
+.doora-bottom-nav a .dock-money-icon{color:#000!important}
+.doora-bottom-nav a.dock-active svg,
+.mobile-dock a.dock-active svg{color:#000!important;stroke:#000!important}
