@@ -2,7 +2,7 @@
 
 :root{color-scheme:light;--bg:#f7f7f5;--surface:#fff;--ink:#111;--muted:#777;--line:#e9e9e7;--soft:#f1f1ef;--black:#111;--radius:20px;--shadow:0 18px 50px rgba(0,0,0,.07)}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:90px}
+html{scroll-behavior:auto;scroll-padding-top:90px;overflow-x:clip}
 body{margin:0;background:var(--surface);color:var(--ink);font-family:"DM Sans",sans-serif;font-size:15px;-webkit-font-smoothing:antialiased}
 button,input,textarea,select{font:inherit}
 button,a{-webkit-tap-highlight-color:transparent}
@@ -2485,3 +2485,9 @@ button, a, input, select, textarea { touch-action:manipulation; }
 @keyframes listingSheetIn{from{transform:translateY(28px);opacity:.65}to{transform:translateY(0);opacity:1}}
 @media(min-width:700px){.doora-account-page .listing-offers-backdrop{align-items:center;padding:24px}.doora-account-page .listing-offers-sheet{max-height:min(78vh,760px);border-bottom:1px solid rgba(255,255,255,.75);border-radius:24px}.doora-account-page .listing-offers-sheet-head:before{display:none}}
 @media(prefers-reduced-motion:reduce){.doora-account-page .listing-offers-sheet{animation:none}}
+
+
+/* Mobile browser scroll stability: preserve native document scrolling */
+html,body{min-height:100%;overscroll-behavior-x:none}
+body{overflow-x:clip}
+@media(max-width:900px){html{scroll-behavior:auto!important}}
