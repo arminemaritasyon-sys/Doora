@@ -11,7 +11,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
   let task:any;
   try {
     const rows = await db`
-      SELECT t.id,t.title,t.description,t.category,t.budget,t.city,t.district,t.status,t.created_at,t.scheduled_at,
+      SELECT t.id,t.owner_id,t.title,t.description,t.category,t.budget,t.city,t.district,t.status,t.created_at,t.scheduled_at,
         COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS owner_name,
         p.avatar_url
       FROM public.tasks t
