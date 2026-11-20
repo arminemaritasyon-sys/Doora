@@ -444,3 +444,18 @@ button, a, input, select, textarea { touch-action:manipulation; }
   .mobile-dock svg { width:21px; height:21px; }
   .mobile-dock a, .mobile-dock button { font-size:9px; }
 }
+
+/* Icon sizing: stronger visual weight and easier touch recognition */
+.button svg, .task-offer svg { width:20px; height:20px; }
+.button-large svg { width:21px; height:21px; }
+.icon-button svg { width:22px; height:22px; }
+.category-pill svg, .filter-control svg { width:18px; height:18px; }
+.task-meta svg { width:17px; height:17px; }
+.quick-points svg, .how-icon svg { width:21px; height:21px; }
+.mobile-menu-toggle svg { width:23px; height:23px; }
+@media(max-width:650px) {
+  .button svg, .task-offer svg { width:18px; height:18px; }
+  .icon-button svg { width:20px; height:20px; }
+  .category-pill svg, .filter-control svg { width:16px; height:16px; }
+  .task-meta svg { width:16px; height:16px; }
+}
