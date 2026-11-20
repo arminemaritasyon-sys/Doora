@@ -1547,3 +1547,43 @@ button, a, input, select, textarea { touch-action:manipulation; }
 .account-review-form select,.account-review-form input{min-width:0;height:40px;padding:0 10px;border:1px solid #e0e8da;border-radius:9px;background:white;color:#33412e;font-size:13px}
 .account-review-form button{grid-column:1/-1;min-height:39px;border:0;border-radius:9px;background:#294128;color:white;font-size:12px;font-weight:800}
 @media(max-width:650px){.account-review-form{grid-template-columns:1fr}.account-review-form b,.account-review-form button{grid-column:auto}}
+
+
+/* Account action dialogs and bottom-nav offer badge */
+.account-wallet-actions-clean{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
+.account-wallet-actions-clean button{min-height:54px;cursor:pointer}
+.account-wallet-actions-clean .create-task-action{border-color:#dce9d2;background:#eef6e8;color:#456a35}
+.account-inline-create{display:inline-flex;align-items:center;gap:5px;margin-left:auto;padding:8px 11px;border:0;border-radius:10px;background:#edf5e7;color:#52763e;font-size:12px;font-weight:800;cursor:pointer}
+.account-task-controls button.pause-action{border-color:#f0dfbd;background:#fff8e9;color:#9a6b22}
+.account-task-controls button.publish-action{border-color:#d5e8ca;background:#edf7e8;color:#4d793d}
+.account-modal-backdrop{position:fixed;z-index:120;inset:0;display:grid;place-items:center;padding:18px;background:rgba(16,25,14,.48);backdrop-filter:blur(8px)}
+.account-modal{width:min(100%,510px);max-height:92dvh;overflow:auto;padding:25px;border:1px solid #e7ece3;border-radius:23px;background:#fff;box-shadow:0 28px 90px #14210f38}
+.account-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:21px}
+.account-modal-head small{color:#829276;font-size:10px;font-weight:850;letter-spacing:1.5px}
+.account-modal-head h2{margin:5px 0 0;color:#263522;font:800 25px/1.2 Manrope,sans-serif;letter-spacing:-.8px}
+.account-modal-head>button{display:grid;width:37px;height:37px;place-items:center;border:1px solid #e8ede4;border-radius:11px;background:#fff;color:#71806a;cursor:pointer}
+.account-modal-form{display:grid;gap:14px}
+.account-modal-form label{display:grid;gap:7px;color:#4c5c45;font-size:12px;font-weight:750}
+.account-modal-form input,.account-modal-form select,.account-modal-form textarea{width:100%;min-width:0;min-height:47px;padding:11px 13px;border:1px solid #e1e9dc;border-radius:12px;background:#fbfcfa;color:#293626;font:500 14px "DM Sans",sans-serif;outline:none}
+.account-modal-form textarea{resize:vertical;line-height:1.55}
+.account-modal-form input:focus,.account-modal-form select:focus,.account-modal-form textarea:focus{border-color:#9cbe7d;box-shadow:0 0 0 3px #bddd9c44}
+.account-modal-form input[readonly]{background:#f0f4ed;color:#687662;cursor:not-allowed}
+.account-modal-form>button{min-height:49px;margin-top:3px;border:0;border-radius:12px;background:#263e25;color:white;font-size:14px;font-weight:850;cursor:pointer}
+.account-modal-form>button:disabled{opacity:.6;cursor:wait}
+.account-modal-form>p{margin:0;color:#8c9786;font-size:11px;line-height:1.5}
+.account-modal-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dock-account-icon{position:relative;display:grid;place-items:center}
+.dock-account-icon i{position:absolute;top:-8px;right:-12px;display:grid;min-width:18px;height:18px;padding:0 4px;place-items:center;border:2px solid white;border-radius:20px;background:#e23c3c;color:white;font:800 9px/1 "DM Sans",sans-serif;font-style:normal}
+@media(max-width:650px){
+ .account-wallet-actions-clean{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .account-wallet-actions-clean button{min-height:59px;flex-direction:column;gap:5px;padding:7px 3px;font-size:10px}
+ .account-wallet-actions-clean button svg{width:19px;height:19px}
+ .account-inline-create{padding:7px 8px;font-size:10px;white-space:nowrap}
+ .account-modal-backdrop{align-items:end;padding:8px}
+ .account-modal{max-height:93dvh;padding:21px 16px;border-radius:21px 21px 14px 14px}
+ .account-modal-head h2{font-size:21px}
+ .account-modal-form{gap:11px}
+ .account-modal-form label{font-size:11px}
+ .account-modal-form input,.account-modal-form select,.account-modal-form textarea{min-height:44px;font-size:13px}
+ .account-modal-form>button{min-height:47px;font-size:13px}
+}
