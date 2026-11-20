@@ -50,10 +50,50 @@ export default async function AccountPage() {
       WHERE o.user_id=${user.id} ORDER BY t.updated_at DESC LIMIT 30`, "assigned tasks"),
     withTimeout(db`SELECT count(*)::int AS count FROM public.tasks WHERE owner_id=${user.id}`, "task count"),
     withTimeout(db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id}`, "offer count"),
-    withTimeout(db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id} AND o.status='pending'`, "pending offer count")
+    withTimeout(db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id} AND o.status='pending'`, "pending offer count"),
+    withTimeout(db`
+      WITH ensured AS (
+        INSERT INTO public.wallet_accounts(user_id,mode)
+        VALUES(${user.id},'test')
+        ON CONFLICT(user_id) DO NOTHING
+      )
+      SELECT
+        (SELECT json_build_object(
+          'account', json_build_object(
+            'available_balance', wa.available_balance,
+            'held_balance', wa.held_balance,
+            'currency', wa.currency,
+            'mode', wa.mode
+          ),
+          'transactions', COALESCE((
+            SELECT json_agg(json_build_object(
+              'id', tx.id, 'type', tx.type, 'amount', tx.amount,
+              'status', tx.status, 'description', tx.description, 'created_at', tx.created_at
+            ))
+            FROM (
+              SELECT id,type,amount,status,description,created_at
+              FROM public.wallet_transactions
+              WHERE user_id=${user.id}
+              ORDER BY created_at DESC LIMIT 30
+            ) tx
+          ), '[]'::json),
+          'withdrawals', COALESCE((
+            SELECT json_agg(json_build_object(
+              'id', w.id, 'amount', w.amount, 'status', w.status, 'created_at', w.created_at
+            ))
+            FROM (
+              SELECT id,amount,status,created_at
+              FROM public.wallet_withdrawals
+              WHERE user_id=${user.id}
+              ORDER BY created_at DESC LIMIT 10
+            ) w
+          ), '[]'::json),
+          'testMode', true
+        ) FROM public.wallet_accounts wa WHERE wa.user_id=${user.id}) AS wallet
+    `, "wallet data")
   ]);
 
-  const [tasksResult, receivedResult, sentOffersResult, assignedResult, taskTotalResult, receivedTotalResult, pendingOffersResult] = queryResults;
+  const [tasksResult, receivedResult, sentOffersResult, assignedResult, taskTotalResult, receivedTotalResult, pendingOffersResult, walletResult] = queryResults;
   const tasks = tasksResult.status === "fulfilled" ? tasksResult.value : (console.error("[account] tasks query failed", tasksResult.reason), []);
   const received = receivedResult.status === "fulfilled" ? receivedResult.value : (console.error("[account] received offers query failed", receivedResult.reason), []);
   const sentOffers = sentOffersResult.status === "fulfilled" ? sentOffersResult.value : (console.error("[account] sent offers query failed", sentOffersResult.reason), []);
@@ -61,6 +101,8 @@ export default async function AccountPage() {
   const taskTotal = taskTotalResult.status === "fulfilled" ? taskTotalResult.value : (console.error("[account] task count query failed", taskTotalResult.reason), [{ count: 0 }]);
   const receivedTotal = receivedTotalResult.status === "fulfilled" ? receivedTotalResult.value : (console.error("[account] received count query failed", receivedTotalResult.reason), [{ count: 0 }]);
   const pendingOffers = pendingOffersResult.status === "fulfilled" ? pendingOffersResult.value : (console.error("[account] pending offers count query failed", pendingOffersResult.reason), [{ count: 0 }]);
+  const walletInitialData = walletResult.status === "fulfilled" ? walletResult.value[0]?.wallet ?? null : null;
+  const walletInitialError = walletResult.status === "fulfilled" && walletInitialData ? "" : "Cüzdan bilgileri şu anda alınamadı.";
 
   const taskRows=tasks.map((x:any)=>({...x,created_at:String(x.created_at),work_started_at:x.work_started_at?String(x.work_started_at):null,completion_requested_at:x.completion_requested_at?String(x.completion_requested_at):null}));
   const receivedRows=received.map((x:any)=>({...x,created_at:String(x.created_at),bidder:x.bidder==null?null:String(x.bidder)}));
@@ -74,7 +116,7 @@ export default async function AccountPage() {
       </header>
       <div className="doora-page-container account-page-container">
         <div className="wallet-lite-page-title"><h1>Hesabım</h1><span>DOORA</span><AccountSettings name={user.name || "DOORA üyesi"} email={user.email || ""}/></div>
-        <AccountDashboard name={user.name || "DOORA üyesi"} email={user.email || ""} tasks={taskRows} assigned={assigned.map((x:any)=>({...x,created_at:String(x.created_at),work_started_at:x.work_started_at?String(x.work_started_at):null,completion_requested_at:x.completion_requested_at?String(x.completion_requested_at):null}))} received={receivedRows} sentOffers={sentOfferRows} taskCount={Number(taskTotal[0]?.count ?? 0)} receivedCount={Number(receivedTotal[0]?.count ?? 0)} pendingOfferCount={Number(pendingOffers[0]?.count ?? 0)}/>
+        <AccountDashboard name={user.name || "DOORA üyesi"} email={user.email || ""} walletInitialData={walletInitialData} walletInitialError={walletInitialError} tasks={taskRows} assigned={assigned.map((x:any)=>({...x,created_at:String(x.created_at),work_started_at:x.work_started_at?String(x.work_started_at):null,completion_requested_at:x.completion_requested_at?String(x.completion_requested_at):null}))} received={receivedRows} sentOffers={sentOfferRows} taskCount={Number(taskTotal[0]?.count ?? 0)} receivedCount={Number(receivedTotal[0]?.count ?? 0)} pendingOfferCount={Number(pendingOffers[0]?.count ?? 0)}/>
         <div className="account-page-footer"><span>DOORA · Günlük işler, kolay çözümler.</span><Link href="/kaydedilenler">Kaydedilen işlerin <ArrowUpRight size={14}/></Link></div>
       </div>
       <AppBottomNav active="account" pendingOffers={Number(pendingOffers[0]?.count ?? 0)}/>
