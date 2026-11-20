@@ -2387,3 +2387,8 @@ button, a, input, select, textarea { touch-action:manipulation; }
  .doora-account-page .account-section-head{align-items:center}
  .doora-account-page .account-section-head h2{font-size:18px}
 }
+
+.doora-account-page .account-detail-heading + .account-section-offers .account-section-head>div{display:none}
+.doora-account-page .account-detail-heading + .account-section-activity .account-section-head{display:none}
+.doora-account-page .account-detail-heading + .account-section-assigned .account-section-head h2,
+.doora-account-page .account-detail-heading + .account-section-listings .account-section-head h2{display:none}
