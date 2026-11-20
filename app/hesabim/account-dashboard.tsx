@@ -2,7 +2,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { ArrowDownLeft, ArrowUpRight, Ban, Check, Clock3, Flag, Pause, Play, Plus, ShieldCheck, Star, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
-type TaskRow={id:string;title:string;description?:string|null;category?:string|null;district?:string|null;budget:string|number;status:string;created_at:string;assigned_user_id?:string|null;reviewed?:boolean;work_started_at?:string|null;completion_requested_at?:string|null};
+type TaskRow={id:string;title:string;description?:string|null;category?:string|null;district?:string|null;budget:string|number;status:string;created_at:string;assigned_user_id?:string|null;assigned_user_name?:string|null;assigned_user_avatar?:string|null;reviewed?:boolean;work_started_at?:string|null;completion_requested_at?:string|null};
 type AssignedRow={id:string;title:string;description?:string|null;budget:string|number;status:string;owner_id:string;owner_name:string;avatar_url?:string|null;reviewed?:boolean;work_started_at?:string|null;completion_requested_at?:string|null};
 type OfferRow={id:string;task_id:string;amount:string|number;status:string;created_at:string;title:string;bidder:string;bidder_id:string;avatar_url?:string|null;district?:string|null;rating?:number|string|null;review_count?:number|string|null;rejection_reason?:string|null;message?:string|null};
 type Props={name:string;email:string;tasks:TaskRow[];assigned:AssignedRow[];received:OfferRow[];taskCount:number;receivedCount:number;pendingOfferCount:number};
@@ -77,7 +77,7 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
   <section className="account-section">
    <div className="account-section-head"><h2>Üstlendiğim işler</h2><span>{assigned.length} iş</span></div>
    {assigned.length?assigned.map(t=><article className="account-task-card provider-task-card" key={t.id}>
-    <div className="account-task-main"><span className={"account-state "+t.status}>{t.status==="completed"?"Tamamlandı":t.status==="disputed"?"İncelemede":t.completion_requested_at?"Onay bekliyor":t.work_started_at?"Devam ediyor":"Yeni iş"}</span><b>{t.title}</b><strong>{money(t.budget)}</strong><small>{t.owner_name}</small></div>
+    <div className="account-task-main"><span className={"account-state "+t.status}>{t.status==="completed"?"Tamamlandı":t.status==="disputed"?"İncelemede":t.completion_requested_at?"Onay bekliyor":t.work_started_at?"Devam ediyor":"Yeni iş"}</span><b>{t.title}</b><strong>{money(t.budget)}</strong><div className="account-person compact-person">{t.avatar_url?<img src={t.avatar_url} alt=""/>:<span className="account-person-avatar">{(t.owner_name||"D").slice(0,1).toLocaleUpperCase("tr")}</span>}<div><b>{t.owner_name||"DOORA üyesi"}</b><small>İşveren</small></div></div></div>
     <WorkProgress started={!!t.work_started_at} requested={!!t.completion_requested_at} completed={t.status==="completed"} disputed={t.status==="disputed"}/>
     <div className="account-task-controls work-progress-actions">
      {t.status==="assigned"&&!t.work_started_at?<button className="publish-action" onClick={()=>workflowAction(t.id,"start")}><Play size={15}/> İşe başla</button>:null}
@@ -94,6 +94,7 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
    <div className="account-section-head"><h2>İlanlarım</h2><span>{taskCount} ilan</span><button className="account-inline-create" onClick={()=>{setTaskForm({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});setModal("task")}}><Plus size={15}/> İlan oluştur</button></div>
    {tasks.length?tasks.map(t=><article className="account-task-card" key={t.id}>
     <div className="account-task-main"><span className={"account-state "+t.status}>{t.status==="assigned"&&t.completion_requested_at?"Onay bekliyor":t.status==="assigned"&&t.work_started_at?"Devam ediyor":taskLabel[t.status]||t.status}</span><b>{t.title}</b><strong>{money(t.budget)}</strong></div>
+    {t.assigned_user_id?<div className="account-person compact-person assigned-person">{t.assigned_user_avatar?<img src={t.assigned_user_avatar} alt=""/>:<span className="account-person-avatar">{(t.assigned_user_name||"D").slice(0,1).toLocaleUpperCase("tr")}</span>}<div><b>{t.assigned_user_name||"DOORA üyesi"}</b><small>İşi üstlenen</small></div></div>:null}
     {t.status==="assigned"||t.status==="completed"||t.status==="disputed"?<WorkProgress started={!!t.work_started_at} requested={!!t.completion_requested_at} completed={t.status==="completed"} disputed={t.status==="disputed"}/>:null}
     <div className="account-task-controls">
      {t.status==="open"?<button className="pause-action" onClick={()=>taskAction(t.id,"pause")}><Pause size={15}/> Pasife al</button>:null}
