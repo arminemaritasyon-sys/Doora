@@ -48,7 +48,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       return NextResponse.json({ success: true, released });
     }
 
-    if (task.status !== "awaiting_confirmation") return NextResponse.json({ error: "Sorun bildirimi için önce tamamlanma talebi gelmeli." }, { status: 409 });
+    if (task.status !== "assigned" || !task.completion_requested_at) return NextResponse.json({ error: "Sorun bildirimi için önce tamamlanma talebi gelmeli." }, { status: 409 });
     if (reason.trim().length < 5) return NextResponse.json({ error: "Lütfen sorunu en az 5 karakterle açıkla." }, { status: 400 });
     await db`INSERT INTO public.task_disputes(task_id,opened_by,reason,details) VALUES(${id}::uuid,${user.id},'work_not_completed',${reason}) ON CONFLICT(task_id) DO UPDATE SET opened_by=EXCLUDED.opened_by,reason=EXCLUDED.reason,details=EXCLUDED.details,status='open',created_at=now(),resolved_at=NULL`;
     await db`UPDATE public.tasks SET status='disputed',updated_at=now() WHERE id=${id}::uuid AND status='assigned' AND completion_requested_at IS NOT NULL`;
