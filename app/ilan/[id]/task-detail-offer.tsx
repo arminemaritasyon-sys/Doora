@@ -50,7 +50,7 @@ export default function TaskDetailOffer({ taskId, taskTitle }: { taskId: string;
 
   return <>
     <button type="button" className="task-detail-primary" style={{ border: 0, cursor: "pointer", font: "inherit" }} onClick={() => setOpen(true)}>
-      Teklif ver <ArrowRight size={17}/>
+      Ben yaparım <ArrowRight size={17}/>
     </button>
     {open && <div className="dialog-backdrop" onMouseDown={event => { if (event.target === event.currentTarget && !busy) setOpen(false); }}>
       <section className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="task-detail-offer-title">
