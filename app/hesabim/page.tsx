@@ -34,7 +34,7 @@ export default async function AccountPage() {
         <div className="doora-header-right"><Link href="/isler" className="header-discover">İşleri keşfet <ArrowUpRight size={15}/></Link><div className="header-logout"><LogoutButton/></div></div>
       </header>
       <div className="doora-page-container account-page-container">
-        <div className="account-page-heading"><div><span className="doora-section-kicker"><i/> KİŞİSEL ALANIN</span><h1>Hesap merkezi</h1><p>DOORA üzerindeki tüm hareketlerin tek yerde.</p></div><div className="account-secure-label"><span/> Güvenli hesabın</div></div>
+        <div className="account-page-heading"><div><span className="doora-section-kicker"><i/> DOORA CÜZDAN</span><h1>Cüzdanım</h1><p>Cüzdanın, ilanların ve tekliflerin tek ekranda.</p></div><div className="account-secure-label"><span/> Güvenli hesabın</div></div>
         <AccountDashboard name={user.name || "DOORA üyesi"} email={user.email || ""} tasks={taskRows} received={receivedRows} sent={sentRows} taskCount={Number(taskTotal[0]?.count ?? 0)} receivedCount={Number(receivedTotal[0]?.count ?? 0)} sentCount={Number(sentTotal[0]?.count ?? 0)} savedCount={Number(saved[0]?.count ?? 0)}/>
         <div className="account-page-footer"><span>DOORA · Günlük işler, kolay çözümler.</span><Link href="/kaydedilenler">Kaydedilen işlerin <ArrowUpRight size={14}/></Link></div>
       </div>
