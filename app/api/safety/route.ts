@@ -22,8 +22,5 @@ export async function POST(request: NextRequest) {
   if (!data.userId && !data.taskId) return NextResponse.json({ error: "Şikâyet edilecek kullanıcı veya ilan seç." }, { status: 400 });
   if (data.userId === user.id) return NextResponse.json({ error: "Kendini şikâyet edemezsin." }, { status: 400 });
   await db`INSERT INTO public.user_reports(reporter_id,reported_user_id,task_id,category,details) VALUES(${user.id},${data.userId || null},${data.taskId || null},${data.category},${data.details})`;
-  if (data.userId) {
-    await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${data.userId},'safety_report_received','Güvenlik bildirimi alındı','Hakkında bir bildirim alındı. DOORA ekibi inceleyecek.',${"/hesabim"})`;
-  }
   return NextResponse.json({ success: true });
 }
