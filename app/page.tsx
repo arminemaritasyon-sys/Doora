@@ -196,7 +196,32 @@ export default function Home() {
   useEffect(() => { if (supabase) loadRemoteTasks(); }, [user, supabase, loadRemoteTasks]);
 
   useEffect(() => {
-    if (!ready || !demoMode) return;
+    if (!supabase || !user) return;
+    let alive = true;
+    const loadAccountData = async () => {
+      const [owned, favorites, sentOffers] = await Promise.all([
+        supabase.from("tasks").select("id,title,description,category,budget,location_text,scheduled_at,created_at,owner_id,status,image_url").eq("owner_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("favorites").select("task_id").eq("user_id", user.id),
+        supabase.from("offers").select("id,task_id,amount,message,created_at,status").eq("sender_id", user.id).order("created_at", { ascending: false }),
+      ]);
+      if (!alive) return;
+      if (owned.data) setMyTasks(owned.data.map((row: any) => ({
+        id: row.id, title: row.title, description: row.description, category: row.category, budget: row.budget,
+        location: row.location_text, scheduledAt: row.scheduled_at, createdAt: row.created_at, ownerId: row.owner_id,
+        ownerName: user.name, ownerInitials: initials(user.name), status: row.status, offersCount: 0,
+        imageUrl: row.image_url, isDemo: false,
+      })));
+      if (favorites.data) setSavedIds(favorites.data.map((row: any) => row.task_id));
+      if (sentOffers.data) setMyOffers(sentOffers.data.map((row: any) => ({
+        id: row.id, taskId: row.task_id, amount: row.amount, message: row.message, createdAt: row.created_at, status: row.status,
+      })));
+    };
+    loadAccountData();
+    return () => { alive = false; };
+  }, [supabase, user]);
+
+  useEffect(() => {
+    if (!ready) return;
     localStorage.setItem("doora:tasks:v2", JSON.stringify(tasks));
     localStorage.setItem("doora:saved:v2", JSON.stringify(savedIds));
     localStorage.setItem("doora:offers:v2", JSON.stringify(myOffers));
@@ -230,6 +255,7 @@ export default function Home() {
   };
 
   const openOffer = (task: Task) => {
+    if (supabase && !user && !task.isDemo) { setAuthOpen(true); return; }
     if (task.ownerId && user?.id === task.ownerId) { toast.error("Kendi ilanına teklif veremezsin."); return; }
     setOfferForm({ amount: String(task.budget), message: "" });
     setOfferTask(task);
@@ -237,6 +263,12 @@ export default function Home() {
 
   const submitTask = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (supabase && !user) {
+      toast.info("İlan yayınlamak için önce giriş yapmalısın.");
+      setCreateOpen(false);
+      setAuthOpen(true);
+      return;
+    }
     const parsed = taskSchema.safeParse({ ...taskForm, budget: taskForm.budget });
     if (!parsed.success) { toast.error(parsed.error.issues[0]?.message || "Bilgileri kontrol et."); return; }
     setBusy(true);
