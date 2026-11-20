@@ -32,6 +32,13 @@ type Task = {
   isDemo?: boolean;
 };
 type Offer = { id: string; taskId: string; amount: number; message: string; createdAt: string; status: string };
+type TaskDbRow = {
+  id: string; title: string; description: string; category: string; budget: number;
+  location_text: string; scheduled_at: string | null; created_at: string; owner_id: string;
+  status: Task["status"]; image_url: string | null;
+};
+type FavoriteDbRow = { task_id: string };
+type OfferDbRow = { id: string; task_id: string; amount: number; message: string; created_at: string; status: string };
 type Tab = "discover" | "my-tasks" | "saved" | "messages" | "profile";
 
 const categories = [
@@ -186,7 +193,7 @@ export default function Home() {
     if (!supabase) return;
     const { data, error } = await supabase.from("tasks").select("id,title,description,category,budget,location_text,scheduled_at,created_at,owner_id,status,image_url").eq("status", "open").order("created_at", { ascending: false }).limit(60);
     if (error) { console.error(error); return; }
-    const mapped: Task[] = (data || []).map((row: any) => ({
+    const mapped: Task[] = (data || []).map((row: TaskDbRow) => ({
       id: row.id, title: row.title, description: row.description, category: row.category, budget: row.budget,
       location: row.location_text, scheduledAt: row.scheduled_at, createdAt: row.created_at, ownerId: row.owner_id,
       ownerName: "DOORA üyesi", ownerInitials: "D",
@@ -207,14 +214,14 @@ export default function Home() {
         supabase.from("offers").select("id,task_id,amount,message,created_at,status").eq("sender_id", user.id).order("created_at", { ascending: false }),
       ]);
       if (!alive) return;
-      if (owned.data) setMyTasks(owned.data.map((row: any) => ({
+      if (owned.data) setMyTasks(owned.data.map((row: TaskDbRow) => ({
         id: row.id, title: row.title, description: row.description, category: row.category, budget: row.budget,
         location: row.location_text, scheduledAt: row.scheduled_at, createdAt: row.created_at, ownerId: row.owner_id,
         ownerName: user.name, ownerInitials: initials(user.name), status: row.status, offersCount: 0,
         imageUrl: row.image_url, isDemo: false,
       })));
-      if (favorites.data) setSavedIds(favorites.data.map((row: any) => row.task_id));
-      if (sentOffers.data) setMyOffers(sentOffers.data.map((row: any) => ({
+      if (favorites.data) setSavedIds(favorites.data.map((row: FavoriteDbRow) => row.task_id));
+      if (sentOffers.data) setMyOffers(sentOffers.data.map((row: OfferDbRow) => ({
         id: row.id, taskId: row.task_id, amount: row.amount, message: row.message, createdAt: row.created_at, status: row.status,
       })));
     };
@@ -302,8 +309,8 @@ export default function Home() {
       setCreateOpen(false);
       setActiveTab("my-tasks");
       toast.success(demoMode ? "İlanın bu tarayıcıda kaydedildi." : "İlanın yayınlandı.");
-    } catch (error: any) {
-      toast.error(error.message || "İlan oluşturulamadı.");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "İlan oluşturulamadı.");
     } finally { setBusy(false); }
   };
 
@@ -323,7 +330,7 @@ export default function Home() {
       setTasks((current) => current.map((task) => task.id === offerTask.id ? { ...task, offersCount: task.offersCount + 1 } : task));
       toast.success(demoMode ? "Demo teklifin bu tarayıcıya kaydedildi." : "Teklifin iş sahibine iletildi.");
       setOfferTask(null);
-    } catch (error: any) { toast.error(error.message || "Teklif gönderilemedi."); }
+    } catch (error: unknown) { toast.error(error instanceof Error ? error.message : "Teklif gönderilemedi."); }
     finally { setBusy(false); }
   };
 
@@ -447,7 +454,7 @@ export default function Home() {
                 <label className="district-field"><MapPin size={18}/><select value={district} onChange={(event) => setDistrict(event.target.value)} aria-label="Bölge seç"><option>Tüm Antalya</option><option>Muratpaşa</option><option>Konyaaltı</option><option>Kepez</option><option>Aksu</option><option>Döşemealtı</option></select><ChevronDown size={14}/></label>
                 <button className={"filter-trigger " + (showFilters ? "selected" : "")} onClick={() => setShowFilters(!showFilters)}><SlidersHorizontal size={17}/><span>Filtrele</span></button>
               </div>
-              {showFilters && <div className="filter-panel"><label>En yüksek ücret<select value={maxBudget} onChange={(event) => setMaxBudget(event.target.value)}><option value="10000">Sınır yok</option><option value="250">250 ₺'ye kadar</option><option value="500">500 ₺'ye kadar</option><option value="1000">1.000 ₺'ye kadar</option><option value="2500">2.500 ₺'ye kadar</option></select></label><label>Sıralama<select value={sort} onChange={(event) => setSort(event.target.value)}><option value="newest">En yeni</option><option value="budget-low">Ücret: düşükten yükseğe</option><option value="budget-high">Ücret: yüksekten düşüğe</option></select></label><button onClick={() => { setMaxBudget("10000"); setSort("newest"); setDistrict("Tüm Antalya"); setCategory("Tümü"); setQuery(""); }}>Filtreleri temizle</button></div>}
+              {showFilters && <div className="filter-panel"><label>En yüksek ücret<select value={maxBudget} onChange={(event) => setMaxBudget(event.target.value)}><option value="10000">Sınır yok</option><option value="250">250 ₺&apos;ye kadar</option><option value="500">500 ₺&apos;ye kadar</option><option value="1000">1.000 ₺&apos;ye kadar</option><option value="2500">2.500 ₺&apos;ye kadar</option></select></label><label>Sıralama<select value={sort} onChange={(event) => setSort(event.target.value)}><option value="newest">En yeni</option><option value="budget-low">Ücret: düşükten yükseğe</option><option value="budget-high">Ücret: yüksekten düşüğe</option></select></label><button onClick={() => { setMaxBudget("10000"); setSort("newest"); setDistrict("Tüm Antalya"); setCategory("Tümü"); setQuery(""); }}>Filtreleri temizle</button></div>}
               <div className="category-scroller">{categories.map((item) => <button key={item.name} className={"category-pill " + (category === item.name ? "active" : "")} onClick={() => setCategory(item.name)}><item.icon size={15}/>{item.count}</button>)}</div>
             </>
           ) : null}
@@ -481,7 +488,7 @@ export default function Home() {
 
       {activeTab === "discover" ? <section className="how-section" id="how-it-works"><div className="how-inner"><div className="center-heading"><div className="eyebrow">ÜÇ KOLAY ADIM</div><h2>İşini halletmek <span>bu kadar kolay.</span></h2><p>İhtiyacını anlat. Doğru kişiyi seç. İşini tamamla.</p></div><div className="steps-grid"><div className="step-card"><span className="step-number">01</span><span className="step-icon"><Plus/></span><h3>İşini paylaş</h3><p>Ne yapılacağını, nerede ve ne zaman gerektiğini anlat. Ücretini belirle.</p></div><div className="step-card"><span className="step-number">02</span><span className="step-icon"><MessageCircle/></span><h3>Teklifleri değerlendir</h3><p>İlgilenen kişilerin tekliflerini ve profillerini karşılaştır. Sana uygun olanı seç.</p></div><div className="step-card"><span className="step-number">03</span><span className="step-icon"><CheckCircle2/></span><h3>Birlikte tamamlayın</h3><p>İşin kapsamını netleştir, tamamlandığında karşılıklı değerlendirme yap.</p></div></div></div></section> : null}
 
-      {activeTab === "discover" ? <section className="safety-section"><div className="safety-inner"><div className="safety-icon"><ShieldCheck size={27}/></div><div><div className="eyebrow">DOORA'DA GÜVEN</div><h2>İyi iş, güvenle başlar.</h2><p>İş kapsamını ve ücreti baştan netleştir. Kişisel bilgilerini koru, platform dışından ödeme yapmadan önce güvenlik adımlarını kontrol et.</p></div><button className="button button-outline" onClick={() => toast.info("Güven merkezi ve destek akışı hazırlanıyor.")}>Güvenlik rehberi <ArrowUpRight size={16}/></button></div></section> : null}
+      {activeTab === "discover" ? <section className="safety-section"><div className="safety-inner"><div className="safety-icon"><ShieldCheck size={27}/></div><div><div className="eyebrow">DOORA&apos;DA GÜVEN</div><h2>İyi iş, güvenle başlar.</h2><p>İş kapsamını ve ücreti baştan netleştir. Kişisel bilgilerini koru, platform dışından ödeme yapmadan önce güvenlik adımlarını kontrol et.</p></div><button className="button button-outline" onClick={() => toast.info("Güven merkezi ve destek akışı hazırlanıyor.")}>Güvenlik rehberi <ArrowUpRight size={16}/></button></div></section> : null}
 
       <footer className="site-footer"><div className="footer-inner"><div className="footer-brand"><Brand/><p>Günlük hayatın küçük işleri, birlikte daha kolay.</p></div><div className="footer-links"><a href="#how-it-works">Nasıl çalışır?</a><button onClick={() => toast.info("Yardım merkezi hazırlanıyor.")}>Yardım merkezi</button><button onClick={() => toast.info("Gizlilik politikası yayına hazırlık aşamasında.")}>Gizlilik</button><button onClick={() => toast.info("Kullanım koşulları yayına hazırlık aşamasında.")}>Kullanım koşulları</button></div><span className="copyright">© 2026 DOORA. Tüm hakları saklıdır.</span></div></footer>
 
@@ -493,7 +500,7 @@ export default function Home() {
 
       {detailTask && <div className="modal-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) setDetailTask(null); }}><div className="dialog detail-dialog"><div className="dialog-header"><div><span className="dialog-kicker">İLAN DETAYI</span><h2>{detailTask.title}</h2></div><button type="button" className="close-button" onClick={() => setDetailTask(null)} aria-label="Kapat"><X/></button></div>{detailTask.imageUrl && <img className="detail-image" src={detailTask.imageUrl} alt="İş görseli"/>}<div className="detail-price-row"><span className="category-tag">{detailTask.category}</span><strong>{money(detailTask.budget)}</strong></div><p className="detail-description">{detailTask.description}</p><div className="detail-facts"><span><MapPin/>{detailTask.location}</span><span><CalendarDays/>{formatDate(detailTask.scheduledAt)}</span><span><Clock3/>{relativeDate(detailTask.createdAt)}</span></div><div className="detail-owner"><Avatar name={detailTask.ownerName} size="large"/><div><b>{detailTask.ownerName}</b><small>İş sahibi · Yeni üye</small></div><span className="detail-offers">{detailTask.offersCount} teklif</span></div><div className="detail-actions"><button className="button button-outline" onClick={() => toggleSave(detailTask.id)}><Bookmark size={16}/>{savedIds.includes(detailTask.id) ? "Kaydedildi" : "Kaydet"}</button><button className="button button-dark" onClick={() => { setOfferTask(detailTask); setDetailTask(null); }}>Teklif ver <ArrowUpRight size={16}/></button></div><p className="legal-note">Bu ilanı kabul etmeden önce iş kapsamını, konumu ve ödeme koşullarını netleştir.</p></div></div>}
 
-      {authOpen && <div className="modal-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) setAuthOpen(false); }}><form className="dialog auth-dialog" onSubmit={sendMagicLink}><button type="button" className="close-button auth-close" onClick={() => setAuthOpen(false)} aria-label="Kapat"><X/></button><div className="auth-mark"><span className="brand-symbol">d</span></div><span className="dialog-kicker">DOORA'YA HOŞ GELDİN</span><h2>İşlerini kolaylaştırmaya başla.</h2><p>E-posta adresinle güvenli giriş bağlantısı al.</p><label className="form-label">Adın <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Nasıl hitap edelim?"/></label><label className="form-label">E-posta adresin <input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="ornek@eposta.com"/></label>{demoMode && <div className="setup-hint"><LockKeyhole size={16}/><span>Canlı giriş için Supabase bağlantısı henüz eklenmedi. Ön izleme modunda hesap açma devre dışı.</span></div>}<button className="button button-dark dialog-submit" type="submit" disabled={authBusy || demoMode}>{authBusy ? <LoaderCircle className="spin" size={17}/> : <Mail size={17}/>} E-posta ile devam et</button><small className="legal-note">Devam ederek kullanım koşullarını ve gizlilik politikasını kabul etmiş olursun.</small></form></div>}
+      {authOpen && <div className="modal-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) setAuthOpen(false); }}><form className="dialog auth-dialog" onSubmit={sendMagicLink}><button type="button" className="close-button auth-close" onClick={() => setAuthOpen(false)} aria-label="Kapat"><X/></button><div className="auth-mark"><span className="brand-symbol">d</span></div><span className="dialog-kicker">DOORA&apos;YA HOŞ GELDİN</span><h2>İşlerini kolaylaştırmaya başla.</h2><p>E-posta adresinle güvenli giriş bağlantısı al.</p><label className="form-label">Adın <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Nasıl hitap edelim?"/></label><label className="form-label">E-posta adresin <input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="ornek@eposta.com"/></label>{demoMode && <div className="setup-hint"><LockKeyhole size={16}/><span>Canlı giriş için Supabase bağlantısı henüz eklenmedi. Ön izleme modunda hesap açma devre dışı.</span></div>}<button className="button button-dark dialog-submit" type="submit" disabled={authBusy || demoMode}>{authBusy ? <LoaderCircle className="spin" size={17}/> : <Mail size={17}/>} E-posta ile devam et</button><small className="legal-note">Devam ederek kullanım koşullarını ve gizlilik politikasını kabul etmiş olursun.</small></form></div>}
     </main>
   );
 }
