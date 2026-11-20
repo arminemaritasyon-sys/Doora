@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
-import { ArrowDownLeft, ArrowUpRight, Ban, Check, Clock3, Flag, Pause, Play, Plus, ShieldCheck, Star, X, Pencil } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ArrowLeft, ChevronRight, Ban, Check, Clock3, Flag, Pause, Play, Plus, ShieldCheck, Star, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
 type TaskRow={id:string;title:string;description?:string|null;category?:string|null;district?:string|null;budget:string|number;status:string;created_at:string;assigned_user_id?:string|null;assigned_user_name?:string|null;assigned_user_avatar?:string|null;reviewed?:boolean;work_started_at?:string|null;completion_requested_at?:string|null};
 type AssignedRow={id:string;title:string;description?:string|null;budget:string|number;status:string;owner_id:string;owner_name:string;avatar_url?:string|null;reviewed?:boolean;work_started_at?:string|null;completion_requested_at?:string|null};
@@ -26,7 +26,7 @@ function WorkProgress({started,requested,completed,disputed}:{started:boolean;re
 }
 
 export default function AccountDashboard({name,tasks,assigned,received,sentOffers,taskCount,pendingOfferCount}:Props){
- const [wallet,setWallet]=useState<WalletData|null>(null),[walletLoading,setWalletLoading]=useState(true),[walletError,setWalletError]=useState(""),[amount,setAmount]=useState(""),[iban,setIban]=useState(""),[busy,setBusy]=useState(false),[tab,setTab]=useState<"offers"|"sent">("offers"),[accountView,setAccountView]=useState<"offers"|"assigned"|"listings"|"activity">("offers"),[modal,setModal]=useState<"topup"|"withdraw"|"task"|"edit"|null>(null),[editingTaskId,setEditingTaskId]=useState<string|null>(null);
+ const [wallet,setWallet]=useState<WalletData|null>(null),[walletLoading,setWalletLoading]=useState(true),[walletError,setWalletError]=useState(""),[amount,setAmount]=useState(""),[iban,setIban]=useState(""),[busy,setBusy]=useState(false),[tab,setTab]=useState<"offers"|"sent">("offers"),[accountView,setAccountView]=useState<"home"|"offers"|"assigned"|"listings"|"activity">("home"),[modal,setModal]=useState<"topup"|"withdraw"|"task"|"edit"|null>(null),[editingTaskId,setEditingTaskId]=useState<string|null>(null);
  const [reviewRating,setReviewRating]=useState<Record<string,string>>({}),[reviewText,setReviewText]=useState<Record<string,string>>({}),[rejectReason,setRejectReason]=useState<Record<string,string>>({});
  const [taskForm,setTaskForm]=useState<TaskForm>({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});
  async function loadWallet(){
@@ -106,12 +106,16 @@ export default function AccountDashboard({name,tasks,assigned,received,sentOffer
    <button className="secondary" disabled={busy} onClick={()=>{setAmount("");setModal("withdraw")}}><ArrowUpRight/> Para çek</button>
    <button className="create-listing-action" disabled={busy} onClick={()=>{setTaskForm({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});setEditingTaskId(null);setModal("task")}}><Plus/> İlan oluştur</button>
   </section>
-  <nav className="account-view-switch" aria-label="Hesap bölümleri">
-   <button className={accountView==="offers"?"active":""} onClick={()=>setAccountView("offers")}>Teklifler <span>{pendingOfferCount}</span></button>
-   <button className={accountView==="assigned"?"active":""} onClick={()=>setAccountView("assigned")}>Üstlendiğim işler <span>{assigned.length}</span></button>
-   <button className={accountView==="listings"?"active":""} onClick={()=>setAccountView("listings")}>İlanlarım <span>{taskCount}</span></button>
-   <button className={accountView==="activity"?"active":""} onClick={()=>setAccountView("activity")}>Hesap hareketleri</button>
-  </nav>
+  {accountView==="home"?<section className="account-overview" aria-label="Hesap özeti">
+   <div className="account-overview-heading"><div><span>HESAP MERKEZİ</span><h2>Nasıl yardımcı olalım?</h2></div><p>İşlerini ve hesabını buradan yönet.</p></div>
+   <div className="account-overview-list">
+    <button type="button" onClick={()=>setAccountView("offers")}><span className="account-overview-icon offers"><Star size={19}/></span><span className="account-overview-copy"><b>Teklifler</b><small>Gelen ve gönderdiğin teklifler</small></span><span className="account-overview-count">{pendingOfferCount}</span><ChevronRight size={18}/></button>
+    <button type="button" onClick={()=>setAccountView("assigned")}><span className="account-overview-icon assigned"><Check size={19}/></span><span className="account-overview-copy"><b>Üstlendiğim işler</b><small>Devam eden ve tamamlanan işler</small></span><span className="account-overview-count">{assigned.length}</span><ChevronRight size={18}/></button>
+    <button type="button" onClick={()=>setAccountView("listings")}><span className="account-overview-icon listings"><Plus size={19}/></span><span className="account-overview-copy"><b>İlanlarım</b><small>Yayınladığın ve yönettiğin ilanlar</small></span><span className="account-overview-count">{taskCount}</span><ChevronRight size={18}/></button>
+    <button type="button" onClick={()=>setAccountView("activity")}><span className="account-overview-icon activity"><Clock3 size={19}/></span><span className="account-overview-copy"><b>Hesap hareketleri</b><small>Cüzdan giriş ve çıkışların</small></span><ChevronRight size={18}/></button>
+   </div>
+   <div className="account-overview-note"><ShieldCheck size={16}/> İşlemlerini ve tüm süreçlerini tek yerden takip et.</div>
+  </section>:<div className="account-detail-heading"><button type="button" onClick={()=>setAccountView("home")} aria-label="Hesap özetine dön"><ArrowLeft size={18}/></button><div><small>HESABIM</small><h2>{accountView==="offers"?"Teklifler":accountView==="assigned"?"Üstlendiğim işler":accountView==="listings"?"İlanlarım":"Hesap hareketleri"}</h2></div></div>}
   <section className={"account-section account-section-offers"+(accountView!=="offers"?" is-hidden":"")}>
    <div className="account-section-head"><div><h2>Teklifler</h2><p>İlanlarına gelen ve senin gönderdiğin teklifler.</p></div><span>{pendingOfferCount} bekleyen</span></div>
    <div className="account-tabs"><button className={tab==="offers"?"active":""} onClick={()=>setTab("offers")}>İlanlarıma gelen</button><button className={tab==="sent"?"active":""} onClick={()=>setTab("sent")}>Gönderdiğim teklifler <span>{sentOffers.length}</span></button></div>
