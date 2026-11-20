@@ -308,3 +308,59 @@ button:disabled{opacity:.55;cursor:not-allowed}
 /* DOORA logo contrast: pistachio mark with a dark D */
 .brand-mark{background:#c5e4a5!important;color:#10130f!important}
 .brand:hover .brand-mark{background:#bddd9c!important;color:#10130f!important}
+
+
+/* 2026 product polish: clear hierarchy, accessible controls, and calmer motion */
+:root{--pistachio:#c5e4a5;--pistachio-hover:#b6d991;--pistachio-ink:#1c2b15;--line:#e5ebdf;--soft:#f2f6ee}
+:focus-visible{outline:3px solid rgba(139,180,104,.55)!important;outline-offset:3px}
+.button-primary{background:var(--pistachio);color:var(--pistachio-ink);border-color:var(--pistachio);font-weight:800}
+.button-primary:hover{background:var(--pistachio-hover);border-color:var(--pistachio-hover);color:#172410}
+.header-create{box-shadow:0 5px 16px rgba(116,153,83,.14)}
+.hero-section{background:radial-gradient(ellipse at 78% 28%,#e3efd8 0%,transparent 43%),linear-gradient(115deg,#f7faf4 0%,#eef5e8 100%)}
+.hero-copy h1{letter-spacing:-.065em}
+.hero-copy h1 span{color:#6e984f}
+.hero-proof{color:#53634a}
+.visual-card{box-shadow:0 26px 70px rgba(35,55,26,.14);border-radius:25px}
+.visual-card h2{letter-spacing:-1px}
+.market-section{padding-top:76px}
+.section-title-row h2,.how-heading h2{letter-spacing:-.055em}
+.search-toolbar{background:#fff;box-shadow:0 12px 32px rgba(31,47,24,.045)}
+.search-field input:focus{outline:none}
+.category-pill.selected{background:#c5e4a5;color:#1c2b15;border-color:#c5e4a5}
+.task-card{border-radius:19px;box-shadow:0 5px 20px rgba(20,35,15,.025)}
+.task-card h3{letter-spacing:-.55px}
+.task-offer{background:#151a12;transition:background .2s,transform .2s}
+.task-offer:hover{background:#34452a;transform:translateY(-1px)}
+.sort-control{display:flex;align-items:center;gap:7px;color:#899083;font-size:10px;font-weight:700}
+.sort-control select{max-width:150px;border:0;outline:0;appearance:none;background:transparent;color:#293322;font-size:11px;font-weight:800;cursor:pointer;padding:5px 0}
+.sort-control svg{pointer-events:none;margin-left:-5px}
+.load-error{border-color:#e4ebdd;background:#fbfdf9}
+.load-error>span{background:#edf5e6;color:#567c3e}
+.how-grid article{transition:transform .2s,border-color .2s,box-shadow .2s}
+.how-grid article:hover{transform:translateY(-3px);border-color:#c8dbb8;box-shadow:0 14px 34px rgba(35,55,26,.06)}
+.auth-card,.account-section,.account-stats>div,.saved-grid article{box-shadow:0 8px 28px rgba(30,45,22,.025)}
+.account-saved-link{transition:border-color .2s,background .2s}
+.account-saved-link:hover{border-color:#bfd6ad;background:#fbfdf9}
+.mobile-dock{padding-bottom:max(6px,env(safe-area-inset-bottom))}
+.mobile-dock .dock-active{color:#557c3c}
+.dock-add{background:#c5e4a5;color:#1c2b15}
+@media(min-width:651px){
+ .task-grid{gap:18px}
+ .task-card{padding:22px}
+ .quick-points{padding-top:25px;padding-bottom:25px}
+ .hero-inner{min-height:570px}
+}
+@media(max-width:650px){
+ .hero-inner{padding-top:42px}
+ .hero-visual{height:265px}
+ .market-section{padding-top:43px}
+ .sort-control span{display:none}
+ .sort-control select{max-width:104px;font-size:9px}
+ .task-card{box-shadow:0 5px 18px rgba(20,35,15,.035)}
+ .mobile-dock{height:calc(70px + env(safe-area-inset-bottom))}
+ body{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+}
+@media(prefers-reduced-motion:no-preference){
+ .task-card,.category-pill,.button,.icon-button{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease}
+ .category-pill:active{transform:scale(.97)}
+}
