@@ -106,15 +106,13 @@ export default function AccountDashboard({name,tasks,assigned,received,sentOffer
    <button className="secondary" disabled={busy} onClick={()=>{setAmount("");setModal("withdraw")}}><ArrowUpRight/> Para çek</button>
    <button className="create-listing-action" disabled={busy} onClick={()=>{setTaskForm({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});setEditingTaskId(null);setModal("task")}}><Plus/> İlan oluştur</button>
   </section>
-  {accountView==="home"?<section className="account-overview" aria-label="Hesap özeti">
-   <div className="account-overview-heading"><div><span>HESAP MERKEZİ</span><h2>Nasıl yardımcı olalım?</h2></div><p>İşlerini ve hesabını buradan yönet.</p></div>
+  {accountView==="home"?<section className="account-overview" aria-label="Hesap bölümleri">
    <div className="account-overview-list">
-    <button type="button" onClick={()=>setAccountView("offers")}><span className="account-overview-icon offers"><Star size={19}/></span><span className="account-overview-copy"><b>Teklifler</b><small>Gelen ve gönderdiğin teklifler</small></span><span className="account-overview-count">{pendingOfferCount}</span><ChevronRight size={18}/></button>
-    <button type="button" onClick={()=>setAccountView("assigned")}><span className="account-overview-icon assigned"><Check size={19}/></span><span className="account-overview-copy"><b>Üstlendiğim işler</b><small>Devam eden ve tamamlanan işler</small></span><span className="account-overview-count">{assigned.length}</span><ChevronRight size={18}/></button>
-    <button type="button" onClick={()=>setAccountView("listings")}><span className="account-overview-icon listings"><Plus size={19}/></span><span className="account-overview-copy"><b>İlanlarım</b><small>Yayınladığın ve yönettiğin ilanlar</small></span><span className="account-overview-count">{taskCount}</span><ChevronRight size={18}/></button>
-    <button type="button" onClick={()=>setAccountView("activity")}><span className="account-overview-icon activity"><Clock3 size={19}/></span><span className="account-overview-copy"><b>Hesap hareketleri</b><small>Cüzdan giriş ve çıkışların</small></span><ChevronRight size={18}/></button>
+    <button type="button" onClick={()=>setAccountView("offers")}><span className="account-overview-icon offers"><Star size={20}/></span><b>Teklifler</b><span className="account-overview-count">{pendingOfferCount}</span></button>
+    <button type="button" onClick={()=>setAccountView("assigned")}><span className="account-overview-icon assigned"><Check size={20}/></span><b>Üstlendiğim işler</b><span className="account-overview-count">{assigned.length}</span></button>
+    <button type="button" onClick={()=>setAccountView("listings")}><span className="account-overview-icon listings"><Plus size={20}/></span><b>İlanlarım</b><span className="account-overview-count">{taskCount}</span></button>
+    <button type="button" onClick={()=>setAccountView("activity")}><span className="account-overview-icon activity"><Clock3 size={20}/></span><b>Hesap hareketleri</b><span className="account-overview-count"><ArrowUpRight size={14}/></span></button>
    </div>
-   <div className="account-overview-note"><ShieldCheck size={16}/> İşlemlerini ve tüm süreçlerini tek yerden takip et.</div>
   </section>:<div className="account-detail-heading"><button type="button" onClick={()=>setAccountView("home")} aria-label="Hesap özetine dön"><ArrowLeft size={18}/></button><div><small>HESABIM</small><h2>{accountView==="offers"?"Teklifler":accountView==="assigned"?"Üstlendiğim işler":accountView==="listings"?"İlanlarım":"Hesap hareketleri"}</h2></div></div>}
   <section className={"account-section account-section-offers"+(accountView!=="offers"?" is-hidden":"")}>
    <div className="account-section-head"><div><h2>Teklifler</h2><p>İlanlarına gelen ve senin gönderdiğin teklifler.</p></div><span>{pendingOfferCount} bekleyen</span></div>
