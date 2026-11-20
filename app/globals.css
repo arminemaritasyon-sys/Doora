@@ -2301,3 +2301,10 @@ button, a, input, select, textarea { touch-action:manipulation; }
 @media(max-width:650px){
  .doora-account-page .account-card-deck>.account-task-card{flex-basis:88%;width:88%;max-width:350px}
 }
+
+/* Submitted-offer decision states */
+.account-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.account-tabs button{white-space:nowrap}
+.offer-status-rejected{display:inline-flex!important;width:max-content;padding:5px 9px;border-radius:999px;background:#fff0f0;color:#c43b3b!important;font-weight:750}
+.offer-status-accepted{display:inline-flex!important;width:max-content;padding:5px 9px;border-radius:999px;background:#edf7ef;color:#27834b!important;font-weight:750}
+.offer-status-pending{display:inline-flex!important;width:max-content;padding:5px 9px;border-radius:999px;background:#f5f3e9;color:#8b7130!important;font-weight:750}
