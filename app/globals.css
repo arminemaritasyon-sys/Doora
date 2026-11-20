@@ -2392,3 +2392,71 @@ button, a, input, select, textarea { touch-action:manipulation; }
 .doora-account-page .account-detail-heading + .account-section-activity .account-section-head{display:none}
 .doora-account-page .account-detail-heading + .account-section-assigned .account-section-head h2,
 .doora-account-page .account-detail-heading + .account-section-listings .account-section-head h2{display:none}
+
+
+/* DOORA account mobile app navigation refinement */
+.doora-account-page .account-overview{padding:2px 0 10px}
+.doora-account-page .account-overview-heading,
+.doora-account-page .account-overview-note{display:none!important}
+.doora-account-page .account-overview-list{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;
+ overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none
+}
+.doora-account-page .account-overview-list>button{
+ position:relative;display:flex;min-width:0;min-height:116px;flex-direction:column;
+ align-items:flex-start;justify-content:center;gap:10px;padding:15px;
+ border:1px solid #e9eee6;border-radius:19px;background:linear-gradient(145deg,#fff 0%,#f9fbf7 100%);
+ color:#283326;text-align:left;box-shadow:0 5px 18px rgba(35,53,29,.045);
+ -webkit-tap-highlight-color:transparent;transition:transform .16s ease,background .16s ease
+}
+.doora-account-page .account-overview-list>button:active{transform:scale(.975);background:#f1f5ee}
+.doora-account-page .account-overview-icon{width:40px;height:40px;flex:0 0 40px;border-radius:13px}
+.doora-account-page .account-overview-list>button>b{max-width:100%;padding-right:28px;color:#263124;font-size:12px;font-weight:800;line-height:1.25}
+.doora-account-page .account-overview-count{
+ position:absolute;top:14px;right:13px;min-width:24px;height:24px;
+ border:1px solid #edf0e9;border-radius:50%;background:#f5f7f2;color:#71806a;font-size:10px
+}
+.doora-account-page .account-overview-list>button>svg:last-child{display:none}
+.doora-account-page .account-detail-heading{position:sticky;top:0;z-index:4;padding:7px 0 13px;background:rgba(250,251,248,.94);backdrop-filter:blur(14px)}
+.doora-account-page .account-detail-heading>button{width:38px;height:38px;border-radius:50%;background:#f0f4ed;border:0}
+.doora-account-page .account-detail-heading small{font-size:9px}
+.doora-account-page .account-detail-heading h2{margin-top:3px;font-size:20px}
+.doora-account-page .account-section{display:grid;gap:12px}
+.doora-account-page .account-section-head{margin:0;padding:0 1px}
+.doora-account-page .account-section-head h2{font-size:15px;font-weight:800}
+.doora-account-page .account-section-head p{display:none}
+.doora-account-page .account-section-head>span{padding:5px 9px;border-radius:20px;background:#f0f4ed;color:#6d7c65;font-size:10px;font-weight:750}
+.doora-account-page .account-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:0;border-radius:13px;background:#eef2eb}
+.doora-account-page .account-tabs button{min-height:38px;padding:7px 8px;border:0;border-radius:10px;background:transparent;color:#879181;font-size:10px;font-weight:750}
+.doora-account-page .account-tabs button.active{background:#fff;color:#2d3a29;box-shadow:0 2px 8px rgba(31,48,27,.08)}
+.doora-account-page .account-offer-card,
+.doora-account-page .account-task-card{
+ display:grid;gap:12px;padding:14px;border:1px solid #e9eee6;border-radius:17px;
+ background:#fff;box-shadow:0 4px 15px rgba(35,53,29,.035)
+}
+.doora-account-page .account-offer-meta{display:grid;gap:5px}
+.doora-account-page .account-offer-meta>span{color:#7f8979;font-size:10px}
+.doora-account-page .account-offer-meta>strong{color:#273525;font-size:19px;font-weight:850}
+.doora-account-page .account-offer-meta>small{width:max-content;padding:4px 8px;border-radius:20px;background:#f1f5ee;color:#6d8063;font-size:9px}
+.doora-account-page .account-task-main{display:grid;gap:8px}
+.doora-account-page .account-task-main>b{color:#273525;font-size:14px;line-height:1.4}
+.doora-account-page .account-task-main>strong{font-size:18px}
+.doora-account-page .account-task-controls{display:flex;flex-wrap:wrap;gap:7px}
+.doora-account-page .account-task-controls button,
+.doora-account-page .account-task-controls a,
+.doora-account-page .account-accept,
+.doora-account-page .account-reject{min-height:36px;padding:0 11px;border-radius:10px;font-size:10px;font-weight:750}
+.doora-account-page .account-transactions{display:grid;gap:8px}
+.doora-account-page .account-transactions article{padding:12px;border:1px solid #edf0e9;border-radius:14px;background:#fff}
+.doora-account-page .offer-safety-actions{gap:12px}
+.doora-account-page .account-muted{font-size:11px;line-height:1.5}
+@media(max-width:650px){
+ .doora-account-page .account-overview-list{gap:9px}
+ .doora-account-page .account-overview-list>button{min-height:108px;padding:13px;border-radius:17px}
+ .doora-account-page .account-overview-icon{width:38px;height:38px;flex-basis:38px}
+ .doora-account-page .account-overview-list>button>b{font-size:11px}
+ .doora-account-page .account-wallet-actions-clean{gap:7px}
+ .doora-account-page .account-wallet-actions-clean button{min-height:42px;font-size:10px}
+ .doora-account-page .account-section{gap:10px}
+ .doora-account-page .account-offer-card,.doora-account-page .account-task-card{padding:12px;border-radius:15px}
+}
