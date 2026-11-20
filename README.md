@@ -12,7 +12,7 @@ Mobile-first local task marketplace built with Next.js 16.4, React 19 and Neon P
 Vercel Neon integration supplies the database and auth URLs. Add `RESEND_API_KEY` and a verified sender address as encrypted Vercel environment variables for production, preview and development.
 
 ## Database
-Apply `db/migrations/0001_doora_core.sql` through `0007_task_dispute_status.sql` in order. Test schema changes on a Neon branch first; never apply production migrations without reviewing the SQL and current data.
+Apply `db/migrations/0001_doora_core.sql` through `0008_harden_wallet_and_offer_functions.sql` in order. Test schema changes on a Neon branch first; never apply production migrations without reviewing the SQL and current data.
 
 ## Local development
 ```bash

@@ -38,8 +38,16 @@ Durum: Devam ediyor. Tamamlanan inceleme ve düzeltmeler, canlı ortamda onay be
 - Kullanım koşulları ve gizlilik metinleri için gerçek sayfalar / bağlantılar eksik.
 - İş listelerinde sayfalama yok; açık ilan API'si en fazla 60 kayıt döndürüyor.
 - Otomatik test paketi ve CI doğrulaması yok.
-- Profil fotoğrafları veri URL'si olarak veritabanında tutuluyor; nesne depolama ve boyut optimizasyonu değerlendirilmeli.
+- Profil fotoğrafları veri URL'si olarak veritabanında tutuluyor; liste API'lerinde ayrı önbelleklenebilir uç noktaya taşındı, yeni yüklemeler 512 px ile sınırlandırıldı. Uzun vadede nesne depolama değerlendirilmeli.
 - Canlı Cloudflare Worker dağıtımı ve gerçek mobil etkileşim testi henüz doğrulanmadı.
 
 ## Üretim veritabanı notu
 `db/migrations/0007_task_dispute_status.sql` yalnızca görev durum kısıtını desteklenen durumlarla eşleştirir. Canlı Neon veritabanına uygulanmadan önce kullanıcı onayı ve migration testi gereklidir. Bu denetimde canlı veriler değiştirilmemiştir.
+
+
+## Ek veritabanı güvenlik bulgusu
+
+- Canlı veritabanında eski iki parametreli `doora_test_withdraw(text,numeric)` fonksiyonu hâlâ mevcut. Güncel API dört parametreli IBAN/ad-soyad fonksiyonunu çağırıyor; eski overload kaldırılmalı.
+- `doora_accept_offer` fonksiyonu DB katmanında teklifin `pending` olduğunu ayrıca doğrulamıyor. API kontrolüne ek olarak fonksiyonun kendisine de koruma eklenmeli.
+- `doora_complete_task` fonksiyonu DB katmanında `completion_requested_at` alanını kontrol etmiyor. API kontrolüne ek olarak fonksiyonun kendisine de koruma eklenmeli.
+- Bu üç düzeltme `0008_harden_wallet_and_offer_functions.sql` migration dosyasında hazırlandı; canlı DB'ye uygulanmadı.
