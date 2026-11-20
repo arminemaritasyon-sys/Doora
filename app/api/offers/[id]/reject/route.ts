@@ -16,7 +16,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       UPDATE public.offers AS o SET status='rejected',rejection_reason=${parsed.data.reason || null},updated_at=now()
       FROM public.tasks AS t
       WHERE o.id=${id}::uuid AND t.id=o.task_id AND t.owner_id=${user.id}
-        AND o.status='pending' AND t.status='open'
+        AND o.status='pending'
       RETURNING o.id,o.user_id,o.task_id,t.title
     `;
     if (!offer) return NextResponse.json({ error: "Teklif bulunamadı veya artık reddedilemiyor." }, { status: 404 });
