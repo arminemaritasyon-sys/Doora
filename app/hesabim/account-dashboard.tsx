@@ -42,9 +42,9 @@ export default function AccountDashboard({name,tasks,assigned,received,sentOffer
     return d as WalletData;
    })();
    const deadline=new Promise<never>((_,reject)=>{
-    deadlineTimer=window.setTimeout(()=>{controller.abort();reject(new Error("Cüzdan yanıtı zaman aşımına uğradı. Hesap bölümlerini kullanmaya devam edebilirsin."));},7000);
+    deadlineTimer=window.setTimeout(()=>{controller.abort();reject(new Error("Cüzdan yanıtı gecikti. Tekrar deneyebilirsin; diğer hesap bölümleri kullanılabilir."));},18000);
    });
-   abortTimer=window.setTimeout(()=>controller.abort(),7500);
+   abortTimer=window.setTimeout(()=>controller.abort(),18500);
    const data=await Promise.race([request,deadline]);
    setWallet(data);setWalletError("");
   }catch(e){
