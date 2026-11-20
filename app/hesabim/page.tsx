@@ -37,6 +37,11 @@ export default async function AccountPage() {
       LEFT JOIN neon_auth.user u ON u.id::text=o.user_id
       LEFT JOIN LATERAL (SELECT avg(rating) AS rating,count(*) AS review_count FROM public.task_reviews WHERE reviewee_id=o.user_id) rv ON true
       WHERE t.owner_id=${user.id} ORDER BY o.created_at DESC LIMIT 30`, "received offers"),
+    withTimeout(db`SELECT o.id,o.task_id,o.amount,o.status,o.rejection_reason,o.message,o.created_at,t.title,t.owner_id AS bidder_id,
+      COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS bidder,p.avatar_url,p.district
+      FROM public.offers o JOIN public.tasks t ON t.id=o.task_id
+      LEFT JOIN public.user_profiles p ON p.user_id=t.owner_id LEFT JOIN neon_auth.user u ON u.id::text=t.owner_id
+      WHERE o.user_id=${user.id} ORDER BY o.created_at DESC LIMIT 30`, "sent offers"),
     withTimeout(db`SELECT t.id,t.title,t.description,t.category,t.district,t.budget,t.status,t.created_at,t.work_started_at,t.completion_requested_at,t.owner_id AS owner_id,
       COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS owner_name,p.avatar_url,
       EXISTS(SELECT 1 FROM public.task_reviews r WHERE r.task_id=t.id AND r.reviewer_id=${user.id}) AS reviewed
@@ -48,9 +53,10 @@ export default async function AccountPage() {
     withTimeout(db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id} AND o.status='pending'`, "pending offer count")
   ]);
 
-  const [tasksResult, receivedResult, assignedResult, taskTotalResult, receivedTotalResult, pendingOffersResult] = queryResults;
+  const [tasksResult, receivedResult, sentOffersResult, assignedResult, taskTotalResult, receivedTotalResult, pendingOffersResult] = queryResults;
   const tasks = tasksResult.status === "fulfilled" ? tasksResult.value : (console.error("[account] tasks query failed", tasksResult.reason), []);
   const received = receivedResult.status === "fulfilled" ? receivedResult.value : (console.error("[account] received offers query failed", receivedResult.reason), []);
+  const sentOffers = sentOffersResult.status === "fulfilled" ? sentOffersResult.value : (console.error("[account] sent offers query failed", sentOffersResult.reason), []);
   const assigned = assignedResult.status === "fulfilled" ? assignedResult.value : (console.error("[account] assigned tasks query failed", assignedResult.reason), []);
   const taskTotal = taskTotalResult.status === "fulfilled" ? taskTotalResult.value : (console.error("[account] task count query failed", taskTotalResult.reason), [{ count: 0 }]);
   const receivedTotal = receivedTotalResult.status === "fulfilled" ? receivedTotalResult.value : (console.error("[account] received count query failed", receivedTotalResult.reason), [{ count: 0 }]);
@@ -58,6 +64,7 @@ export default async function AccountPage() {
 
   const taskRows=tasks.map((x:any)=>({...x,created_at:String(x.created_at),work_started_at:x.work_started_at?String(x.work_started_at):null,completion_requested_at:x.completion_requested_at?String(x.completion_requested_at):null}));
   const receivedRows=received.map((x:any)=>({...x,created_at:String(x.created_at),bidder:x.bidder==null?null:String(x.bidder)}));
+  const sentOfferRows=sentOffers.map((x:any)=>({...x,created_at:String(x.created_at),bidder:x.bidder==null?null:String(x.bidder)}));
 
   return (
     <main className="doora-page doora-account-page">
@@ -67,7 +74,7 @@ export default async function AccountPage() {
       </header>
       <div className="doora-page-container account-page-container">
         <div className="wallet-lite-page-title"><h1>Cüzdanım</h1><span>DOORA</span><AccountSettings name={user.name || "DOORA üyesi"} email={user.email || ""}/></div>
-        <AccountDashboard name={user.name || "DOORA üyesi"} email={user.email || ""} tasks={taskRows} assigned={assigned.map((x:any)=>({...x,created_at:String(x.created_at),work_started_at:x.work_started_at?String(x.work_started_at):null,completion_requested_at:x.completion_requested_at?String(x.completion_requested_at):null}))} received={receivedRows} taskCount={Number(taskTotal[0]?.count ?? 0)} receivedCount={Number(receivedTotal[0]?.count ?? 0)} pendingOfferCount={Number(pendingOffers[0]?.count ?? 0)}/>
+        <AccountDashboard name={user.name || "DOORA üyesi"} email={user.email || ""} tasks={taskRows} assigned={assigned.map((x:any)=>({...x,created_at:String(x.created_at),work_started_at:x.work_started_at?String(x.work_started_at):null,completion_requested_at:x.completion_requested_at?String(x.completion_requested_at):null}))} received={receivedRows} sentOffers={sentOfferRows} taskCount={Number(taskTotal[0]?.count ?? 0)} receivedCount={Number(receivedTotal[0]?.count ?? 0)} pendingOfferCount={Number(pendingOffers[0]?.count ?? 0)}/>
         <div className="account-page-footer"><span>DOORA · Günlük işler, kolay çözümler.</span><Link href="/kaydedilenler">Kaydedilen işlerin <ArrowUpRight size={14}/></Link></div>
       </div>
       <AppBottomNav active="account" pendingOffers={Number(pendingOffers[0]?.count ?? 0)}/>
