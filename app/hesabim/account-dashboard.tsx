@@ -32,17 +32,26 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
  async function loadWallet(){
   setWalletLoading(true);
   const controller=new AbortController();
-  const timeout=window.setTimeout(()=>controller.abort(),10000);
+  let abortTimer=0,deadlineTimer=0;
   try{
-   const r=await fetch("/api/wallet",{cache:"no-store",signal:controller.signal});
-   const raw=await r.text();let d:any={};try{d=raw?JSON.parse(raw):{}}catch{}
-   if(!r.ok)throw new Error(d.error||"Cüzdan bilgileri alınamadı.");
-   if(!d?.account)throw new Error("Cüzdan verileri beklenen biçimde gelmedi.");
-   setWallet(d);setWalletError("");
+   const request=(async()=>{
+    const r=await fetch("/api/wallet",{cache:"no-store",signal:controller.signal});
+    const raw=await r.text();let d:any={};try{d=raw?JSON.parse(raw):{}}catch{}
+    if(!r.ok)throw new Error(d.error||"Cüzdan bilgileri alınamadı.");
+    if(!d?.account)throw new Error("Cüzdan verileri beklenen biçimde gelmedi.");
+    return d as WalletData;
+   })();
+   const deadline=new Promise<never>((_,reject)=>{
+    deadlineTimer=window.setTimeout(()=>{controller.abort();reject(new Error("Cüzdan yanıtı zaman aşımına uğradı. Hesap bölümlerini kullanmaya devam edebilirsin."));},7000);
+   });
+   abortTimer=window.setTimeout(()=>controller.abort(),7500);
+   const data=await Promise.race([request,deadline]);
+   setWallet(data);setWalletError("");
   }catch(e){
-   setWalletError(e instanceof DOMException&&e.name==="AbortError"?"Cüzdan yanıtı zaman aşımına uğradı. Tekrar deneyebilirsin.":e instanceof Error?e.message:"Cüzdan bilgileri alınamadı.");
+   setWalletError(e instanceof Error?e.message:"Cüzdan bilgileri alınamadı.");
   }finally{
-   window.clearTimeout(timeout);
+   window.clearTimeout(abortTimer);
+   window.clearTimeout(deadlineTimer);
    setWalletLoading(false);
   }
  }
@@ -93,8 +102,8 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
  return <div className="account-hub">
   <section className="account-wallet-card"><div className="account-wallet-top"><span><i>d</i> DOORA WALLET</span><span className="account-test-pill">TEST MODU</span></div><small>KULLANILABİLİR BAKİYE</small><strong>{walletLoading?"Yükleniyor…":walletError?"—":money(available)}</strong><div className="account-wallet-foot"><span><ShieldCheck size={15}/> Emanette: {walletLoading?"—":walletError?"—":money(held)}</span><span>{name||"DOORA üyesi"}</span></div>{walletError?<div className="account-wallet-error" role="alert"><span>{walletError}</span><button type="button" onClick={loadWallet} disabled={walletLoading}>Tekrar dene</button></div>:null}</section>
   <section className="account-wallet-actions account-wallet-actions-clean">
-   <button disabled={busy||walletLoading||!!walletError} onClick={()=>{setAmount("");setModal("topup")}}><Plus/> Bakiye yükle</button>
-   <button className="secondary" disabled={busy||walletLoading||!!walletError} onClick={()=>{setAmount("");setModal("withdraw")}}><ArrowUpRight/> Para çek</button>
+   <button disabled={busy} onClick={()=>{setAmount("");setModal("topup")}}><Plus/> Bakiye yükle</button>
+   <button className="secondary" disabled={busy} onClick={()=>{setAmount("");setModal("withdraw")}}><ArrowUpRight/> Para çek</button>
    <button className="create-listing-action" disabled={busy} onClick={()=>{setTaskForm({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});setEditingTaskId(null);setModal("task")}}><Plus/> İlan oluştur</button>
   </section>
   <nav className="account-view-switch" aria-label="Hesap bölümleri">
