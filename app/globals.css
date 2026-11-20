@@ -2286,3 +2286,18 @@ button, a, input, select, textarea { touch-action:manipulation; }
  .doora-account-page .account-section-assigned .account-task-card,
  .doora-account-page .account-section-listings .account-task-card{flex-basis:88%;width:88%;max-width:350px}
 }
+
+.doora-account-page .account-card-deck{
+ display:flex;gap:12px;overflow-x:auto;align-items:stretch;
+ margin:0 -2px;padding:2px 2px 9px;
+ scroll-snap-type:x mandatory;scrollbar-width:none;
+ -webkit-overflow-scrolling:touch;
+}
+.doora-account-page .account-card-deck::-webkit-scrollbar{display:none}
+.doora-account-page .account-card-deck>.account-task-card{
+ flex:0 0 min(86%,390px);width:min(86%,390px);margin:0;
+ scroll-snap-align:start;
+}
+@media(max-width:650px){
+ .doora-account-page .account-card-deck>.account-task-card{flex-basis:88%;width:88%;max-width:350px}
+}
