@@ -6,7 +6,7 @@ import { z } from "zod";
 export const dynamic = "force-dynamic";
 const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("test_topup"), amount: z.coerce.number().positive().max(50000), idempotencyKey: z.string().uuid() }),
-  z.object({ action: z.literal("withdraw"), amount: z.coerce.number().positive().max(50000), iban: z.string().trim().regex(/^TR[0-9]{24}$/i, "Geçerli bir TR IBAN gir.") })
+  z.object({ action: z.literal("withdraw"), amount: z.coerce.number().positive().max(50000), iban: z.string().trim().min(26,"IBAN bilgisi eksik.").max(32,"IBAN çok uzun.") })
 ]);
 
 export async function GET() {
