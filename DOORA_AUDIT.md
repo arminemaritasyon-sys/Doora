@@ -28,7 +28,7 @@ Durum: Devam ediyor. Tamamlanan inceleme ve düzeltmeler, canlı ortamda onay be
 | Orta | Kaydedilenler sekmelerinde Radix roving-focus bileşeni kullanılıyordu. | Yerel butonlara taşındı; Radix sekme bağımlılığı kaldırıldı. |
 
 ## Henüz tamamlanmamış / doğrulanması gerekenler
-- Şifre sıfırlama ve doğrulama kodunu yeniden gönderme akışı.
+- Şifre sıfırlama ve doğrulama kodunu yeniden gönderme akışı kaynakta eklendi; Neon Auth üzerinde uçtan uca e-posta testi bekliyor.
 - Bildirim tercihleri kayıt ediliyor; tüm bildirim üretim noktalarında bu tercihlere uyulup uyulmadığı tamamlanmalı.
 - Bildirim merkezi / okunmamış bildirim listesi kullanıcı arayüzü bulunmuyor.
 - Şikâyet ve anlaşmazlıkları inceleyecek yönetici ekranı ve çözüm API'si bulunmuyor.

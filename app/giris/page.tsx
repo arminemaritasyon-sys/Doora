@@ -38,9 +38,10 @@ export default function SignInPage() {
     setBusy(true);
     setMessage("");
     try {
-      const result = resetStep
-        ? await authClient.forgetPassword.emailOtp({ email })
-        : await authClient.emailOtp.sendVerificationOtp({ email, type: "email-verification" });
+      const result = await authClient.emailOtp.sendVerificationOtp({
+        email,
+        type: resetStep ? "forget-password" : "email-verification"
+      });
       if (result.error) throw new Error(result.error.message || "Yeni kod gönderilemedi.");
       setMessage("Yeni doğrulama kodunu e-posta adresine gönderdik.");
     } catch (error) {
@@ -56,7 +57,7 @@ export default function SignInPage() {
     setMessage("");
     try {
       if (resetStep === "request") {
-        const result = await authClient.forgetPassword.emailOtp({ email });
+        const result = await authClient.emailOtp.sendVerificationOtp({ email, type: "forget-password" });
         if (result.error) throw new Error(result.error.message || "Şifre yenileme kodu gönderilemedi.");
         setResetStep("verify");
         setOtp("");

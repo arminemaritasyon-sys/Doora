@@ -28,7 +28,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
   const user=await getCurrentUser();
   const isOwner=user?.id===String(task.owner_id);
   const date=new Intl.DateTimeFormat("tr-TR",{day:"numeric",month:"long",year:"numeric"}).format(new Date(task.created_at));
-  const statusLabel:Record<string,string>={open:"Tekliflere açık",paused:"Geçici olarak pasif",assigned:"İş başladı",completed:"Tamamlandı",cancelled:"İptal edildi"};
+  const statusLabel:Record<string,string>={open:"Tekliflere açık",paused:"Geçici olarak pasif",assigned:"İş başladı",completed:"Tamamlandı",cancelled:"İptal edildi",disputed:"İncelemede"};
   return <main className="doora-page doora-task-detail-page">
     <header className="doora-app-header">
       <Link className="doora-brand" href="/"><span className="doora-brand-mark">d</span><span>doora<span>.</span></span></Link>
