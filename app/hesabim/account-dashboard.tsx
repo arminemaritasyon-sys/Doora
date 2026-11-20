@@ -14,6 +14,17 @@ const dates=(v:string)=>new Intl.DateTimeFormat("tr-TR",{day:"numeric",month:"sh
 const taskLabel:Record<string,string>={open:"Yayında",paused:"Pasif",assigned:"Devam ediyor",completed:"Tamamlandı",disputed:"İncelemede",cancelled:"İptal"};
 const txIcon:Record<string,any>={test_topup:ArrowDownLeft,escrow_lock:ShieldCheck,escrow_release:ArrowUpRight,escrow_refund:ArrowDownLeft,withdrawal_request:ArrowUpRight,withdrawal_rejected:X};
 const categories=["Alışveriş","Teslimat","Ev işleri","Taşıma","Tamir","Diğer"];
+
+function WorkProgress({started,requested,completed,disputed}:{started:boolean;requested:boolean;completed:boolean;disputed:boolean}){
+ const current=completed?3:requested?2:started?1:0;
+ const steps=["Kabul","Başladı","Bitti","Onay"];
+ return <div className={"work-progress"+(disputed?" is-disputed":"")} aria-label={"İş aşaması: "+(disputed?"İncelemede":steps[current])}>
+  <div className="work-progress-track">{steps.map((label,i)=><div className={"work-progress-step"+(i<current?" is-done":i===current&&!disputed?" is-current":"")} key={label}>
+   <span className="work-progress-node">{i<current?<Check size={13}/>:i+1}</span><small>{label}</small>
+  </div>)}</div>{disputed?<span className="work-progress-note">İncelemede</span>:null}
+ </div>
+}
+
 export default function AccountDashboard({name,tasks,assigned,received,taskCount,pendingOfferCount}:Props){
  const [wallet,setWallet]=useState<WalletData|null>(null),[amount,setAmount]=useState(""),[iban,setIban]=useState(""),[busy,setBusy]=useState(false),[tab,setTab]=useState("offers"),[modal,setModal]=useState<"topup"|"withdraw"|"task"|"edit"|null>(null),[editingTaskId,setEditingTaskId]=useState<string|null>(null);
  const [reviewRating,setReviewRating]=useState<Record<string,string>>({}),[reviewText,setReviewText]=useState<Record<string,string>>({}),[rejectReason,setRejectReason]=useState<Record<string,string>>({});
@@ -66,22 +77,24 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
   <section className="account-section">
    <div className="account-section-head"><h2>Üstlendiğim işler</h2><span>{assigned.length} iş</span></div>
    {assigned.length?assigned.map(t=><article className="account-task-card provider-task-card" key={t.id}>
-    <div className="account-task-main"><span className={"account-state "+t.status}>{t.status==="completed"?"Tamamlandı":t.status==="disputed"?"İncelemede":t.completion_requested_at?"Onay bekliyor":t.work_started_at?"İş üzerinde çalışılıyor":"Başlamadı"}</span><b>{t.title}</b><strong>{money(t.budget)}</strong><small>İlan sahibi: {t.owner_name}</small></div>
-    <div className="account-task-controls">
-     {t.status==="assigned"&&!t.work_started_at?<button className="publish-action" onClick={()=>workflowAction(t.id,"start")}><Play size={15}/> İşe başladım</button>:null}
-     {t.status==="assigned"&&t.work_started_at&&!t.completion_requested_at?<button className="complete" onClick={()=>workflowAction(t.id,"mark_done")}><Check size={15}/> İşi tamamladım</button>:null}
-     {t.status==="assigned"&&t.completion_requested_at?<span className="account-muted">İlan sahibinin onayı bekleniyor.</span>:null}
-     {t.status==="disputed"?<span className="account-muted">İş için inceleme bildirimi açıldı.</span>:null}
-     <a href={"/ilan/"+t.id}>İlanı gör <ArrowUpRight size={14}/></a>
+    <div className="account-task-main"><span className={"account-state "+t.status}>{t.status==="completed"?"Tamamlandı":t.status==="disputed"?"İncelemede":t.completion_requested_at?"Onay bekliyor":t.work_started_at?"Devam ediyor":"Yeni iş"}</span><b>{t.title}</b><strong>{money(t.budget)}</strong><small>{t.owner_name}</small></div>
+    <WorkProgress started={!!t.work_started_at} requested={!!t.completion_requested_at} completed={t.status==="completed"} disputed={t.status==="disputed"}/>
+    <div className="account-task-controls work-progress-actions">
+     {t.status==="assigned"&&!t.work_started_at?<button className="publish-action" onClick={()=>workflowAction(t.id,"start")}><Play size={15}/> İşe başla</button>:null}
+     {t.status==="assigned"&&t.work_started_at&&!t.completion_requested_at?<button className="complete" onClick={()=>workflowAction(t.id,"mark_done")}><Check size={15}/> Tamamlandı olarak işaretle</button>:null}
+     {t.status==="assigned"&&t.completion_requested_at?<span className="account-muted"><Clock3 size={14}/> İşveren onayı bekleniyor</span>:null}
+     {t.status==="disputed"?<span className="account-muted">İnceleme sürecinde</span>:null}
+     <a href={"/ilan/"+t.id}>Detay <ArrowUpRight size={14}/></a>
     </div>
-    {t.status==="completed"&&!t.reviewed?<form className="account-review-form" onSubmit={e=>{e.preventDefault();submitReview(t.id)}}><b>İlan sahibini değerlendir</b><select aria-label="Puan" value={reviewRating[t.id]||"5"} onChange={e=>setReviewRating(v=>({...v,[t.id]:e.target.value}))}><option value="5">★★★★★ · 5</option><option value="4">★★★★ · 4</option><option value="3">★★★ · 3</option><option value="2">★★ · 2</option><option value="1">★ · 1</option></select><input value={reviewText[t.id]||""} onChange={e=>setReviewText(v=>({...v,[t.id]:e.target.value}))} maxLength={1000} placeholder="Kısa bir değerlendirme yaz (isteğe bağlı)"/><button>Değerlendirmeyi gönder</button></form>:null}
-    <div className="offer-safety-actions"><button onClick={()=>safetyAction("block",t.owner_id)}><Ban size={14}/> İlan sahibini engelle</button><button onClick={()=>safetyAction("report",t.owner_id,t.id)}><Flag size={14}/> Şikâyet et</button></div>
+    {t.status==="completed"&&!t.reviewed?<form className="account-review-form" onSubmit={e=>{e.preventDefault();submitReview(t.id)}}><b>Değerlendir</b><select aria-label="Puan" value={reviewRating[t.id]||"5"} onChange={e=>setReviewRating(v=>({...v,[t.id]:e.target.value}))}><option value="5">★★★★★ · 5</option><option value="4">★★★★ · 4</option><option value="3">★★★ · 3</option><option value="2">★★ · 2</option><option value="1">★ · 1</option></select><input value={reviewText[t.id]||""} onChange={e=>setReviewText(v=>({...v,[t.id]:e.target.value}))} maxLength={1000} placeholder="Yorum (isteğe bağlı)"/><button>Gönder</button></form>:null}
+    <div className="offer-safety-actions"><button onClick={()=>safetyAction("block",t.owner_id)}><Ban size={14}/> Engelle</button><button onClick={()=>safetyAction("report",t.owner_id,t.id)}><Flag size={14}/> Şikâyet</button></div>
    </article>):<p className="account-muted">Henüz üstlendiğin iş yok.</p>}
   </section>
   <section className="account-section">
    <div className="account-section-head"><h2>İlanlarım</h2><span>{taskCount} ilan</span><button className="account-inline-create" onClick={()=>{setTaskForm({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});setModal("task")}}><Plus size={15}/> İlan oluştur</button></div>
    {tasks.length?tasks.map(t=><article className="account-task-card" key={t.id}>
-    <div className="account-task-main"><span className={"account-state "+t.status}>{t.status==="assigned"&&t.completion_requested_at?"Onay bekliyor":t.status==="assigned"&&t.work_started_at?"İş üzerinde":taskLabel[t.status]||t.status}</span><b>{t.title}</b><strong>{money(t.budget)}</strong></div>
+    <div className="account-task-main"><span className={"account-state "+t.status}>{t.status==="assigned"&&t.completion_requested_at?"Onay bekliyor":t.status==="assigned"&&t.work_started_at?"Devam ediyor":taskLabel[t.status]||t.status}</span><b>{t.title}</b><strong>{money(t.budget)}</strong></div>
+    {t.status==="assigned"||t.status==="completed"||t.status==="disputed"?<WorkProgress started={!!t.work_started_at} requested={!!t.completion_requested_at} completed={t.status==="completed"} disputed={t.status==="disputed"}/>:null}
     <div className="account-task-controls">
      {t.status==="open"?<button className="pause-action" onClick={()=>taskAction(t.id,"pause")}><Pause size={15}/> Pasife al</button>:null}
      {t.status==="paused"?<button className="publish-action" onClick={()=>taskAction(t.id,"publish")}><Play size={15}/> Aktife al</button>:null}
