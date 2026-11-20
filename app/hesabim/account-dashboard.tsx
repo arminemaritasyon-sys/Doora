@@ -56,7 +56,7 @@ export default function AccountDashboard({name,tasks,assigned,received,sentOffer
   }
  }
  useEffect(()=>{loadWallet()},[]);
- useEffect(()=>{if(!modal&&!listingOffersTaskId)return;const oldOverflow=document.body.style.overflow;const oldOverscroll=document.body.style.overscrollBehavior;document.body.style.overflow="hidden";document.body.style.overscrollBehavior="none";return()=>{document.body.style.overflow=oldOverflow;document.body.style.overscrollBehavior=oldOverscroll}},[modal,listingOffersTaskId]);
+ useEffect(()=>{if(!modal&&!listingOffersTaskId)return;const body=document.body;const scrollY=window.scrollY;const old={position:body.style.position,top:body.style.top,left:body.style.left,right:body.style.right,width:body.style.width,overflow:body.style.overflow,overscroll:body.style.overscrollBehavior};body.style.position="fixed";body.style.top=`-${scrollY}px`;body.style.left="0";body.style.right="0";body.style.width="100%";body.style.overflow="hidden";body.style.overscrollBehavior="none";return()=>{body.style.position=old.position;body.style.top=old.top;body.style.left=old.left;body.style.right=old.right;body.style.width=old.width;body.style.overflow=old.overflow;body.style.overscrollBehavior=old.overscroll;window.scrollTo({top:scrollY,left:0,behavior:"instant" as ScrollBehavior})}},[modal,listingOffersTaskId]);
  async function walletAction(action:"test_topup"|"withdraw"){
   const value=Number(amount);
   if(!Number.isFinite(value)||value<=0||value>50000){toast.error("1 ₺ ile 50.000 ₺ arasında geçerli bir tutar gir.");return}
