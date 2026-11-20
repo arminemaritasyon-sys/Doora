@@ -1789,3 +1789,28 @@ button, a, input, select, textarea { touch-action:manipulation; }
  .offer-reject-reason{width:100%}
  .provider-task-card .account-task-controls>*{max-width:100%}
 }
+
+/* Compact native-app style work lifecycle */
+.work-progress{margin:13px 0 7px;padding:15px 13px 10px;border:1px solid #edf0e9;border-radius:16px;background:#fafbf9}
+.work-progress-track{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));position:relative;gap:0}
+.work-progress-track:before{content:"";position:absolute;top:14px;left:12.5%;right:12.5%;height:2px;background:#e5e9e1}
+.work-progress-step{position:relative;z-index:1;display:flex;min-width:0;align-items:center;flex-direction:column;gap:7px;color:#a0a79b}
+.work-progress-node{display:grid;width:29px;height:29px;place-items:center;border:2px solid #e2e7de;border-radius:50%;background:#fff;color:#9ba395;font-size:11px;font-weight:800}
+.work-progress-step small{font-size:10px;font-weight:700;white-space:nowrap}
+.work-progress-step.is-done .work-progress-node{border-color:#2e8657;background:#2e8657;color:#fff}
+.work-progress-step.is-current .work-progress-node{border-color:#2e8657;background:#fff;color:#2e8657;box-shadow:0 0 0 4px #2e86571a}
+.work-progress-step.is-done small,.work-progress-step.is-current small{color:#355d40}
+.work-progress.is-disputed{border-color:#f1d9d7;background:#fffafa}
+.work-progress-note{display:block;margin-top:9px;color:#b54743;font-size:11px;font-weight:750;text-align:center}
+.work-progress-actions{align-items:center}
+.work-progress-actions .account-muted{display:inline-flex;align-items:center;gap:6px;font-size:11px}
+@media(max-width:650px){
+ .provider-task-card{padding:14px;border-radius:17px}
+ .work-progress{margin:11px 0 5px;padding:13px 8px 9px;border-radius:14px}
+ .work-progress-node{width:27px;height:27px;font-size:10px}
+ .work-progress-track:before{top:13px}
+ .work-progress-step{gap:6px}
+ .work-progress-step small{font-size:9px}
+ .work-progress-actions{gap:8px}
+ .work-progress-actions button{min-height:43px;flex:1;justify-content:center;font-size:12px}
+}
