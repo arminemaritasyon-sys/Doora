@@ -29,7 +29,23 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
  const [wallet,setWallet]=useState<WalletData|null>(null),[walletLoading,setWalletLoading]=useState(true),[walletError,setWalletError]=useState(""),[amount,setAmount]=useState(""),[iban,setIban]=useState(""),[busy,setBusy]=useState(false),[tab,setTab]=useState("offers"),[accountView,setAccountView]=useState<"offers"|"assigned"|"listings">("offers"),[modal,setModal]=useState<"topup"|"withdraw"|"task"|"edit"|null>(null),[editingTaskId,setEditingTaskId]=useState<string|null>(null);
  const [reviewRating,setReviewRating]=useState<Record<string,string>>({}),[reviewText,setReviewText]=useState<Record<string,string>>({}),[rejectReason,setRejectReason]=useState<Record<string,string>>({});
  const [taskForm,setTaskForm]=useState<TaskForm>({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});
- async function loadWallet(){setWalletLoading(true);try{const r=await fetch("/api/wallet",{cache:"no-store"});const d=await r.json();if(!r.ok)throw new Error(d.error||"Cüzdan bilgileri alınamadı.");if(!d?.account)throw new Error("Cüzdan verileri beklenen biçimde gelmedi.");setWallet(d);setWalletError("")}catch(e){setWalletError(e instanceof Error?e.message:"Cüzdan bilgileri alınamadı.")}finally{setWalletLoading(false)}}
+ async function loadWallet(){
+  setWalletLoading(true);
+  const controller=new AbortController();
+  const timeout=window.setTimeout(()=>controller.abort(),10000);
+  try{
+   const r=await fetch("/api/wallet",{cache:"no-store",signal:controller.signal});
+   const raw=await r.text();let d:any={};try{d=raw?JSON.parse(raw):{}}catch{}
+   if(!r.ok)throw new Error(d.error||"Cüzdan bilgileri alınamadı.");
+   if(!d?.account)throw new Error("Cüzdan verileri beklenen biçimde gelmedi.");
+   setWallet(d);setWalletError("");
+  }catch(e){
+   setWalletError(e instanceof DOMException&&e.name==="AbortError"?"Cüzdan yanıtı zaman aşımına uğradı. Tekrar deneyebilirsin.":e instanceof Error?e.message:"Cüzdan bilgileri alınamadı.");
+  }finally{
+   window.clearTimeout(timeout);
+   setWalletLoading(false);
+  }
+ }
  useEffect(()=>{loadWallet()},[]);
  useEffect(()=>{if(!modal)return;const oldOverflow=document.body.style.overflow;const oldOverscroll=document.body.style.overscrollBehavior;document.body.style.overflow="hidden";document.body.style.overscrollBehavior="none";return()=>{document.body.style.overflow=oldOverflow;document.body.style.overscrollBehavior=oldOverscroll}},[modal]);
  async function walletAction(action:"test_topup"|"withdraw"){
