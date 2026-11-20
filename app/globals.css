@@ -230,3 +230,76 @@ button:disabled{opacity:.55;cursor:not-allowed}
  .account-topbar{height:62px;padding:0 17px}.account-topbar .brand{font-size:23px}.account-shell{padding:35px 16px 45px}.account-welcome{align-items:flex-start;margin-bottom:20px}.account-welcome h1{font-size:25px}.account-stats{grid-template-columns:repeat(2,1fr);gap:8px}.account-stats>div{padding:14px}.account-stats strong{font-size:23px}.account-section{padding:16px;margin-bottom:9px}.account-section-head h2{font-size:14px}.account-list article{padding:12px 0}.account-list b{font-size:10px}.account-list small{font-size:9px}.account-list strong{font-size:12px}.saved-grid{grid-template-columns:1fr;gap:9px}.saved-grid article{padding:16px}.account-empty-card{padding:23px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* DOORA pistachio identity */
+:root{
+  --bg:#f7f9f5;--surface:#fff;--ink:#10130f;--muted:#6f776b;
+  --line:#e7ece3;--soft:#f0f5eb;--black:#10130f;
+  --pistachio:#c5e4a5;--pistachio-deep:#9fc77b;--pistachio-ink:#26351d;
+  --shadow:0 18px 50px rgba(27,42,19,.08);
+}
+::selection{background:#c5e4a5;color:#10130f}
+.brand-dot{color:#8eb66a}
+.brand-mark{background:#10130f;color:#c5e4a5}
+.hero-section{background:linear-gradient(115deg,#f5f8f1 0%,#eef5e8 52%,#e6f0dc 100%)}
+.hero-copy h1 span,.section-title-row h2 span,.how-heading h2 span{color:#83a967}
+.eyebrow{color:#718067}
+.status-dot{background:#91b66f;box-shadow:0 0 0 4px #91b66f22}
+.proof-icon,.quick-points>div>span{background:#e5efd9;color:#456333}
+.visual-grid{opacity:.5}
+.visual-ring{border-color:#d3e2c8}
+.visual-card{border-color:#e0ead8}
+.visual-tag{color:#789267}
+.visual-live{background:#edf5e6;color:#425b32}
+.visual-live i{background:#8db86a}
+.visual-icon,.visual-floating span{background:#bddd9c;color:#24351c}
+.visual-card-bottom span{color:#6d875d}
+.float-one,.float-two{border-color:#e1ead9}
+.category-pill.selected{background:#bddd9c;color:#203019;border-color:#bddd9c}
+.category-pill:hover{border-color:#a9c990}
+.task-category{background:#edf5e6;color:#526b40}
+.save-button.is-saved{background:#bddd9c;color:#26351d;border-color:#bddd9c}
+.task-offer{background:#10130f}
+.task-offer:hover{background:#2a3424}
+.how-section{background:#f3f7ef}
+.how-grid article{border-color:#e3ebdc}
+.how-icon{background:#bddd9c;color:#26351d}
+.empty-state>span{background:#edf5e6;color:#5d7c47}
+.search-toolbar{border-color:#e3ebdc}
+.category-pill{border-color:#e4eadf}
+.filter-control{background:#edf4e7;color:#526b40}
+.task-card:hover{border-color:#c9dabb;box-shadow:0 16px 40px rgba(54,83,37,.08)}
+.avatar{background:#edf4e7;color:#526b40}
+.skeleton-card{background:linear-gradient(100deg,#f2f5ef 30%,#e6eddf 45%,#f2f5ef 60%);background-size:200% 100%}
+.mobile-dock .dock-active{color:#567b3d}
+.dock-add{background:#bddd9c;color:#26351d}
+.task-form input:focus,.task-form select:focus,.task-form textarea:focus{border-color:#9cbe7d;box-shadow:0 0 0 3px #bddd9c44}
+.auth-page{background:#f3f7ef}
+.auth-input:focus-within{border-color:#9cbe7d;box-shadow:0 0 0 3px #bddd9c44}
+.account-page{background:#f5f8f2}
+.account-topbar{background:#fff}
+.account-stats>div{border-color:#e3ebdc}
+.account-saved-link{border-color:#e3ebdc}
+.account-empty-card{border-color:#d7e4cd}
+@media(min-width:651px){
+ .hero-visual::before{
+  content:"";position:absolute;inset:18px 4px 18px 28px;border-radius:30px;
+  background:linear-gradient(140deg,rgba(28,42,19,.08),rgba(28,42,19,.2)),url("https://images.unsplash.com/photo-1607082349566-187342175e2f?auto=format&fit=crop&w=1200&q=85") center/cover;
+  box-shadow:0 25px 65px rgba(40,60,28,.13);opacity:.82;
+ }
+ .visual-grid{z-index:1;pointer-events:none}
+ .visual-card{margin-left:18px}
+}
+@media(max-width:650px){
+ .hero-section{background:linear-gradient(155deg,#f5f8f1 0%,#edf5e7 100%)}
+ .hero-visual::before{content:"";position:absolute;inset:10px 3px 10px 3px;border-radius:23px;background:linear-gradient(140deg,rgba(28,42,19,.1),rgba(28,42,19,.24)),url("https://images.unsplash.com/photo-1607082349566-187342175e2f?auto=format&fit=crop&w=900&q=80") center/cover;opacity:.78}
+ .visual-card{margin-top:0}
+}
+@media(prefers-reduced-motion:no-preference){
+ .brand-mark{transition:transform .25s,background .25s}
+ .brand:hover .brand-mark{transform:rotate(-7deg) scale(1.04);background:#bddd9c;color:#26351d}
+ .button-primary:hover{box-shadow:0 7px 20px rgba(20,30,14,.14)}
+ .visual-floating{animation:doora-float 5s ease-in-out infinite}
+ .float-two{animation-delay:-2.5s}
+}
+@keyframes doora-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
