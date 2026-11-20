@@ -26,7 +26,7 @@ function WorkProgress({started,requested,completed,disputed}:{started:boolean;re
 }
 
 export default function AccountDashboard({name,tasks,assigned,received,taskCount,pendingOfferCount}:Props){
- const [wallet,setWallet]=useState<WalletData|null>(null),[walletLoading,setWalletLoading]=useState(true),[walletError,setWalletError]=useState(""),[amount,setAmount]=useState(""),[iban,setIban]=useState(""),[busy,setBusy]=useState(false),[tab,setTab]=useState("offers"),[modal,setModal]=useState<"topup"|"withdraw"|"task"|"edit"|null>(null),[editingTaskId,setEditingTaskId]=useState<string|null>(null);
+ const [wallet,setWallet]=useState<WalletData|null>(null),[walletLoading,setWalletLoading]=useState(true),[walletError,setWalletError]=useState(""),[amount,setAmount]=useState(""),[iban,setIban]=useState(""),[busy,setBusy]=useState(false),[tab,setTab]=useState("offers"),[accountView,setAccountView]=useState<"offers"|"assigned"|"listings">("offers"),[modal,setModal]=useState<"topup"|"withdraw"|"task"|"edit"|null>(null),[editingTaskId,setEditingTaskId]=useState<string|null>(null);
  const [reviewRating,setReviewRating]=useState<Record<string,string>>({}),[reviewText,setReviewText]=useState<Record<string,string>>({}),[rejectReason,setRejectReason]=useState<Record<string,string>>({});
  const [taskForm,setTaskForm]=useState<TaskForm>({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});
  async function loadWallet(){setWalletLoading(true);try{const r=await fetch("/api/wallet",{cache:"no-store"});const d=await r.json();if(!r.ok)throw new Error(d.error||"Cüzdan bilgileri alınamadı.");if(!d?.account)throw new Error("Cüzdan verileri beklenen biçimde gelmedi.");setWallet(d);setWalletError("")}catch(e){setWalletError(e instanceof Error?e.message:"Cüzdan bilgileri alınamadı.")}finally{setWalletLoading(false)}}
@@ -81,7 +81,12 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
    <button className="secondary" disabled={busy||walletLoading||!!walletError} onClick={()=>{setAmount("");setModal("withdraw")}}><ArrowUpRight/> Para çek</button>
    <button className="create-listing-action" disabled={busy} onClick={()=>{setTaskForm({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});setEditingTaskId(null);setModal("task")}}><Plus/> İlan oluştur</button>
   </section>
-  <section className="account-section">
+  <nav className="account-view-switch" aria-label="Hesap bölümleri">
+   <button className={accountView==="offers"?"active":""} onClick={()=>setAccountView("offers")}>Tekliflerim <span>{pendingOfferCount}</span></button>
+   <button className={accountView==="assigned"?"active":""} onClick={()=>setAccountView("assigned")}>Üstlendiğim işler <span>{assigned.length}</span></button>
+   <button className={accountView==="listings"?"active":""} onClick={()=>setAccountView("listings")}>İlanlarım <span>{taskCount}</span></button>
+  </nav>
+  <section className={"account-section account-section-offers"+(accountView!=="offers"?" is-hidden":"")}>
    <div className="account-section-head"><h2>Tekliflerim</h2><span>{pendingOfferCount} yeni</span></div>
    <div className="account-tabs"><button className={tab==="offers"?"active":""} onClick={()=>setTab("offers")}>İlanlarıma gelen</button><button className={tab==="activity"?"active":""} onClick={()=>setTab("activity")}>Hesap hareketleri</button></div>
    {tab==="offers"?<div className="account-offers">{received.length?received.map(o=><article className="account-offer-card" key={o.id}>
@@ -91,7 +96,7 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
     <div className="offer-safety-actions"><button onClick={()=>safetyAction("block",o.bidder_id)}><Ban size={14}/> Engelle</button><button onClick={()=>safetyAction("report",o.bidder_id,o.task_id)}><Flag size={14}/> Şikâyet et</button></div>
    </article>):<p className="account-muted">Henüz teklif gelmedi.</p>}</div>:<div className="account-transactions">{wallet?.transactions?.length?wallet.transactions.map(tx=>{const Icon=txIcon[tx.type]||Clock3;return <article key={tx.id}><span><Icon size={18}/></span><div><b>{tx.description}</b><small>{dates(tx.created_at)} · {tx.status==="pending"?"Bekliyor":"Tamamlandı"}</small></div><strong className={tx.type==="escrow_lock"||tx.type==="withdrawal_request"?"minus":"plus"}>{tx.type==="escrow_lock"||tx.type==="withdrawal_request"?"−":"+"}{money(tx.amount)}</strong></article>}):<p className="account-muted">Henüz hesap hareketi yok.</p>}</div>}
   </section>
-  <section className="account-section">
+  <section className={"account-section account-section-assigned"+(accountView!=="assigned"?" is-hidden":"")}>
    <div className="account-section-head"><h2>Üstlendiğim işler</h2><span>{assigned.length} iş</span></div>
    {assigned.length?assigned.map(t=><article className="account-task-card provider-task-card" key={t.id}>
     <div className="account-task-main"><span className={"account-state "+t.status}>{t.status==="completed"?"Tamamlandı":t.status==="disputed"?"İncelemede":t.completion_requested_at?"Onay bekliyor":t.work_started_at?"Devam ediyor":"Yeni iş"}</span><b>{t.title}</b><strong>{money(t.budget)}</strong><div className="account-person compact-person">{t.avatar_url?<img src={t.avatar_url} alt=""/>:<span className="account-person-avatar">{(t.owner_name||"D").slice(0,1).toLocaleUpperCase("tr")}</span>}<div><b>{t.owner_name||"DOORA üyesi"}</b><small>İşveren</small></div></div></div>
@@ -107,7 +112,7 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
     <div className="offer-safety-actions"><button onClick={()=>safetyAction("block",t.owner_id)}><Ban size={14}/> Engelle</button><button onClick={()=>safetyAction("report",t.owner_id,t.id)}><Flag size={14}/> Şikâyet</button></div>
    </article>):<p className="account-muted">Henüz üstlendiğin iş yok.</p>}
   </section>
-  <section className="account-section">
+  <section className={"account-section account-section-listings"+(accountView!=="listings"?" is-hidden":"")}>
    <div className="account-section-head"><h2>İlanlarım</h2><span>{taskCount} ilan</span><button className="account-inline-create" onClick={()=>{setTaskForm({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});setModal("task")}}><Plus size={15}/> İlan oluştur</button></div>
    {tasks.length?tasks.map(t=><article className="account-task-card" key={t.id}>
     <div className="account-task-main"><span className={"account-state "+t.status}>{t.status==="assigned"&&t.completion_requested_at?"Onay bekliyor":t.status==="assigned"&&t.work_started_at?"Devam ediyor":taskLabel[t.status]||t.status}</span><b>{t.title}</b><strong>{money(t.budget)}</strong></div>
