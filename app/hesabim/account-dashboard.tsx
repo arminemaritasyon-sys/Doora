@@ -98,7 +98,7 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
   </section>
   <section className={"account-section account-section-assigned"+(accountView!=="assigned"?" is-hidden":"")}>
    <div className="account-section-head"><h2>Üstlendiğim işler</h2><span>{assigned.length} iş</span></div>
-   {assigned.length?assigned.map(t=><article className="account-task-card provider-task-card" key={t.id}>
+   <div className="account-card-deck">{assigned.length?assigned.map(t=><article className="account-task-card provider-task-card" key={t.id}>
     <div className="account-task-main"><span className={"account-state "+t.status}>{t.status==="completed"?"Tamamlandı":t.status==="disputed"?"İncelemede":t.completion_requested_at?"Onay bekliyor":t.work_started_at?"Devam ediyor":"Yeni iş"}</span><b>{t.title}</b><strong>{money(t.budget)}</strong><div className="account-person compact-person">{t.avatar_url?<img src={t.avatar_url} alt=""/>:<span className="account-person-avatar">{(t.owner_name||"D").slice(0,1).toLocaleUpperCase("tr")}</span>}<div><b>{t.owner_name||"DOORA üyesi"}</b><small>İşveren</small></div></div></div>
     <WorkProgress started={!!t.work_started_at} requested={!!t.completion_requested_at} completed={t.status==="completed"} disputed={t.status==="disputed"}/>
     <div className="account-task-controls work-progress-actions">
@@ -110,11 +110,11 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
     </div>
     {t.status==="completed"&&!t.reviewed?<form className="account-review-form" onSubmit={e=>{e.preventDefault();submitReview(t.id)}}><b>Değerlendir</b><select aria-label="Puan" value={reviewRating[t.id]||"5"} onChange={e=>setReviewRating(v=>({...v,[t.id]:e.target.value}))}><option value="5">★★★★★ · 5</option><option value="4">★★★★ · 4</option><option value="3">★★★ · 3</option><option value="2">★★ · 2</option><option value="1">★ · 1</option></select><input value={reviewText[t.id]||""} onChange={e=>setReviewText(v=>({...v,[t.id]:e.target.value}))} maxLength={1000} placeholder="Yorum (isteğe bağlı)"/><button>Gönder</button></form>:null}
     <div className="offer-safety-actions"><button onClick={()=>safetyAction("block",t.owner_id)}><Ban size={14}/> Engelle</button><button onClick={()=>safetyAction("report",t.owner_id,t.id)}><Flag size={14}/> Şikâyet</button></div>
-   </article>):<p className="account-muted">Henüz üstlendiğin iş yok.</p>}
+   </article>):<p className="account-muted">Henüz üstlendiğin iş yok.</p>}</div>
   </section>
   <section className={"account-section account-section-listings"+(accountView!=="listings"?" is-hidden":"")}>
    <div className="account-section-head"><h2>İlanlarım</h2><span>{taskCount} ilan</span><button className="account-inline-create" onClick={()=>{setTaskForm({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});setModal("task")}}><Plus size={15}/> İlan oluştur</button></div>
-   {tasks.length?tasks.map(t=><article className="account-task-card" key={t.id}>
+   <div className="account-card-deck">{tasks.length?tasks.map(t=><article className="account-task-card" key={t.id}>
     <div className="account-task-main"><span className={"account-state "+t.status}>{t.status==="assigned"&&t.completion_requested_at?"Onay bekliyor":t.status==="assigned"&&t.work_started_at?"Devam ediyor":taskLabel[t.status]||t.status}</span><b>{t.title}</b><strong>{money(t.budget)}</strong></div>
     {t.assigned_user_id?<div className="account-person compact-person assigned-person">{t.assigned_user_avatar?<img src={t.assigned_user_avatar} alt=""/>:<span className="account-person-avatar">{(t.assigned_user_name||"D").slice(0,1).toLocaleUpperCase("tr")}</span>}<div><b>{t.assigned_user_name||"DOORA üyesi"}</b><small>İşi üstlenen</small></div></div>:null}
     {t.status==="assigned"||t.status==="completed"||t.status==="disputed"?<WorkProgress started={!!t.work_started_at} requested={!!t.completion_requested_at} completed={t.status==="completed"} disputed={t.status==="disputed"}/>:null}
@@ -126,7 +126,7 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
      <a href={"/ilan/"+t.id}>İlanı gör <ArrowUpRight size={14}/></a>
     </div>
     {t.status==="completed"&&t.assigned_user_id&&!t.reviewed?<form className="account-review-form" onSubmit={e=>{e.preventDefault();submitReview(t.id)}}><b>İşi yapan kişiyi değerlendir</b><select aria-label="Puan" value={reviewRating[t.id]||"5"} onChange={e=>setReviewRating(v=>({...v,[t.id]:e.target.value}))}><option value="5">★★★★★ · 5</option><option value="4">★★★★ · 4</option><option value="3">★★★ · 3</option><option value="2">★★ · 2</option><option value="1">★ · 1</option></select><input value={reviewText[t.id]||""} onChange={e=>setReviewText(v=>({...v,[t.id]:e.target.value}))} maxLength={1000} placeholder="Kısa bir değerlendirme yaz (isteğe bağlı)"/><button>Değerlendirmeyi gönder</button></form>:null}
-   </article>):<p className="account-muted">Henüz ilan oluşturmadın.</p>}
+   </article>):<p className="account-muted">Henüz ilan oluşturmadın.</p>}</div>
   </section>
   <div className="account-footnote"><ShieldCheck size={15}/> TEST cüzdanıdır. Gerçek para tahsilatı ve banka ödemesi yapılmaz.</div>
   {modal&&<div className="account-modal-backdrop" onTouchMove={e=>{if(e.target===e.currentTarget)e.preventDefault()}} onMouseDown={e=>{if(e.target===e.currentTarget&&!busy)setModal(null)}}>
