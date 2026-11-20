@@ -90,10 +90,11 @@ export default async function AccountPage() {
           ), '[]'::json),
           'testMode', true
         ) FROM public.wallet_accounts wa WHERE wa.user_id=${user.id}) AS wallet
-    `, "wallet data")
+    `, "wallet data"),
+    withTimeout(db`SELECT display_name FROM public.user_profiles WHERE user_id=${user.id} LIMIT 1`, "profile name")
   ]);
 
-  const [tasksResult, receivedResult, sentOffersResult, assignedResult, taskTotalResult, receivedTotalResult, pendingOffersResult, walletResult] = queryResults;
+  const [tasksResult, receivedResult, sentOffersResult, assignedResult, taskTotalResult, receivedTotalResult, pendingOffersResult, walletResult, profileNameResult] = queryResults;
   const tasks = tasksResult.status === "fulfilled" ? tasksResult.value : (console.error("[account] tasks query failed", tasksResult.reason), []);
   const received = receivedResult.status === "fulfilled" ? receivedResult.value : (console.error("[account] received offers query failed", receivedResult.reason), []);
   const sentOffers = sentOffersResult.status === "fulfilled" ? sentOffersResult.value : (console.error("[account] sent offers query failed", sentOffersResult.reason), []);
@@ -103,6 +104,9 @@ export default async function AccountPage() {
   const pendingOffers = pendingOffersResult.status === "fulfilled" ? pendingOffersResult.value : (console.error("[account] pending offers count query failed", pendingOffersResult.reason), [{ count: 0 }]);
   const walletInitialData = walletResult.status === "fulfilled" ? walletResult.value[0]?.wallet ?? null : null;
   const walletInitialError = walletResult.status === "fulfilled" && walletInitialData ? "" : "Cüzdan bilgileri şu anda alınamadı.";
+  const accountName = profileNameResult.status === "fulfilled"
+    ? (profileNameResult.value[0]?.display_name || user.name || "DOORA üyesi")
+    : (user.name || "DOORA üyesi");
 
   const taskRows=tasks.map((x:any)=>({...x,created_at:String(x.created_at),work_started_at:x.work_started_at?String(x.work_started_at):null,completion_requested_at:x.completion_requested_at?String(x.completion_requested_at):null}));
   const receivedRows=received.map((x:any)=>({...x,created_at:String(x.created_at),bidder:x.bidder==null?null:String(x.bidder)}));
@@ -115,8 +119,8 @@ export default async function AccountPage() {
         <div className="doora-header-right"><Link href="/isler" className="header-discover">İşleri keşfet <ArrowUpRight size={15}/></Link><div className="header-logout"><LogoutButton/></div></div>
       </header>
       <div className="doora-page-container account-page-container">
-        <div className="wallet-lite-page-title"><h1>Hesabım</h1><span>DOORA</span><AccountSettings name={user.name || "DOORA üyesi"} email={user.email || ""}/></div>
-        <AccountDashboard name={user.name || "DOORA üyesi"} email={user.email || ""} walletInitialData={walletInitialData} walletInitialError={walletInitialError} tasks={taskRows} assigned={assigned.map((x:any)=>({...x,created_at:String(x.created_at),work_started_at:x.work_started_at?String(x.work_started_at):null,completion_requested_at:x.completion_requested_at?String(x.completion_requested_at):null}))} received={receivedRows} sentOffers={sentOfferRows} taskCount={Number(taskTotal[0]?.count ?? 0)} receivedCount={Number(receivedTotal[0]?.count ?? 0)} pendingOfferCount={Number(pendingOffers[0]?.count ?? 0)}/>
+        <div className="wallet-lite-page-title"><h1>Hesabım</h1><span>DOORA</span><AccountSettings name={accountName} email={user.email || ""}/></div>
+        <AccountDashboard name={accountName} email={user.email || ""} walletInitialData={walletInitialData} walletInitialError={walletInitialError} tasks={taskRows} assigned={assigned.map((x:any)=>({...x,created_at:String(x.created_at),work_started_at:x.work_started_at?String(x.work_started_at):null,completion_requested_at:x.completion_requested_at?String(x.completion_requested_at):null}))} received={receivedRows} sentOffers={sentOfferRows} taskCount={Number(taskTotal[0]?.count ?? 0)} receivedCount={Number(receivedTotal[0]?.count ?? 0)} pendingOfferCount={Number(pendingOffers[0]?.count ?? 0)}/>
         <div className="account-page-footer"><span>DOORA · Günlük işler, kolay çözümler.</span><Link href="/kaydedilenler">Kaydedilen işlerin <ArrowUpRight size={14}/></Link></div>
       </div>
       <AppBottomNav active="account" pendingOffers={Number(pendingOffers[0]?.count ?? 0)}/>

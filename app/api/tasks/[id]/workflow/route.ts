@@ -31,13 +31,21 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       if (action === "start") {
         const rows = await db`UPDATE public.tasks SET work_started_at=COALESCE(work_started_at,now()),updated_at=now() WHERE id=${id}::uuid AND status='assigned' AND work_started_at IS NULL RETURNING id`;
         if (!rows.length) return NextResponse.json({ error: "İş başlatma aşamasında değil." }, { status: 409 });
-        await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.owner_id},'work_started','İş başladı',${task.title + " işi hizmet veren tarafından başlatıldı."},${"/hesabim"})`;
+        try {
+          await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.owner_id},'work_started','İş başladı',${task.title + " işi hizmet veren tarafından başlatıldı."},${"/hesabim"})`;
+        } catch (notificationError) {
+          console.error("[task workflow] start notification failed", notificationError);
+        }
         return NextResponse.json({ success: true, status: "assigned", workStarted: true });
       }
       if (!task.work_started_at) return NextResponse.json({ error: "Önce işe başladığını bildirmen gerekiyor." }, { status: 409 });
       const rows = await db`UPDATE public.tasks SET completion_requested_at=now(),updated_at=now() WHERE id=${id}::uuid AND status='assigned' AND completion_requested_at IS NULL RETURNING id`;
       if (!rows.length) return NextResponse.json({ error: "İş tamamlandı olarak işaretlenemiyor." }, { status: 409 });
-      await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.owner_id},'work_done','İş tamamlandı olarak bildirildi',${task.title + " işi için tamamlanma onayı bekleniyor."},${"/hesabim"})`;
+      try {
+        await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.owner_id},'work_done','İş tamamlandı olarak bildirildi',${task.title + " işi için tamamlanma onayı bekleniyor."},${"/hesabim"})`;
+      } catch (notificationError) {
+        console.error("[task workflow] completion-request notification failed", notificationError);
+      }
       return NextResponse.json({ success: true, status: "assigned", awaitingConfirmation: true });
     }
 
@@ -45,15 +53,38 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     if (action === "confirm_complete") {
       if (task.status !== "assigned" || !task.completion_requested_at) return NextResponse.json({ error: "Hizmet veren henüz işi tamamlandı olarak bildirmedi." }, { status: 409 });
       const [released] = await db`SELECT * FROM public.doora_complete_task(${user.id},${id}::uuid)`;
-      await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.provider_id},'work_approved','İşin onaylandı',${task.title + " işi onaylandı, emanet ödeme cüzdanına aktarıldı."},${"/hesabim"})`;
+      try {
+        await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.provider_id},'work_approved','İşin onaylandı',${task.title + " işi onaylandı, emanet ödeme cüzdanına aktarıldı."},${"/hesabim"})`;
+      } catch (notificationError) {
+        console.error("[task workflow] completion notification failed after escrow release", notificationError);
+      }
       return NextResponse.json({ success: true, released });
     }
 
     if (task.status !== "assigned" || !task.completion_requested_at) return NextResponse.json({ error: "Sorun bildirimi için önce tamamlanma talebi gelmeli." }, { status: 409 });
     if (reason.trim().length < 5) return NextResponse.json({ error: "Lütfen sorunu en az 5 karakterle açıkla." }, { status: 400 });
-    await db`INSERT INTO public.task_disputes(task_id,opened_by,reason,details) VALUES(${id}::uuid,${user.id},'work_not_completed',${reason}) ON CONFLICT(task_id) DO UPDATE SET opened_by=EXCLUDED.opened_by,reason=EXCLUDED.reason,details=EXCLUDED.details,status='open',created_at=now(),resolved_at=NULL`;
-    await db`UPDATE public.tasks SET status='disputed',updated_at=now() WHERE id=${id}::uuid AND status='assigned' AND completion_requested_at IS NOT NULL`;
-    await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.provider_id},'work_disputed','İş için sorun bildirildi',${task.title + " işi için tamamlanmadı bildirimi yapıldı: " + reason},${"/hesabim"})`;
+    const [dispute] = await db`
+      WITH updated_task AS (
+        UPDATE public.tasks
+        SET status='disputed',updated_at=now()
+        WHERE id=${id}::uuid AND status='assigned' AND completion_requested_at IS NOT NULL
+        RETURNING id
+      ),
+      upserted_dispute AS (
+        INSERT INTO public.task_disputes(task_id,opened_by,reason,details)
+        SELECT id,${user.id},'work_not_completed',${reason} FROM updated_task
+        ON CONFLICT(task_id) DO UPDATE SET opened_by=EXCLUDED.opened_by,reason=EXCLUDED.reason,
+          details=EXCLUDED.details,status='open',created_at=now(),resolved_at=NULL
+        RETURNING task_id
+      )
+      SELECT task_id FROM upserted_dispute
+    `;
+    if (!dispute) return NextResponse.json({ error: "İşin durumu değişti. Sayfayı yenileyip tekrar kontrol et." }, { status: 409 });
+    try {
+      await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.provider_id},'work_disputed','İş için sorun bildirildi',${task.title + " işi için tamamlanmadı bildirimi yapıldı: " + reason},${"/hesabim"})`;
+    } catch (notificationError) {
+      console.error("[task workflow] dispute notification failed", notificationError);
+    }
     return NextResponse.json({ success: true, status: "disputed" });
   } catch (error) {
     console.error("[task workflow] failed", error);

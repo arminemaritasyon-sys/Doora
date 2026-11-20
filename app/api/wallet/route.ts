@@ -56,7 +56,8 @@ export async function POST(request: NextRequest) {
       const [result] = await db`SELECT * FROM public.doora_test_topup(${user.id},${parsed.data.amount},${parsed.data.idempotencyKey})`;
       return NextResponse.json({ success: true, testMode: true, account: result });
     }
-    const accountHolderName = user.name?.trim();
+    const [profile] = await db`SELECT display_name FROM public.user_profiles WHERE user_id=${user.id} LIMIT 1`;
+    const accountHolderName = (profile?.display_name || user.name || "").trim();
     if (!accountHolderName) return NextResponse.json({ error: "Para çekmek için profilinde ad soyad bilgisi bulunmalı." }, { status: 400 });
     const cleanIban = parsed.data.iban.replace(/\s/g, "").toUpperCase();
     const [withdrawal] = await db`SELECT * FROM public.doora_test_withdraw(${user.id},${parsed.data.amount},${cleanIban},${accountHolderName})`;

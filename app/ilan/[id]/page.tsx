@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowUpRight, MapPin, CalendarDays, Tag, Wallet, ShieldCheck
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/server";
 import TaskSafetyActions from "./task-safety-actions";
+import TaskDetailOffer from "./task-detail-offer";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
         <div className="task-detail-description">{task.description}</div>
         <div className="task-detail-bottom"><div><small>İŞ BÜTÇESİ</small><strong>{new Intl.NumberFormat("tr-TR",{maximumFractionDigits:2}).format(Number(task.budget))} ₺</strong></div><span><ShieldCheck size={16}/> DOORA güvencesiyle</span></div>
         <div className="task-detail-owner"><span className="task-detail-avatar">{task.avatar_url?<img src={task.avatar_url} alt=""/>:String(task.owner_name||"D").slice(0,1).toLocaleUpperCase("tr")}</span><div><small>İLAN SAHİBİ</small><b>{task.owner_name}</b></div></div>
-        {isOwner?<Link className="task-detail-primary" href="/hesabim">İlanını hesabından yönet <ArrowUpRight size={17}/></Link>:task.status==="open"?<Link className="task-detail-primary" href="/giris">Bu iş için teklif ver <ArrowUpRight size={17}/></Link>:<p className="task-detail-closed">Bu ilan şu anda yeni teklif kabul etmiyor.</p>}{user&&!isOwner?<TaskSafetyActions taskId={String(task.id)} ownerId={String(task.owner_id)}/>:null}
+        {isOwner?<Link className="task-detail-primary" href="/hesabim">İlanını hesabından yönet <ArrowUpRight size={17}/></Link>:task.status==="open"?user?<TaskDetailOffer taskId={String(task.id)} taskTitle={String(task.title)}/>:<Link className="task-detail-primary" href="/giris">Giriş yap ve teklif ver <ArrowUpRight size={17}/></Link>:<p className="task-detail-closed">Bu ilan şu anda yeni teklif kabul etmiyor.</p>}{user&&!isOwner?<TaskSafetyActions taskId={String(task.id)} ownerId={String(task.owner_id)}/>:null}
       </article>
       <Link className="task-detail-back" href="/isler"><ArrowLeft size={15}/> Diğer işleri keşfet</Link>
     </div>
