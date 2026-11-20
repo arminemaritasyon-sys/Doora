@@ -24,8 +24,9 @@ export default function SignInPage() {
       if (verify) {
         const result = await authClient.emailOtp.verifyEmail({ email, otp });
         if (result.error) throw new Error(result.error.message || "Kod doğrulanamadı.");
-        setMessage("E-posta adresin doğrulandı. Hoş geldin!");
-        router.push("/");
+        const login = await authClient.signIn.email({ email, password });
+        if (login.error) throw new Error(login.error.message || "E-posta doğrulandı. Şimdi giriş yapabilirsin.");
+        router.replace("/");
         router.refresh();
       } else if (mode === "signup") {
         const result = await authClient.signUp.email({ email, password, name });
