@@ -34,6 +34,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.owner_id},'work_started','İş başladı',${task.title + " işi hizmet veren tarafından başlatıldı."},${"/hesabim"})`;
         return NextResponse.json({ success: true, status: "assigned", workStarted: true });
       }
+      if (!task.work_started_at) return NextResponse.json({ error: "Önce işe başladığını bildirmen gerekiyor." }, { status: 409 });
       const rows = await db`UPDATE public.tasks SET completion_requested_at=now(),updated_at=now() WHERE id=${id}::uuid AND status='assigned' AND completion_requested_at IS NULL RETURNING id`;
       if (!rows.length) return NextResponse.json({ error: "İş tamamlandı olarak işaretlenemiyor." }, { status: 409 });
       await db`INSERT INTO public.notifications(user_id,type,title,body,href) VALUES(${task.owner_id},'work_done','İş tamamlandı olarak bildirildi',${task.title + " işi için tamamlanma onayı bekleniyor."},${"/hesabim"})`;
