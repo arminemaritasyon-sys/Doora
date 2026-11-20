@@ -182,18 +182,18 @@ export default function Home() {
 
   const loadRemoteTasks = useCallback(async () => {
     if (!supabase) return;
-    const { data, error } = await supabase.from("tasks").select("id,title,description,category,budget,location_text,scheduled_at,created_at,owner_id,status,image_url,offers(count),profiles!tasks_owner_id_fkey(display_name)").eq("status", "open").order("created_at", { ascending: false }).limit(60);
+    const { data, error } = await supabase.from("tasks").select("id,title,description,category,budget,location_text,scheduled_at,created_at,owner_id,status,image_url").eq("status", "open").order("created_at", { ascending: false }).limit(60);
     if (error) { console.error(error); return; }
     const mapped: Task[] = (data || []).map((row: any) => ({
       id: row.id, title: row.title, description: row.description, category: row.category, budget: row.budget,
       location: row.location_text, scheduledAt: row.scheduled_at, createdAt: row.created_at, ownerId: row.owner_id,
-      ownerName: row.profiles?.display_name || "DOORA üyesi", ownerInitials: initials(row.profiles?.display_name || "DOORA"),
-      status: row.status, offersCount: row.offers?.[0]?.count || 0, imageUrl: row.image_url, isDemo: false,
+      ownerName: "DOORA üyesi", ownerInitials: "D",
+      status: row.status, offersCount: 0, imageUrl: row.image_url, isDemo: false,
     }));
     setTasks(mapped);
   }, [supabase]);
 
-  useEffect(() => { if (user && supabase) loadRemoteTasks(); }, [user, supabase, loadRemoteTasks]);
+  useEffect(() => { if (supabase) loadRemoteTasks(); }, [user, supabase, loadRemoteTasks]);
 
   useEffect(() => {
     if (!ready || !demoMode) return;
