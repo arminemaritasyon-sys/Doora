@@ -15,6 +15,8 @@ export async function POST(request: NextRequest) {
   const [task] = await db`SELECT id, owner_id, title FROM public.tasks WHERE id=${taskId} AND status='open' LIMIT 1`;
   if (!task) return NextResponse.json({ error: "İlan bulunamadı veya artık açık değil." }, { status: 404 });
   if (task.owner_id === user.id) return NextResponse.json({ error: "Kendi ilanına teklif veremezsin." }, { status: 400 });
+  const blocked = await db`SELECT 1 FROM public.user_blocks WHERE (blocker_id=${user.id} AND blocked_id=${task.owner_id}) OR (blocker_id=${task.owner_id} AND blocked_id=${user.id}) LIMIT 1`;
+  if (blocked.length) return NextResponse.json({ error: "Bu kullanıcıyla aranızda engelleme bulunduğu için teklif veremezsin." }, { status: 403 });
   const [offer] = await db`
     INSERT INTO public.offers(task_id,user_id,amount,message)
     VALUES (${taskId},${user.id},${amount},${message})
