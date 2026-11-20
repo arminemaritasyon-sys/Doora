@@ -11,7 +11,10 @@ export const dynamic = "force-dynamic";
 export default async function SavedPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/giris");
-  const [rows,pendingOffers] = await Promise.all([\n    db`SELECT t.id,t.title,t.description,t.category,t.budget,t.district,t.created_at FROM public.saved_tasks s JOIN public.tasks t ON t.id=s.task_id WHERE s.user_id=${user.id} ORDER BY s.created_at DESC LIMIT 100`,\n    db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id} AND o.status='pending'`\n  ]);
+  const [rows,pendingOffers] = await Promise.all([
+    db`SELECT t.id,t.title,t.description,t.category,t.budget,t.district,t.created_at FROM public.saved_tasks s JOIN public.tasks t ON t.id=s.task_id WHERE s.user_id=${user.id} ORDER BY s.created_at DESC LIMIT 100`,
+    db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id} AND o.status='pending'`
+  ]);
   const tasks: SavedTask[] = rows.map((task:any) => ({
     id:String(task.id), title:String(task.title), description:task.description == null ? null : String(task.description),
     category:task.category == null ? null : String(task.category), budget:task.budget,
