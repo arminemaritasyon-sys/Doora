@@ -1,13 +1,23 @@
 import "server-only";
 import { createNeonAuth } from "@neondatabase/auth/next/server";
 
-// Neon Auth server instance.
-// These variables must be configured in both the Cloudflare build and runtime
-// environments because this module is also imported by route handlers/proxy.
+// Neon Auth's endpoint is public configuration, not a credential.
+// Keep a verified fallback so a missing Cloudflare runtime variable cannot
+// turn the proxy target into "undefined/sign-in/...".
+const authBaseUrl =
+  process.env.NEON_AUTH_BASE_URL?.trim() ||
+  "https://ep-rough-boat-bcrte998.neonauth.c-16.us-east-1.aws.neon.tech/neondb/auth";
+
+const cookieSecret = process.env.NEON_AUTH_COOKIE_SECRET?.trim();
+
+if (!cookieSecret) {
+  throw new Error("NEON_AUTH_COOKIE_SECRET is missing in the Worker runtime.");
+}
+
 export const auth = createNeonAuth({
-  baseUrl: process.env.NEON_AUTH_BASE_URL!,
+  baseUrl: authBaseUrl,
   cookies: {
-    secret: process.env.NEON_AUTH_COOKIE_SECRET!,
+    secret: cookieSecret,
     sessionDataTtl: 300,
   },
 });
