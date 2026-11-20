@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowUpRight, LogOut } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import LogoutButton from "./logout-button";
