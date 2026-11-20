@@ -14,7 +14,7 @@ export default async function AccountPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/giris");
 
-  const [tasks, received, assigned, taskTotal, receivedTotal, pendingOffers] = await Promise.all([
+  const queryResults = await Promise.allSettled([
     db`SELECT t.id,t.title,t.description,t.category,t.district,t.budget,t.status,t.created_at,t.work_started_at,t.completion_requested_at,o.user_id AS assigned_user_id,
       COALESCE(NULLIF(ap.display_name,''),NULLIF(au.name,''),'DOORA üyesi') AS assigned_user_name,ap.avatar_url AS assigned_user_avatar,
       EXISTS(SELECT 1 FROM public.task_reviews r WHERE r.task_id=t.id AND r.reviewer_id=${user.id}) AS reviewed
@@ -40,6 +40,14 @@ export default async function AccountPage() {
     db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id}`,
     db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id} AND o.status='pending'`
   ]);
+
+  const [tasksResult, receivedResult, assignedResult, taskTotalResult, receivedTotalResult, pendingOffersResult] = queryResults;
+  const tasks = tasksResult.status === "fulfilled" ? tasksResult.value : (console.error("[account] tasks query failed", tasksResult.reason), []);
+  const received = receivedResult.status === "fulfilled" ? receivedResult.value : (console.error("[account] received offers query failed", receivedResult.reason), []);
+  const assigned = assignedResult.status === "fulfilled" ? assignedResult.value : (console.error("[account] assigned tasks query failed", assignedResult.reason), []);
+  const taskTotal = taskTotalResult.status === "fulfilled" ? taskTotalResult.value : (console.error("[account] task count query failed", taskTotalResult.reason), [{ count: 0 }]);
+  const receivedTotal = receivedTotalResult.status === "fulfilled" ? receivedTotalResult.value : (console.error("[account] received count query failed", receivedTotalResult.reason), [{ count: 0 }]);
+  const pendingOffers = pendingOffersResult.status === "fulfilled" ? pendingOffersResult.value : (console.error("[account] pending offers count query failed", pendingOffersResult.reason), [{ count: 0 }]);
 
   const taskRows=tasks.map((x:any)=>({...x,created_at:String(x.created_at),work_started_at:x.work_started_at?String(x.work_started_at):null,completion_requested_at:x.completion_requested_at?String(x.completion_requested_at):null}));
   const receivedRows=received.map((x:any)=>({...x,created_at:String(x.created_at),bidder:x.bidder==null?null:String(x.bidder)}));
