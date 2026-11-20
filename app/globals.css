@@ -1377,3 +1377,72 @@ button, a, input, select, textarea { touch-action:manipulation; }
  .wallet-profile-lock{width:15px}
  .wallet-disclaimer{font-size:9px}
 }
+
+
+/* Compact native-feeling DOORA wallet */
+.wallet-lite{width:100%;max-width:680px;margin:0 auto;display:grid;gap:22px}
+.wallet-lite-page-title{max-width:680px;margin:0 auto 18px;display:flex;align-items:center;justify-content:space-between}
+.wallet-lite-page-title h1{margin:0;color:#171b16;font:750 25px/1.15 Manrope,sans-serif;letter-spacing:-1px}
+.wallet-lite-page-title>span{color:#91a783;font:800 10px Manrope,sans-serif;letter-spacing:2px}
+.wallet-lite-card{position:relative;isolation:isolate;overflow:hidden;min-height:190px;padding:22px 24px;border-radius:23px;background:linear-gradient(125deg,#18251a 0%,#253b25 60%,#395a32 100%);color:#fff;box-shadow:0 16px 36px #1d321c22}
+.wallet-lite-orb{position:absolute;z-index:-1;right:-70px;top:-145px;width:310px;height:310px;border:1px solid #ffffff20;border-radius:50%;box-shadow:0 0 0 34px #ffffff08,0 0 0 70px #ffffff06}
+.wallet-lite-top{display:flex;align-items:center;justify-content:space-between}
+.wallet-lite-brand{display:flex;align-items:center;gap:9px;font:800 12px Manrope,sans-serif;letter-spacing:1.6px}
+.wallet-lite-mark{display:grid;width:31px;height:31px;place-items:center;border:1px solid #ffffff38;border-radius:10px;background:#ffffff12;color:#d8efc5;font:800 23px Manrope,sans-serif;letter-spacing:-2px}
+.wallet-lite-card-icon{display:grid;width:34px;height:34px;place-items:center;border:1px solid #ffffff2c;border-radius:11px;color:#d7eacb}
+.wallet-lite-caption{display:block;margin-top:22px;color:#b9c9b0;font-size:9px;font-weight:800;letter-spacing:1.5px}
+.wallet-lite-balance{margin-top:4px;color:#fff;font:750 42px/1.1 Manrope,sans-serif;letter-spacing:-2px}
+.wallet-lite-balance small{color:#d1dfc9;font-size:19px;letter-spacing:0}
+.wallet-lite-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:17px;padding-top:12px;border-top:1px solid #ffffff20;color:#c4d2bd;font-size:10px}
+.wallet-lite-foot>span:first-child{display:flex;align-items:center;gap:7px}
+.wallet-lite-foot i{width:6px;height:6px;border-radius:50%;background:#c5e4a5;box-shadow:0 0 0 4px #c5e4a51c}
+.wallet-lite-foot>span:last-child{overflow:hidden;max-width:48%;text-overflow:ellipsis;white-space:nowrap}
+.wallet-lite-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.wallet-lite-actions>a{position:relative;display:flex;min-width:0;min-height:94px;flex-direction:column;align-items:center;justify-content:center;gap:9px;border:1px solid #e9ede6;border-radius:17px;background:#fff;color:#263123;transition:background .18s,border-color .18s}
+.wallet-lite-actions>a:hover{border-color:#c7d9ba;background:#f8fbf5}
+.wallet-lite-actions b{font-size:11px;font-weight:750}
+.wallet-lite-actions small{position:absolute;top:9px;right:12px;color:#8b9a81;font-size:9px}
+.wallet-lite-action-icon{display:grid;width:39px;height:39px;place-items:center;border-radius:13px;background:#f0f4ed;color:#607c4e}
+.wallet-lite-action-icon.create{background:#c5e4a5;color:#253a1e}
+.wallet-lite-activity{padding:18px 20px;border:1px solid #e9ede6;border-radius:19px;background:#fff}
+.wallet-lite-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px}
+.wallet-lite-section-head h2{margin:0;color:#252e22;font:750 16px Manrope,sans-serif;letter-spacing:-.35px}
+.wallet-lite-section-head>a{display:flex;align-items:center;gap:4px;color:#718c5e;font-size:10px;font-weight:750}
+.wallet-lite-list{display:grid}
+.wallet-lite-row{display:flex;min-width:0;align-items:center;gap:11px;padding:13px 0;border-top:1px solid #f0f2ee}
+.wallet-lite-row-icon{display:grid;width:37px;height:37px;flex:0 0 37px;place-items:center;border-radius:12px;background:#f0f4ed;color:#668052}
+.wallet-lite-row-icon.offer{background:#eef5e9;color:#78975f}
+.wallet-lite-row-copy{display:grid;min-width:0;flex:1;gap:4px}
+.wallet-lite-row-copy b{overflow:hidden;color:#303a2c;font-size:11px;font-weight:750;text-overflow:ellipsis;white-space:nowrap}
+.wallet-lite-row-copy small{overflow:hidden;color:#929b8d;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.wallet-lite-row time{color:#929b8d;font-size:9px;white-space:nowrap}
+.wallet-lite-row-arrow{flex:0 0 auto;color:#a2ad99}
+.wallet-lite-empty{padding:24px 0 12px;color:#929b8d;text-align:center;font-size:11px}
+.wallet-lite-counts{display:flex;align-items:center;justify-content:center;gap:10px;color:#8b9684;font-size:10px}
+.wallet-lite-counts i{width:3px;height:3px;border-radius:50%;background:#c4cdbd}
+@media(min-width:651px){.wallet-lite{gap:18px}.wallet-lite-card{min-height:205px;padding:24px 27px}.wallet-lite-actions>a{min-height:100px}}
+@media(max-width:650px){
+ .doora-page-container.account-page-container{padding:17px 15px 96px}
+ .wallet-lite-page-title{margin-bottom:15px}
+ .wallet-lite-page-title h1{font-size:23px}
+ .wallet-lite{gap:15px}
+ .wallet-lite-card{min-height:176px;padding:18px 19px;border-radius:20px}
+ .wallet-lite-orb{right:-105px;top:-155px;width:285px;height:285px}
+ .wallet-lite-caption{margin-top:18px;font-size:8px}
+ .wallet-lite-balance{font-size:38px}
+ .wallet-lite-foot{margin-top:14px;padding-top:10px;font-size:9px}
+ .wallet-lite-actions{gap:8px}
+ .wallet-lite-actions>a{min-height:86px;gap:7px;border-radius:15px}
+ .wallet-lite-action-icon{width:35px;height:35px;border-radius:11px}
+ .wallet-lite-action-icon svg{width:19px;height:19px}
+ .wallet-lite-actions b{font-size:10px}
+ .wallet-lite-activity{padding:15px 14px;border-radius:17px}
+ .wallet-lite-section-head h2{font-size:15px}
+ .wallet-lite-row{gap:9px;padding:11px 0}
+ .wallet-lite-row-icon{width:34px;height:34px;flex-basis:34px;border-radius:11px}
+ .wallet-lite-row-icon svg{width:17px;height:17px}
+ .wallet-lite-row-copy b{font-size:10px}
+ .wallet-lite-row-copy small,.wallet-lite-row time{font-size:8px}
+ .wallet-lite-row-arrow{width:13px}
+ .wallet-lite-counts{font-size:9px}
+}
