@@ -72,7 +72,7 @@ export default function JobsPage(){
         <h3><a className="task-title-link" href={"/ilan/"+task.id}>{task.title}</a></h3><p className="job-description">{task.description}</p>
         <div className="job-details"><span><MapPin size={15}/>{task.location}</span><span><Clock3 size={15}/>{task.time||"Yeni ilan"}</span><span>{task.offers} teklif</span></div>
         <div className="job-owner"><span className="job-owner-avatar">{task.owner_avatar?<img src={task.owner_avatar} alt="" loading="lazy" decoding="async"/>:(task.owner||"D").slice(0,1).toLocaleUpperCase("tr")}</span><span><small>İLAN SAHİBİ</small><b>{task.owner||"DOORA üyesi"}</b></span></div>
-        <div className="job-row-bottom"><div><small>Bütçe</small><strong>{money(task.budget)}</strong></div><button onClick={()=>setOfferTask(task)}>Teklif ver <ArrowUpRight size={16}/></button></div>
+        <div className="job-row-bottom"><div><small>Bütçe</small><strong>{money(task.budget)}</strong></div><button onClick={()=>setOfferTask(task)}>Ben yaparım <ArrowUpRight size={16}/></button></div>
       </motion.article>)}</div>}
     </section>
     <nav className="mobile-dock jobs-dock"><a href="/#kesfet"><Compass/><span>Keşfet</span></a><a className="dock-active" href="/isler"><span className="dock-money-icon">₺</span><span>İşler</span></a><a href={signedIn?"/kaydedilenler":"/giris?next=%2Fkaydedilenler"}><Bookmark/><span>Kaydedilen</span></a><a href={signedIn?"/hesabim":"/giris?next=%2Fhesabim"}><UserRound/><span>Hesabım</span></a></nav>
