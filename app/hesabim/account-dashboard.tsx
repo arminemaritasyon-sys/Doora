@@ -10,7 +10,7 @@ type Tx={id:string;type:string;amount:string|number;status:string;description:st
 type WalletData={account:{available_balance:string|number;held_balance:string|number;mode:string};transactions:Tx[]};
 type TaskForm={title:string;description:string;category:string;budget:string;district:string};
 const money=(v:number|string)=>new Intl.NumberFormat("tr-TR",{maximumFractionDigits:2}).format(Number(v||0))+" ₺";
-const dates=(v:string)=>new Intl.DateTimeFormat("tr-TR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(new Date(v));
+const dates=(v:string)=>{const d=new Date(v);return Number.isNaN(d.getTime())?"Tarih bilgisi yok":new Intl.DateTimeFormat("tr-TR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}).format(d)};
 const taskLabel:Record<string,string>={open:"Yayında",paused:"Pasif",assigned:"Devam ediyor",completed:"Tamamlandı",disputed:"İncelemede",cancelled:"İptal"};
 const txIcon:Record<string,any>={test_topup:ArrowDownLeft,escrow_lock:ShieldCheck,escrow_release:ArrowUpRight,escrow_refund:ArrowDownLeft,withdrawal_request:ArrowUpRight,withdrawal_rejected:X};
 const categories=["Alışveriş","Teslimat","Ev işleri","Taşıma","Tamir","Diğer"];
@@ -55,7 +55,18 @@ export default function AccountDashboard({name,walletInitialData,walletInitialEr
    setWalletLoading(false);
   }
  }
- useEffect(()=>{if(!modal&&!listingOffersTaskId)return;const body=document.body;const scrollY=window.scrollY;const old={position:body.style.position,top:body.style.top,left:body.style.left,right:body.style.right,width:body.style.width,overflow:body.style.overflow,overscroll:body.style.overscrollBehavior};body.style.position="fixed";body.style.top=`-${scrollY}px`;body.style.left="0";body.style.right="0";body.style.width="100%";body.style.overflow="hidden";body.style.overscrollBehavior="none";return()=>{body.style.position=old.position;body.style.top=old.top;body.style.left=old.left;body.style.right=old.right;body.style.width=old.width;body.style.overflow=old.overflow;body.style.overscrollBehavior=old.overscroll;window.scrollTo(0,scrollY)}},[modal,listingOffersTaskId]);
+ // Do not lock the document scroll on this page. A stale iOS fixed-body lock can leave
+ // the account screen visually normal while making the whole page feel unresponsive.
+ useEffect(()=>{
+  const body=document.body;
+  body.style.position="";
+  body.style.top="";
+  body.style.left="";
+  body.style.right="";
+  body.style.width="";
+  body.style.overflow="";
+  body.style.overscrollBehavior="";
+ },[]);
  async function walletAction(action:"test_topup"|"withdraw"){
   const value=Number(amount);
   if(!Number.isFinite(value)||value<=0||value>50000){toast.error("1 ₺ ile 50.000 ₺ arasında geçerli bir tutar gir.");return}
