@@ -35,6 +35,7 @@ function TaskCard({ task, saved, onSave, onOffer }: { task: Task; saved: boolean
 function TaskDialog({ onClose, onSubmit, busy }: { onClose: () => void; onSubmit: (data: {title:string;description:string;category:string;budget:string;district:string}) => void; busy: boolean }) {
   const [form, setForm] = useState({ title:"", description:"", category:"Alışveriş", budget:"", district:"Muratpaşa" });
   const set = (key: keyof typeof form, value: string) => setForm(current => ({...current,[key]:value}));
+  useEffect(()=>{const handleKeyDown=(event:KeyboardEvent)=>{if(event.key==="Escape")onClose();};window.addEventListener("keydown",handleKeyDown);return()=>window.removeEventListener("keydown",handleKeyDown);},[onClose]);
   return <div className="dialog-backdrop" onMouseDown={e => { if(e.target === e.currentTarget) onClose(); }}>
     <motion.section className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="task-dialog-title" initial={{opacity:0,y:20,scale:.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:10,scale:.98}}>
       <div className="dialog-heading"><div><span className="eyebrow">YENİ İLAN</span><h2 id="task-dialog-title">Ne yapılmasını istersin?</h2></div><button className="icon-button" onClick={onClose} aria-label="Kapat"><X/></button></div>
@@ -50,8 +51,9 @@ function TaskDialog({ onClose, onSubmit, busy }: { onClose: () => void; onSubmit
 }
 function OfferDialog({ task, onClose, onSubmit, busy }: { task: Task; onClose: () => void; onSubmit: (amount: string, message: string) => void; busy: boolean }) {
   const [amount,setAmount]=useState(""); const [message,setMessage]=useState("");
-  return <div className="dialog-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><motion.section className="dialog-card" role="dialog" aria-modal="true" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:10}}>
-    <div className="dialog-heading"><div><span className="eyebrow">TEKLİFİNİ GÖNDER</span><h2>{task.title}</h2></div><button className="icon-button" onClick={onClose}><X/></button></div>
+  useEffect(()=>{const handleKeyDown=(event:KeyboardEvent)=>{if(event.key==="Escape")onClose();};window.addEventListener("keydown",handleKeyDown);return()=>window.removeEventListener("keydown",handleKeyDown);},[onClose]);
+  return <div className="dialog-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><motion.section className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="offer-dialog-title" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:10}}>
+    <div className="dialog-heading"><div><span className="eyebrow">TEKLİFİNİ GÖNDER</span><h2 id="offer-dialog-title">{task.title}</h2></div><button className="icon-button" onClick={onClose} aria-label="Kapat"><X/></button></div>
     <form className="task-form" onSubmit={e=>{e.preventDefault();onSubmit(amount,message);}}>
       <label>Teklif tutarı (₺)<input type="number" min="1" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="Teklifin" required /></label>
       <label>Mesaj <span className="optional-label">İsteğe bağlı</span><textarea rows={3} value={message} onChange={e=>setMessage(e.target.value)} placeholder="Kısaca kendinden ve çözümünden bahset..." maxLength={1000}/></label>
