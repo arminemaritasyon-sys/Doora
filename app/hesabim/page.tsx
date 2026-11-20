@@ -15,8 +15,8 @@ export default async function AccountPage() {
   if (!user) redirect("/giris");
 
   const [tasks, received, assigned, taskTotal, receivedTotal, pendingOffers] = await Promise.all([
-    db`SELECT t.id,t.title,t.description,t.category,t.district,t.budget,t.status,t.created_at,o.user_id AS assigned_user_id, EXISTS(SELECT 1 FROM public.task_reviews r WHERE r.task_id=t.id AND r.reviewer_id=${user.id}) AS reviewed FROM public.tasks t LEFT JOIN public.offers o ON o.id=t.assigned_offer_id WHERE t.owner_id=${user.id} ORDER BY t.created_at DESC LIMIT 30`,
-    db`SELECT o.id,o.amount,o.status,o.created_at,t.id AS task_id,t.title,o.user_id AS bidder_id,
+    db`SELECT t.id,t.title,t.description,t.category,t.district,t.budget,t.status,t.created_at,t.work_started_at,t.completion_requested_at,o.user_id AS assigned_user_id, EXISTS(SELECT 1 FROM public.task_reviews r WHERE r.task_id=t.id AND r.reviewer_id=${user.id}) AS reviewed FROM public.tasks t LEFT JOIN public.offers o ON o.id=t.assigned_offer_id WHERE t.owner_id=${user.id} ORDER BY t.created_at DESC LIMIT 30`,
+    db`SELECT o.id,o.amount,o.status,o.rejection_reason,o.message,o.created_at,t.id AS task_id,t.title,o.user_id AS bidder_id,
       COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS bidder,
       p.avatar_url,p.district,
       COALESCE(rv.rating,0)::numeric AS rating,COALESCE(rv.review_count,0)::int AS review_count
@@ -36,7 +36,7 @@ export default async function AccountPage() {
     db`SELECT count(*)::int AS count FROM public.offers o JOIN public.tasks t ON t.id=o.task_id WHERE t.owner_id=${user.id} AND o.status='pending'`
   ]);
 
-  const taskRows=tasks.map((x:any)=>({...x,created_at:String(x.created_at)}));
+  const taskRows=tasks.map((x:any)=>({...x,created_at:String(x.created_at),work_started_at:x.work_started_at?String(x.work_started_at):null,completion_requested_at:x.completion_requested_at?String(x.completion_requested_at):null}));
   const receivedRows=received.map((x:any)=>({...x,created_at:String(x.created_at),bidder:x.bidder==null?null:String(x.bidder)}));
 
   return (
