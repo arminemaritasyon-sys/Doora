@@ -24,14 +24,14 @@ export default async function AccountPage() {
   const queryResults = await Promise.allSettled([
     withTimeout(db`SELECT t.id,t.title,t.description,t.category,t.district,t.budget,t.status,t.created_at,t.work_started_at,t.completion_requested_at,o.user_id AS assigned_user_id,
       COALESCE(NULLIF(ap.display_name,''),NULLIF(au.name,''),'DOORA üyesi') AS assigned_user_name,
-      CASE WHEN ap.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || ap.user_id || '&v=' || extract(epoch from ap.updated_at)::bigint::text END AS assigned_user_avatar,
+      CASE WHEN ap.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || ap.user_id || '&v=' || floor(extract(epoch from ap.updated_at)*1000)::bigint::text END AS assigned_user_avatar,
       EXISTS(SELECT 1 FROM public.task_reviews r WHERE r.task_id=t.id AND r.reviewer_id=${user.id}) AS reviewed
       FROM public.tasks t LEFT JOIN public.offers o ON o.id=t.assigned_offer_id
       LEFT JOIN public.user_profiles ap ON ap.user_id=o.user_id LEFT JOIN neon_auth.user au ON au.id::text=o.user_id
       WHERE t.owner_id=${user.id} ORDER BY t.created_at DESC LIMIT 30`, "owned tasks"),
     withTimeout(db`SELECT o.id,o.amount,o.status,o.rejection_reason,o.message,o.created_at,t.id AS task_id,t.title,o.user_id AS bidder_id,
       COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS bidder,
-      CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || extract(epoch from p.updated_at)::bigint::text END AS avatar_url,p.district,
+      CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || floor(extract(epoch from p.updated_at)*1000)::bigint::text END AS avatar_url,p.district,
       COALESCE(rv.rating,0)::numeric AS rating,COALESCE(rv.review_count,0)::int AS review_count
       FROM public.offers o JOIN public.tasks t ON t.id=o.task_id
       LEFT JOIN public.user_profiles p ON p.user_id=o.user_id
@@ -39,13 +39,13 @@ export default async function AccountPage() {
       LEFT JOIN LATERAL (SELECT avg(rating) AS rating,count(*) AS review_count FROM public.task_reviews WHERE reviewee_id=o.user_id) rv ON true
       WHERE t.owner_id=${user.id} ORDER BY o.created_at DESC LIMIT 30`, "received offers"),
     withTimeout(db`SELECT o.id,o.task_id,o.amount,o.status,o.rejection_reason,o.message,o.created_at,t.title,t.owner_id AS bidder_id,
-      COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS bidder,CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || extract(epoch from p.updated_at)::bigint::text END AS avatar_url,p.district
+      COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS bidder,CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || floor(extract(epoch from p.updated_at)*1000)::bigint::text END AS avatar_url,p.district
       FROM public.offers o JOIN public.tasks t ON t.id=o.task_id
       LEFT JOIN public.user_profiles p ON p.user_id=t.owner_id LEFT JOIN neon_auth.user u ON u.id::text=t.owner_id
       WHERE o.user_id=${user.id} ORDER BY o.created_at DESC LIMIT 30`, "sent offers"),
     withTimeout(db`SELECT t.id,t.title,t.description,t.category,t.district,t.budget,t.status,t.created_at,t.work_started_at,t.completion_requested_at,t.owner_id AS owner_id,
       COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS owner_name,
-      CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || extract(epoch from p.updated_at)::bigint::text END AS avatar_url,
+      CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || floor(extract(epoch from p.updated_at)*1000)::bigint::text END AS avatar_url,
       EXISTS(SELECT 1 FROM public.task_reviews r WHERE r.task_id=t.id AND r.reviewer_id=${user.id}) AS reviewed
       FROM public.tasks t JOIN public.offers o ON o.id=t.assigned_offer_id
       LEFT JOIN public.user_profiles p ON p.user_id=t.owner_id LEFT JOIN neon_auth.user u ON u.id::text=t.owner_id

@@ -51,3 +51,13 @@ Durum: Devam ediyor. Tamamlanan inceleme ve düzeltmeler, canlı ortamda onay be
 - `doora_accept_offer` fonksiyonu DB katmanında teklifin `pending` olduğunu ayrıca doğrulamıyor. API kontrolüne ek olarak fonksiyonun kendisine de koruma eklenmeli.
 - `doora_complete_task` fonksiyonu DB katmanında `completion_requested_at` alanını kontrol etmiyor. API kontrolüne ek olarak fonksiyonun kendisine de koruma eklenmeli.
 - Bu üç düzeltme `0008_harden_wallet_and_offer_functions.sql` migration dosyasında hazırlandı; canlı DB'ye uygulanmadı.
+
+
+## Canlı Vercel smoke test sonuçları
+
+- `GET /api/tasks`: 200; avatar ayrıştırmasından önce tek kayıtlı yanıt 450.331 bayttı, sonrasında 424 bayt oldu.
+- `GET /api/profile/avatar?userId=…`: 200, `image/jpeg`, önbellek başlığı mevcut.
+- `GET /api/auth/get-session`: 200 ve oturumsuz testte `null`.
+- `/giris`, `/isler`, `/ilan/[id]`: 200 HTML.
+- Oturumsuz `/hesabim` ve `/kaydedilenler`: beklenen şekilde `/giris` sayfasına yönleniyor.
+- Bu testler Vercel üretim alan adında yapıldı; Cloudflare Worker üzerinde aynı testler henüz yapılamadı. Giriş gerektiren işlemler gerçek bir test hesabıyla doğrulanmadı.

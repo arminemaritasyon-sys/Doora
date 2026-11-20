@@ -15,7 +15,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
     const rows = await db`
       SELECT t.id,t.owner_id,t.title,t.description,t.category,t.budget,t.city,t.district,t.status,t.created_at,t.scheduled_at,
         COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS owner_name,
-        CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || extract(epoch from p.updated_at)::bigint::text END AS avatar_url
+        CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || floor(extract(epoch from p.updated_at)*1000)::bigint::text END AS avatar_url
       FROM public.tasks t
       LEFT JOIN public.user_profiles p ON p.user_id=t.owner_id
       LEFT JOIN neon_auth.user u ON u.id::text=t.owner_id

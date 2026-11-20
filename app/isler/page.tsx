@@ -22,7 +22,7 @@ function OfferSheet({task,onClose,onSubmit,busy}:{task:Task;onClose:()=>void;onS
       <div className="jobs-sheet-head"><div><span className="jobs-kicker">TEKLİF VER</span><h2 id="offer-title">{task.title}</h2></div><button className="jobs-close" onClick={onClose} aria-label="Kapat"><X/></button></div>
       <div className="jobs-sheet-budget"><span>İlan bütçesi</span><strong>{money(task.budget)}</strong></div>
       <form onSubmit={e=>{e.preventDefault();onSubmit(amount,message)}} className="jobs-offer-form">
-        <label>Teklif tutarın (₺)<input type="number" min="1" required value={amount} onChange={e=>setAmount(e.target.value)} placeholder="Örn. 450"/></label>
+        <label>Teklif tutarın (₺)<input type="number" min="1" max="10000000" required value={amount} onChange={e=>setAmount(e.target.value)} placeholder="Örn. 450"/></label>
         <label>Mesajın <span>İsteğe bağlı</span><textarea rows={3} maxLength={1000} value={message} onChange={e=>setMessage(e.target.value)} placeholder="İşi nasıl yapabileceğini kısaca anlat."/></label>
         <button className="jobs-submit" disabled={busy}>{busy?"Gönderiliyor…":"Teklifi gönder"} <ArrowUpRight size={18}/></button>
       </form>

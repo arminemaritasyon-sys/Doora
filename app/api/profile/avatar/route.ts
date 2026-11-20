@@ -33,7 +33,6 @@ export async function GET(request: NextRequest) {
     return new NextResponse(bytes, {
       headers: {
         "Content-Type": `image/${match[1]}`,
-        "Content-Length": String(bytes.byteLength),
         "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
         "ETag": etag,
         "X-Content-Type-Options": "nosniff",
