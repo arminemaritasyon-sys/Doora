@@ -1,23 +1,21 @@
 # DOORA
 
-DOORA is a mobile-first local task marketplace interface.
+Mobile-first local task marketplace built with Next.js 15, React 19 and Neon Postgres.
 
-## Current state
+## Infrastructure
+- Neon Postgres via Vercel integration (`DATABASE_URL`)
+- Neon Managed Auth / Better Auth (`NEON_AUTH_BASE_URL`)
+- Resend transactional email (`RESEND_API_KEY`, `RESEND_FROM_EMAIL`)
+- Motion animations, Lucide icons and Sonner notifications
 
-This repository currently contains the frontend experience only. Database, authentication, file storage, transactional email, and API integrations have intentionally been removed while the application is being rebuilt.
+## Required environment
+Vercel Neon integration supplies the database and auth URLs. Add `RESEND_API_KEY` and a verified sender address as encrypted Vercel environment variables for production, preview and development.
 
-## Stack
+## Database
+Apply `db/migrations/0001_doora_core.sql` to the production Neon main branch after reviewing the migration preview.
 
-- Next.js 15
-- React 19
-- TypeScript
-- Lucide icons
-
-## Development
-
+## Local development
 ```bash
 npm install
 npm run dev
 ```
-
-The sample listings are illustrative UI content and are not stored remotely. Connect Neon through Vercel before adding the production database and application services.

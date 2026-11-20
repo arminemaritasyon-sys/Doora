@@ -182,3 +182,24 @@ a{color:inherit;text-decoration:none}
  .modal-backdrop{padding:9px;align-items:end}.create-modal{padding:21px 17px;border-radius:20px 20px 15px 15px;max-height:93vh}.modal-head h2{font-size:20px}.modal-head p{font-size:10px}.create-modal label{font-size:10px;gap:6px}.create-modal input,.create-modal textarea,.create-modal select{font-size:11px;min-height:42px;padding:10px}.form-row{gap:8px}.modal-note{font-size:9px;padding:10px}.modal-submit{min-height:45px;font-size:11px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}}
+
+/* Authentication */
+.auth-page{min-height:100dvh;background:linear-gradient(145deg,#f8f8fc,#f0efff);padding:28px;display:grid;place-items:center;position:relative}
+.auth-back{position:absolute;top:28px;left:32px;display:flex;align-items:center;gap:8px;color:#686a78;font-size:13px;font-weight:650}
+.auth-card{width:min(100%,440px);background:#fff;border:1px solid #e9e8f2;border-radius:24px;padding:38px;box-shadow:0 25px 80px #29224d10}
+.auth-brand{margin-bottom:32px}
+.auth-card>.eyebrow{display:flex;margin-bottom:10px}
+.auth-card h1{font:800 32px/1.15 Manrope,sans-serif;letter-spacing:-1.5px;margin:0 0 9px;color:#191a23}
+.auth-card>p{font-size:13px;line-height:1.6;color:#7b7d8b;margin:0 0 26px}
+.auth-form{display:grid;gap:16px}
+.auth-form label>span{display:block;margin-bottom:7px;color:#4b4d5a;font-size:12px;font-weight:700}
+.auth-input{height:50px;border:1px solid #e5e5ed;border-radius:12px;display:flex;align-items:center;gap:10px;padding:0 13px;color:#8b8d9b}
+.auth-input:focus-within{border-color:#9389eb;box-shadow:0 0 0 3px #6a5be51a}
+.auth-input input{width:100%;border:0;outline:0;background:transparent;color:#191a23;font-size:13px;min-width:0}
+.auth-input button{border:0;background:none;color:#888b98;display:grid;place-items:center}
+.auth-submit{width:100%;margin-top:3px}
+.auth-message{padding:11px 12px;background:#f2f0ff;color:#5145b8;border-radius:10px;font-size:12px;line-height:1.5}
+.auth-switch{text-align:center;color:#858695;font-size:12px;margin-top:22px}
+.auth-switch button{border:0;background:none;color:#6556d9;font-size:12px;font-weight:800}
+.auth-legal{display:block;margin-top:25px;text-align:center;color:#a0a1ac;font-size:10px;line-height:1.5}
+@media(max-width:600px){.auth-page{padding:16px;align-items:center}.auth-back{top:18px;left:18px}.auth-card{padding:27px 22px;border-radius:20px}.auth-card h1{font-size:29px}}

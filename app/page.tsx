@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight, ArrowUpRight, Bookmark, BriefcaseBusiness, Check, ChevronDown,
   Clock3, Compass, Filter, Heart, MapPin, Menu, Plus, Search, ShieldCheck,
@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 type Task = {
-  id: number;
+  id: string;
   title: string;
   description: string;
   category: string;
@@ -18,15 +18,6 @@ type Task = {
   owner: string;
   offers: number;
 };
-
-const initialTasks: Task[] = [
-  { id: 1, title: "Market alışverişimi yapabilir misin?", description: "Alışveriş listemi paylaşacağım. Ürünleri alıp kapıma bırakmanı rica ediyorum.", category: "Alışveriş", budget: 250, location: "Muratpaşa, Antalya", time: "Bugün · 14:30", owner: "Ece A.", offers: 4 },
-  { id: 2, title: "Koltukları taşımama yardım et", description: "İki kat aşağıya indirilecek. İki kişi olursak yaklaşık yarım saat sürer.", category: "Taşıma", budget: 400, location: "Konyaaltı, Antalya", time: "Yarın · 10:00", owner: "Mert K.", offers: 2 },
-  { id: 3, title: "Kedime akşam mama verir misin?", description: "Evime uğrayıp mamasını ve suyunu tazelemen yeterli. Çok uysal bir kedidir.", category: "Ev işleri", budget: 150, location: "Lara, Antalya", time: "Bugün · 19:00", owner: "Selin Y.", offers: 6 },
-  { id: 4, title: "Kargomu şubeden teslim al", description: "Şubeden teslim alınması gereken küçük bir paketim var. Teslim kodunu paylaşacağım.", category: "Teslimat", budget: 180, location: "Kepez, Antalya", time: "Bugün · 16:00", owner: "Ali D.", offers: 3 },
-  { id: 5, title: "Balkon kapısının kolunu sık", description: "Kapı kolu gevşedi. Uygun bir tornavida ile sıkılması gerekiyor.", category: "Tamir", budget: 220, location: "Şirinyalı, Antalya", time: "Yarın · 12:00", owner: "Can T.", offers: 1 },
-  { id: 6, title: "Bitkilerimi sulamaya uğra", description: "Hafta sonu şehir dışında olacağım. Salondaki ve balkondaki bitkileri sulaman yeterli.", category: "Ev işleri", budget: 200, location: "Fener, Antalya", time: "Cumartesi", owner: "Duru S.", offers: 5 },
-];
 
 const categories = [
   { name: "Tümü", icon: Compass },
@@ -72,15 +63,22 @@ function TaskCard({ task, saved, onSave, onOffer }: { task: Task; saved: boolean
 }
 
 export default function Home() {
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(true);
   const [category, setCategory] = useState("Tümü");
   const [query, setQuery] = useState("");
   const [district, setDistrict] = useState("Tüm Antalya");
-  const [saved, setSaved] = useState<number[]>([]);
+  const [saved, setSaved] = useState<string[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [notice, setNotice] = useState("");
   const [form, setForm] = useState({ title: "", description: "", category: "Alışveriş", budget: "", location: "Muratpaşa, Antalya" });
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/tasks").then((response) => response.ok ? response.json() : Promise.reject()).then((data) => { if (active) setTasks(data.tasks ?? []); }).catch(() => { if (active) setNotice("İlanlar şu anda yüklenemiyor."); }).finally(() => { if (active) setLoadingTasks(false); });
+    return () => { active = false; };
+  }, []);
 
   const visibleTasks = useMemo(() => tasks.filter((task) => {
     const matchesCategory = category === "Tümü" || task.category === category;
@@ -89,18 +87,14 @@ export default function Home() {
     return matchesCategory && matchesDistrict && text.includes(query.toLocaleLowerCase("tr"));
   }), [tasks, category, district, query]);
 
-  const submitTask = (event: React.FormEvent<HTMLFormElement>) => {
+  const submitTask = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!form.title.trim() || !form.description.trim() || Number(form.budget) <= 0) {
-      setNotice("Lütfen tüm alanları doğru şekilde doldur.");
-      return;
-    }
-    setTasks((current) => [{ ...form, id: Date.now(), budget: Number(form.budget), time: "Yeni ilan", owner: "Sen", offers: 0 }, ...current]);
-    setCategory("Tümü");
-    setQuery("");
-    setCreateOpen(false);
+    const response = await fetch("/api/tasks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: form.title, description: form.description, category: form.category, budget: form.budget, district: form.location.split(",")[0].trim() }) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) { setNotice(data.error || "İlan oluşturulamadı. Giriş yaptığından emin ol."); if (response.status === 401) window.location.href = "/giris"; return; }
+    setCategory("Tümü"); setQuery(""); setCreateOpen(false);
     setForm({ title: "", description: "", category: "Alışveriş", budget: "", location: "Muratpaşa, Antalya" });
-    setNotice("İlan önizlemeye eklendi. Kalıcı kayıt için veritabanı bağlantısı bekleniyor.");
+    setTasks((current) => [data.task, ...current]); setNotice("İlanın yayınlandı.");
   };
 
   return (
@@ -114,12 +108,12 @@ export default function Home() {
             <a href="#guven">Güvenli alışveriş</a>
           </nav>
           <div className="header-actions">
-            <button className="header-login" onClick={() => setNotice("Üyelik ve giriş sistemi veritabanı bağlantısından sonra eklenecek.")}>Giriş yap</button>
+            <button className="header-login" onClick={() => window.location.href = "/giris"}>Giriş yap</button>
             <button className="button button-dark header-cta" onClick={() => setCreateOpen(true)}><Plus size={17} /> İlan oluştur</button>
             <button className="mobile-menu-button" onClick={() => setMobileMenu(!mobileMenu)} aria-label="Menüyü aç">{mobileMenu ? <X /> : <Menu />}</button>
           </div>
         </div>
-        {mobileMenu && <div className="mobile-menu"><a href="#kesfet" onClick={() => setMobileMenu(false)}>Keşfet</a><a href="#nasil-calisir" onClick={() => setMobileMenu(false)}>Nasıl çalışır?</a><a href="#guven" onClick={() => setMobileMenu(false)}>Güvenli alışveriş</a><button onClick={() => { setMobileMenu(false); setNotice("Üyelik sistemi veritabanı bağlantısından sonra eklenecek."); }}>Giriş yap</button></div>}
+        {mobileMenu && <div className="mobile-menu"><a href="#kesfet" onClick={() => setMobileMenu(false)}>Keşfet</a><a href="#nasil-calisir" onClick={() => setMobileMenu(false)}>Nasıl çalışır?</a><a href="#guven" onClick={() => setMobileMenu(false)}>Güvenli alışveriş</a><button onClick={() => { setMobileMenu(false); window.location.href = "/giris"; }}>Giriş yap</button></div>}
       </header>
 
       {notice && <div className="notice" role="status"><span>{notice}</span><button onClick={() => setNotice("")} aria-label="Bildirimi kapat"><X size={16} /></button></div>}
@@ -170,13 +164,13 @@ export default function Home() {
             <div className="search-input"><Search size={19} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Ne arıyorsun?" aria-label="İş ara" /></div>
             <span className="search-divider" />
             <div className="location-select"><MapPin size={18} /><select value={district} onChange={(event) => setDistrict(event.target.value)} aria-label="Bölge seç"><option>Tüm Antalya</option><option>Muratpaşa</option><option>Konyaaltı</option><option>Kepez</option><option>Lara</option></select><ChevronDown size={15} /></div>
-            <button className="filter-button" onClick={() => setNotice("Gelişmiş filtreler veritabanı bağlantısından sonra eklenecek.")}><Filter size={17} /><span>Filtrele</span></button>
+            <button className="filter-button" onClick={() => setNotice("Filtreleri kategori ve konum alanlarından kullanabilirsin.")}><Filter size={17} /><span>Filtrele</span></button>
           </div>
           <div className="category-list">
             {categories.map(({ name, icon: Icon }) => <button key={name} className={category === name ? "category-chip selected" : "category-chip"} onClick={() => setCategory(name)}><Icon size={16} />{name}</button>)}
           </div>
           <div className="results-heading"><div><h3>Öne çıkan işler</h3><span>{visibleTasks.length} ilan listeleniyor</span></div><span className="sample-caption">Örnek içerikler</span></div>
-          {visibleTasks.length ? <div className="task-grid">{visibleTasks.map((task) => <TaskCard key={task.id} task={task} saved={saved.includes(task.id)} onSave={() => setSaved((current) => current.includes(task.id) ? current.filter((id) => id !== task.id) : [...current, task.id])} onOffer={() => setNotice("Teklif verme özelliği veritabanı bağlantısından sonra etkinleştirilecek.")} />)}</div> : <div className="empty-state"><span><Search size={22} /></span><h3>Aradığın ilanı bulamadık</h3><p>Farklı bir kelime veya kategori deneyebilirsin.</p><button className="button button-outline" onClick={() => { setQuery(""); setCategory("Tümü"); setDistrict("Tüm Antalya"); }}>Filtreleri temizle</button></div>}
+          {loadingTasks ? <div className="empty-state"><p>İlanlar yükleniyor…</p></div> : visibleTasks.length ? <div className="task-grid">{visibleTasks.map((task) => <TaskCard key={task.id} task={task} saved={saved.includes(task.id)} onSave={() => setSaved((current) => current.includes(task.id) ? current.filter((id) => id !== task.id) : [...current, task.id])} onOffer={() => { const amount = window.prompt("Teklif tutarını TL olarak gir:"); if (!amount || Number(amount) <= 0) return; fetch("/api/offers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ taskId: task.id, amount: Number(amount) }) }).then(async (response) => { const data = await response.json(); if (response.status === 401) { window.location.href = "/giris"; return; } setNotice(response.ok ? "Teklifin gönderildi." : data.error || "Teklif gönderilemedi."); }); }} />)}</div> : <div className="empty-state"><span><Search size={22} /></span><h3>Aradığın ilanı bulamadık</h3><p>Farklı bir kelime veya kategori deneyebilirsin.</p><button className="button button-outline" onClick={() => { setQuery(""); setCategory("Tümü"); setDistrict("Tüm Antalya"); }}>Filtreleri temizle</button></div>}
           <div className="marketplace-foot"><span>Aradığın işi bulamadın mı?</span><button onClick={() => setCreateOpen(true)}>Kendi ilanını oluştur <ArrowRight size={15} /></button></div>
         </div>
       </section>
@@ -193,14 +187,14 @@ export default function Home() {
       </section>
 
       <section className="safety" id="guven">
-        <div className="safety-inner"><span className="safety-icon"><ShieldCheck size={26} /></span><div><span className="eyebrow">İÇİN RAHAT OLSUN</span><h2>Kontrol her zaman sende.</h2><p>İşini kimin üstleneceğine sen karar ver. Teklifleri incele, sana en uygun çözümü seç.</p></div><button className="button button-outline" onClick={() => setNotice("Güven ve ödeme altyapısı sonraki geliştirme aşamasında kurulacak.")}>Daha fazla bilgi <ArrowUpRight size={16} /></button></div>
+        <div className="safety-inner"><span className="safety-icon"><ShieldCheck size={26} /></span><div><span className="eyebrow">İÇİN RAHAT OLSUN</span><h2>Kontrol her zaman sende.</h2><p>İşini kimin üstleneceğine sen karar ver. Teklifleri incele, sana en uygun çözümü seç.</p></div><button className="button button-outline" onClick={() => setNotice("DOORA’da teklifleri sen değerlendirir, seçimini sen yaparsın.")}>Daha fazla bilgi <ArrowUpRight size={16} /></button></div>
       </section>
 
       <footer className="footer"><div className="footer-inner"><div><Brand /><p>Günlük işler, kolay çözümler.</p></div><div className="footer-links"><a href="#kesfet">Keşfet</a><a href="#nasil-calisir">Nasıl çalışır?</a><a href="#guven">Güvenli alışveriş</a></div><small>© 2026 DOORA. Tüm hakları saklıdır.</small></div></footer>
 
-      <nav className="mobile-bottom-nav"><a className="active" href="#kesfet"><Compass size={20} /><span>Keşfet</span></a><button onClick={() => setNotice("Mesajlaşma veritabanı bağlantısından sonra eklenecek.")}><span className="nav-plus"><Plus size={19} /></span><span>İlan ver</span></button><button onClick={() => setNotice("Kaydedilen ilanların hesabınla birlikte etkinleştirilecek.")}><Bookmark size={20} /><span>Kaydedilen</span></button><button onClick={() => setNotice("Profil ve üyelik veritabanı bağlantısından sonra eklenecek.")}><span className="nav-user">D</span><span>Profil</span></button></nav>
+      <nav className="mobile-bottom-nav"><a className="active" href="#kesfet"><Compass size={20} /><span>Keşfet</span></a><button onClick={() => setNotice("Mesajlaşma veritabanı bağlantısından sonra eklenecek.")}><span className="nav-plus"><Plus size={19} /></span><span>İlan ver</span></button><button onClick={() => window.location.href = "/giris"}><Bookmark size={20} /><span>Kaydedilen</span></button><button onClick={() => window.location.href = "/giris"}><span className="nav-user">D</span><span>Profil</span></button></nav>
 
-      {createOpen && <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setCreateOpen(false); }}><section className="create-modal" role="dialog" aria-modal="true" aria-labelledby="create-title"><div className="modal-head"><div><span className="eyebrow">YENİ BİR BAŞLANGIÇ</span><h2 id="create-title">Nasıl bir yardıma ihtiyacın var?</h2><p>İşini kısaca anlat, sana yardımcı olabilecek kişiler görsün.</p></div><button className="modal-close" onClick={() => setCreateOpen(false)} aria-label="Kapat"><X size={19} /></button></div><form onSubmit={submitTask}><label>İlan başlığı<input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Örn. Market alışverişime yardım eder misin?" maxLength={90} required /></label><label>Kategori<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>{categories.filter((item) => item.name !== "Tümü").map((item) => <option key={item.name}>{item.name}</option>)}</select></label><label>İşin detayları<textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Yapılmasını istediğin işi biraz anlat..." rows={4} required /></label><div className="form-row"><label>Belirlediğin bütçe (₺)<input type="number" min="1" value={form.budget} onChange={(event) => setForm({ ...form, budget: event.target.value })} placeholder="250" required /></label><label>Konum<input value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} required /></label></div><div className="modal-note"><ShieldCheck size={17} /><span>Bu aşamada ilan yalnızca önizlemeye eklenir. Kalıcı kayıt, Neon bağlantısı yapıldıktan sonra etkinleştirilecek.</span></div><button className="button button-dark modal-submit" type="submit">İlan önizlemesini oluştur <ArrowRight size={17} /></button></form></section></div>}
+      {createOpen && <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setCreateOpen(false); }}><section className="create-modal" role="dialog" aria-modal="true" aria-labelledby="create-title"><div className="modal-head"><div><span className="eyebrow">YENİ BİR BAŞLANGIÇ</span><h2 id="create-title">Nasıl bir yardıma ihtiyacın var?</h2><p>İşini kısaca anlat, sana yardımcı olabilecek kişiler görsün.</p></div><button className="modal-close" onClick={() => setCreateOpen(false)} aria-label="Kapat"><X size={19} /></button></div><form onSubmit={submitTask}><label>İlan başlığı<input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Örn. Market alışverişime yardım eder misin?" maxLength={90} required /></label><label>Kategori<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>{categories.filter((item) => item.name !== "Tümü").map((item) => <option key={item.name}>{item.name}</option>)}</select></label><label>İşin detayları<textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Yapılmasını istediğin işi biraz anlat..." rows={4} required /></label><div className="form-row"><label>Belirlediğin bütçe (₺)<input type="number" min="1" value={form.budget} onChange={(event) => setForm({ ...form, budget: event.target.value })} placeholder="250" required /></label><label>Konum<input value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} required /></label></div><div className="modal-note"><ShieldCheck size={17} /><span>İlanın hesabınla birlikte kaydedilir. Teklif geldikçe bilgilendirilirsin.</span></div><button className="button button-dark modal-submit" type="submit">İlan önizlemesini oluştur <ArrowRight size={17} /></button></form></section></div>}
     </main>
   );
 }
