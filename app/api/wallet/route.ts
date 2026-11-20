@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/server";
+import { createNotification } from "@/lib/notifications";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
   try {
     if (parsed.data.action === "test_topup") {
       const [result] = await db`SELECT * FROM public.doora_test_topup(${user.id},${parsed.data.amount},${parsed.data.idempotencyKey})`;
+      await createNotification({ userId: user.id, preference: "wallet_updates", type: "wallet_topup", title: "Test bakiyen yüklendi", body: `${parsed.data.amount} ₺ test bakiyesi cüzdanına eklendi.`, href: "/hesabim" });
       return NextResponse.json({ success: true, testMode: true, account: result });
     }
     const [profile] = await db`SELECT display_name FROM public.user_profiles WHERE user_id=${user.id} LIMIT 1`;
@@ -61,6 +63,7 @@ export async function POST(request: NextRequest) {
     if (!accountHolderName) return NextResponse.json({ error: "Para çekmek için profilinde ad soyad bilgisi bulunmalı." }, { status: 400 });
     const cleanIban = parsed.data.iban.replace(/\s/g, "").toUpperCase();
     const [withdrawal] = await db`SELECT * FROM public.doora_test_withdraw(${user.id},${parsed.data.amount},${cleanIban},${accountHolderName})`;
+    await createNotification({ userId: user.id, preference: "wallet_updates", type: "withdrawal_requested", title: "Çekim talebin alındı", body: `${parsed.data.amount} ₺ test çekim talebin oluşturuldu.`, href: "/hesabim" });
     return NextResponse.json({ success: true, testMode: true, withdrawal }, { status: 201 });
   } catch (error) {
     console.error("[wallet] action failed", error);

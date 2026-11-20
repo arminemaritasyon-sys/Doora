@@ -29,7 +29,7 @@ Durum: Devam ediyor. Tamamlanan inceleme ve düzeltmeler, canlı ortamda onay be
 
 ## Henüz tamamlanmamış / doğrulanması gerekenler
 - Şifre sıfırlama ve doğrulama kodunu yeniden gönderme akışı kaynakta eklendi; Neon Auth üzerinde uçtan uca e-posta testi bekliyor.
-- Bildirim tercihleri kayıt ediliyor; tüm bildirim üretim noktalarında bu tercihlere uyulup uyulmadığı tamamlanmalı.
+- Bildirim tercihleri kayıt ediliyor ve ilan, teklif, iş akışı ile test cüzdanı bildirimlerinde artık uygulanıyor; bildirim merkezi / okunmamış bildirim arayüzü hâlâ eksik.
 - Bildirim merkezi / okunmamış bildirim listesi kullanıcı arayüzü bulunmuyor.
 - Şikâyet ve anlaşmazlıkları inceleyecek yönetici ekranı ve çözüm API'si bulunmuyor.
 - Engellenen kullanıcıları listeleme ve engeli kaldırma akışı bulunmuyor.
