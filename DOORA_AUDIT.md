@@ -30,7 +30,7 @@ Durum: Devam ediyor. Tamamlanan inceleme ve düzeltmeler, canlı ortamda onay be
 ## Henüz tamamlanmamış / doğrulanması gerekenler
 - Şifre sıfırlama, doğrulama kodunu yeniden gönderme ve giriş sonrası hedef sayfaya dönme akışları kaynakta eklendi; Neon Auth üzerinde uçtan uca e-posta testi bekliyor.
 - Bildirim tercihleri kayıt ediliyor ve ilan, teklif, iş akışı ile test cüzdanı bildirimlerinde artık uygulanıyor; bildirim merkezi / okunmamış bildirim arayüzü hâlâ eksik.
-- Hesap ekranına bildirim merkezi, okunmamış sayacı ve okundu işaretleme eklendi; son commit Vercel build-rate-limit nedeniyle henüz derlenmedi.
+- Hesap ekranına bildirim merkezi, okunmamış sayacı ve okundu işaretleme eklendi; son kaynak commit'i Vercel build-rate-limit nedeniyle henüz derlenmedi.
 - Şikâyet ve anlaşmazlıkları inceleyecek yönetici ekranı ve çözüm API'si bulunmuyor.
 - Engellenen kullanıcıları listeleme ve engeli kaldırma akışı bulunmuyor.
 - Değerlendirme oluşturma var; değerlendirmeleri listeleme / profil puanını gösterme akışı tamamlanmalı.
@@ -65,7 +65,24 @@ Durum: Devam ediyor. Tamamlanan inceleme ve düzeltmeler, canlı ortamda onay be
 
 ## Son dağıtım durumu
 
-- Ana dalda son commit: `3ffbb4122c4c62c8654a6f2d3748a1d9e7673545`.
+- Ana dalda son commit: `971053106dab38139999d0ca45e7a194e00ebfff`.
 - Vercel'de son başarılı üretim derlemesi, bu son commit'ten önceki kaynakta. Daha yeni commit'ler Vercel `build-rate-limit` nedeniyle derlemeye alınmadı; bu bir TypeScript/build hatası olarak doğrulanmadı.
 - Cloudflare Workers dağıtımı bu oturumdaki bağlı araçlarla görüntülenemedi. Wrangler yapılandırması mevcut `doora` Worker adına ayarlandı; canlı Worker sürümü doğrulanmadı.
 - Son bildirim merkezi ve auth dönüş akışı henüz başarılı bir üretim derlemesinde doğrulanmadı.
+
+
+## Sayfa bazlı kontrol listesi
+
+| Sayfa | Kontrol edilen alanlar | Sonuç / açık konu |
+|---|---|---|
+| `/` | Ana menü, ilan kartları, kaydetme, ilan oluşturma, teklif formu, mobil alt menü | İlan detay bağlantıları ve form limitleri eklendi. Canlı oturumla buton testi bekliyor. |
+| `/giris` | Giriş, kayıt, e-posta OTP, kodu yeniden gönderme, şifre sıfırlama | Akış kodlandı; gerçek e-posta kutusuyla OTP testi yapılmadı. Giriş sonrası hedef sayfaya dönüş eklendi. |
+| `/isler` | Liste, filtreler, kaydetme, teklif formu, alt menü | İlan detay bağlantısı ve teklif üst sınırı eklendi. Sayfalama eksik. |
+| `/kaydedilenler` | Oturum koruması, kategori filtreleri, kaldırma, detay bağlantısı | Radix sekme bağımlılığı kaldırıldı; detay bağlantısı ilgili ilana gidiyor. |
+| `/hesabim` | Cüzdan, para çekme, teklifler, ilanlar, iş akışı, ayarlar, bildirimler, çıkış | İlk cüzdan verisi sunucudan geliyor; profil adı, bildirim merkezi ve çıkış hata yönetimi düzeltildi. Gerçek oturumda iOS tıklama testi bekliyor. |
+| `/ilan/[id]` | İlan detayı, teklif verme, şikâyet/engelleme | Oturum açmış kullanıcıya teklif formu eklendi; giriş sonrası ilana dönüş eklendi. |
+| API | Auth, tasks, offers, wallet, profile, saved, safety, reviews, workflow, notifications | Hata durumları ayrıştırıldı; anlaşmazlık ve DB fonksiyon migration'ları canlı onay bekliyor. |
+
+## Önemli üretim sınırı
+
+DOORA cüzdanı şu an TEST modunda. Gerçek para yatırma/çekme, banka ödeme sağlayıcısı, anlaşmazlıkta iade ve yönetici onayı akışları olmadan gerçek para hareketi için kullanılmamalı.
