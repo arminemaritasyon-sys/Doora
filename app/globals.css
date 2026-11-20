@@ -2499,8 +2499,8 @@ body{overflow-x:clip}
 .doora-account-page .doora-app-header,
 .doora-account-page .account-page-container,
 .doora-account-page .account-hub,
-.doora-account-page .account-page-footer,
-.doora-account-page .doora-bottom-nav{position:relative;pointer-events:auto}
+.doora-account-page .account-page-footer{position:relative;pointer-events:auto}
+.doora-account-page .doora-bottom-nav{position:fixed;pointer-events:auto}
 .doora-account-page .account-hub{z-index:1}
 .doora-account-page .account-hub button,
 .doora-account-page .account-hub a,
