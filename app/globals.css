@@ -1446,3 +1446,97 @@ button, a, input, select, textarea { touch-action:manipulation; }
  .wallet-lite-row-arrow{width:13px}
  .wallet-lite-counts{font-size:9px}
 }
+
+
+/* DOORA account wallet + listing management */
+.account-hub{width:100%;max-width:760px;margin:0 auto;display:grid;gap:22px;padding-bottom:24px}
+.wallet-lite-page-title h1{font-size:30px!important}
+.account-wallet-card{position:relative;overflow:hidden;padding:25px 27px;border-radius:23px;background:linear-gradient(125deg,#17251a,#2d482b 70%,#3e6035);color:white;box-shadow:0 16px 38px #1d321c20}
+.account-wallet-card:after{content:"";position:absolute;right:-85px;top:-175px;width:330px;height:330px;border:1px solid #ffffff24;border-radius:50%;box-shadow:0 0 0 35px #ffffff08,0 0 0 75px #ffffff06;pointer-events:none}
+.account-wallet-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.account-wallet-top>span:first-child{display:flex;align-items:center;gap:10px;font:800 13px Manrope,sans-serif;letter-spacing:1.4px}
+.account-wallet-top i{display:grid;width:34px;height:34px;place-items:center;border:1px solid #ffffff3b;border-radius:10px;color:#d6efc4;font:800 25px Manrope;font-style:normal}
+.account-test-pill{padding:7px 10px;border:1px solid #c5e4a54a;border-radius:20px;color:#d6efc4;font-size:10px;font-weight:800;letter-spacing:.8px}
+.account-wallet-card>small{display:block;color:#c3d2bb;font-size:12px;font-weight:800;letter-spacing:1.4px}
+.account-wallet-card>strong{display:block;margin:7px 0 20px;font:800 clamp(40px,7vw,54px)/1.1 Manrope,sans-serif;letter-spacing:-2px}
+.account-wallet-foot{position:relative;z-index:1;display:flex;justify-content:space-between;gap:10px;padding-top:15px;border-top:1px solid #ffffff24;color:#d0ddc9;font-size:13px;font-weight:650}
+.account-wallet-foot span{display:flex;align-items:center;gap:7px}
+.account-wallet-actions{display:grid;grid-template-columns:minmax(120px,1fr) auto auto;align-items:end;gap:10px}
+.account-wallet-actions label{display:grid;gap:7px;color:#6d7867;font-size:12px;font-weight:750}
+.account-wallet-actions input{width:100%;height:48px;padding:0 13px;border:1px solid #e1e8dc;border-radius:13px;background:#fff;color:#263123;font-size:16px;outline:none}
+.account-wallet-actions button{display:flex;min-height:48px;align-items:center;justify-content:center;gap:7px;padding:0 17px;border:1px solid #253b25;border-radius:13px;background:#253b25;color:#fff;font-size:14px;font-weight:800}
+.account-wallet-actions button.secondary{border-color:#e1e8dc;background:#fff;color:#283626}
+.account-wallet-actions button svg{width:18px;height:18px}
+.account-section{display:grid;gap:13px}
+.account-section-head{display:flex;align-items:center;gap:11px}
+.account-section-head h2{margin:0;color:#1f291d;font:800 23px Manrope,sans-serif;letter-spacing:-.7px}
+.account-section-head>span{padding:5px 9px;border-radius:20px;background:#eff4eb;color:#637c51;font-size:11px;font-weight:800}
+.account-section-head>a{display:flex;align-items:center;gap:4px;margin-left:auto;color:#65844e;font-size:13px;font-weight:800}
+.account-task-card,.account-offer-card{padding:17px 19px;border:1px solid #e7ece3;border-radius:17px;background:#fff}
+.account-task-main{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
+.account-task-main>b{overflow:hidden;color:#283326;font-size:16px;font-weight:800;text-overflow:ellipsis;white-space:nowrap}
+.account-task-main>strong{color:#273a22;font:800 17px Manrope,sans-serif;white-space:nowrap}
+.account-state{padding:6px 9px;border-radius:20px;background:#eff4eb;color:#65824f;font-size:11px;font-weight:800;white-space:nowrap}
+.account-state.paused{background:#f3f1ed;color:#8b8171}.account-state.assigned{background:#edf3fa;color:#57779b}.account-state.completed{background:#eaf5e9;color:#538052}.account-state.cancelled{background:#f8eeee;color:#a46c6c}
+.account-task-controls{display:flex;align-items:center;gap:9px;margin-top:13px;padding-top:12px;border-top:1px solid #eff2ec}
+.account-task-controls button,.account-task-controls a{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 10px;border:1px solid #e6ebe2;border-radius:9px;background:#fff;color:#52634a;font-size:12px;font-weight:750}
+.account-task-controls button.complete{border-color:#d4e7c8;background:#f1f8ec;color:#4f7540}
+.account-task-controls a{margin-left:auto;color:#73836a}
+.account-tabs{display:flex;gap:5px;padding:4px;border-radius:12px;background:#f0f4ed}
+.account-tabs button{min-height:40px;padding:0 15px;border:0;border-radius:9px;background:transparent;color:#7a8872;font-size:13px;font-weight:800}
+.account-tabs button.active{background:white;color:#30452a;box-shadow:0 2px 8px #24351b10}
+.account-offers{display:grid;gap:11px}
+.account-person{display:flex;align-items:center;gap:12px}
+.account-person img,.account-person-avatar{width:49px;height:49px;flex:0 0 49px;border-radius:15px;object-fit:cover}
+.account-person-avatar{display:grid;place-items:center;background:#edf4e8;color:#49683a;font:800 21px Manrope}
+.account-person>div{display:grid;gap:4px}
+.account-person b{color:#263324;font-size:16px;font-weight:800}
+.account-person small{color:#929c8b;font-size:12px}
+.account-rating{display:flex;align-items:center;gap:4px;color:#9a874a;font-size:12px;font-weight:800}
+.account-rating em{color:#9aa393;font-style:normal;font-weight:500}
+.account-offer-meta{display:flex;align-items:center;gap:10px;margin:14px 0 11px;padding-top:12px;border-top:1px solid #eff2ec}
+.account-offer-meta span{overflow:hidden;flex:1;color:#737f6d;font-size:13px;text-overflow:ellipsis;white-space:nowrap}
+.account-offer-meta strong{color:#293c24;font:800 19px Manrope,sans-serif}
+.account-offer-meta small{color:#8a9583;font-size:11px}
+.account-accept{display:flex;width:100%;min-height:43px;align-items:center;justify-content:center;gap:7px;border:0;border-radius:11px;background:#263e25;color:#fff;font-size:14px;font-weight:800}
+.account-transactions{display:grid}
+.account-transactions article{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #eff2ec}
+.account-transactions article>span{display:grid;width:39px;height:39px;flex:0 0 39px;place-items:center;border-radius:12px;background:#eff4eb;color:#617d4d}
+.account-transactions article>div{display:grid;flex:1;gap:4px}
+.account-transactions article b{color:#2d3928;font-size:14px;font-weight:750}
+.account-transactions article small{color:#929b8b;font-size:11px}
+.account-transactions article>strong{font:800 15px Manrope,sans-serif;white-space:nowrap}
+.account-transactions .plus{color:#527b42}.account-transactions .minus{color:#a46e61}
+.account-muted{margin:0;padding:23px 10px;color:#929b8b;text-align:center;font-size:14px}
+.account-footnote{display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:12px;background:#f2f5ef;color:#798871;font-size:12px;font-weight:650}
+@media(max-width:650px){
+ .wallet-lite-page-title h1{font-size:28px!important}
+ .account-hub{gap:17px;padding-bottom:12px}
+ .account-wallet-card{padding:21px 20px;border-radius:20px}
+ .account-wallet-top{margin-bottom:21px}
+ .account-wallet-card>small{font-size:11px}
+ .account-wallet-card>strong{font-size:43px;margin-bottom:17px}
+ .account-wallet-foot{font-size:11px}
+ .account-wallet-actions{grid-template-columns:1fr 1fr;gap:8px}
+ .account-wallet-actions label{grid-column:1/-1}
+ .account-wallet-actions button{padding:0 8px;font-size:12px}
+ .account-section-head h2{font-size:21px}
+ .account-task-card,.account-offer-card{padding:14px;border-radius:15px}
+ .account-task-main{grid-template-columns:auto minmax(0,1fr);gap:8px}
+ .account-task-main>b{font-size:14px;grid-column:1/-1;grid-row:2}
+ .account-task-main>strong{grid-column:2;grid-row:1;justify-self:end;font-size:16px}
+ .account-state{font-size:10px}
+ .account-task-controls{flex-wrap:wrap}
+ .account-task-controls button,.account-task-controls a{font-size:11px}
+ .account-tabs button{flex:1;padding:0 7px;font-size:11px}
+ .account-person b{font-size:15px}
+ .account-person img,.account-person-avatar{width:44px;height:44px;flex-basis:44px}
+ .account-offer-meta{flex-wrap:wrap}
+ .account-offer-meta span{flex-basis:100%}
+ .account-offer-meta strong{font-size:18px}
+ .account-offer-meta small{margin-left:auto}
+ .account-accept{font-size:13px}
+ .account-transactions article b{font-size:12px}
+ .account-transactions article>strong{font-size:13px}
+ .account-footnote{align-items:flex-start;font-size:10px}
+}
