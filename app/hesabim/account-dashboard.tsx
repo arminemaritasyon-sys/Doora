@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import {
   ArrowDownLeft, ArrowRight, ArrowUpRight, Bookmark, BriefcaseBusiness,
   CheckCircle2, Clock3, CreditCard, LockKeyhole, MessageCircle, Plus,
-  Send, ShieldCheck, Sparkles, Wallet
+  Send, ShieldCheck, Sparkles
 } from "lucide-react";
 import Link from "next/link";
 
