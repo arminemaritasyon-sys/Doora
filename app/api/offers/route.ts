@@ -21,11 +21,13 @@ export async function POST(request: NextRequest) {
     ON CONFLICT(task_id,user_id) DO UPDATE SET amount=EXCLUDED.amount,message=EXCLUDED.message,status='pending',updated_at=now()
     RETURNING id,task_id,amount,status,created_at
   `;
+  try {
   await db`
     INSERT INTO public.notifications(user_id,type,title,body,href)
     VALUES (${task.owner_id},'new_offer','Yeni teklif aldın',${task.title},${`/ilan/${taskId}`})
   `;
   const [owner] = await db`SELECT email,name FROM neon_auth.user WHERE id=${task.owner_id} LIMIT 1`;
+  } catch (error) { console.error("[notifications] Could not create notification:", error); }
   try {
   if (owner?.email) await sendDooraEmail({ to:owner.email,userId:task.owner_id,template:"new_offer",subject:"İlanına yeni teklif geldi",html:`<h2>Yeni bir teklifin var.</h2><p><strong>${escapeHtml(task.title)}</strong> ilanına ${amount.toLocaleString("tr-TR")} TL teklif geldi.</p><p>DOORA hesabından teklifleri inceleyebilirsin.</p>` });
   } catch (error) { console.error("[mail] Delivery failed; marketplace action remains successful:", error); }
