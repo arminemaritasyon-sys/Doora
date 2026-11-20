@@ -785,3 +785,81 @@ button, a, input, select, textarea { touch-action:manipulation; }
   .jobs-total{font-size:10px}
   .jobs-category-scroll{padding-top:10px;padding-bottom:11px}
 }
+
+
+/* DOORA saved and account screens */
+.saved-page,.profile-page{background:#f8faf6;color:#172014;padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+.saved-page .account-topbar,.profile-page .account-topbar{height:60px;padding:0 max(18px,calc((100% - 900px)/2));background:rgba(255,255,255,.96);border-bottom:1px solid #e9eee4}
+.saved-page .account-topbar .brand,.profile-page .account-topbar .brand{display:flex;align-items:center;gap:7px;color:#111;font-size:23px;font-weight:850;letter-spacing:-1.5px;text-decoration:none}
+.saved-page .account-topbar .brand-mark,.profile-page .account-topbar .brand-mark{display:grid;place-items:center;width:31px;height:31px;border-radius:10px;background:#c5e4a5;color:#10130f;font-size:23px;font-weight:900}
+.saved-page .account-topbar .brand-dot,.profile-page .account-topbar .brand-dot{color:#8eb66a}
+.saved-page .account-home,.profile-page .account-home{color:#526147;font-size:12px;font-weight:750;text-decoration:none}
+.saved-shell,.profile-shell{max-width:720px;padding:30px 20px 46px}
+.saved-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px}
+.saved-heading h1{margin:7px 0 4px;color:#20271c;font:750 27px/1.2 Manrope,sans-serif;letter-spacing:-1.1px}
+.saved-heading p{margin:0;color:#879080;font-size:12px;line-height:1.5}
+.saved-count{color:#87917e;font-size:11px;font-weight:650;white-space:nowrap}
+.saved-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.saved-card{display:flex;min-width:0;flex-direction:column;padding:16px;border:1px solid #e8eee3!important;border-radius:16px!important;background:#fff;box-shadow:0 3px 12px rgba(30,45,22,.025)}
+.saved-card-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.saved-card-meta span{padding:5px 8px;border-radius:7px;background:#f0f5eb;color:#6c8658;font-size:9px;font-weight:750}
+.saved-card-meta small{overflow:hidden;color:#929b89;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.saved-card h2{margin:12px 0 5px!important;color:#263020;font:800 15px/1.35 Manrope,sans-serif!important;letter-spacing:-.3px}
+.saved-card p{display:-webkit-box;overflow:hidden;margin:0 0 16px;color:#7d8777;font-size:11px;line-height:1.55;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.saved-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:12px;border-top:1px solid #f0f2ed}
+.saved-card-bottom strong{color:#263020;font:850 16px Manrope,sans-serif;white-space:nowrap}
+.saved-card-bottom a{display:inline-flex;align-items:center;gap:4px;color:#64844d;font-size:10px;font-weight:800;text-decoration:none;white-space:nowrap}
+.saved-empty{display:flex;flex-direction:column;align-items:center;padding:46px 24px;border:1px dashed #dce6d3;border-radius:17px;background:#fff;text-align:center}
+.saved-empty-icon{display:grid;width:46px;height:46px;place-items:center;margin-bottom:14px;border-radius:14px;background:#f0f5eb;color:#688752}
+.saved-empty h2{margin:0 0 7px;color:#2d3b25;font:800 17px Manrope,sans-serif}
+.saved-empty p{max-width:300px;margin:0;color:#858e7e;font-size:12px;line-height:1.6}
+.saved-empty>a{display:inline-flex;align-items:center;gap:7px;margin-top:19px;padding:11px 15px;border-radius:11px;background:#c5e4a5;color:#293a20;font-size:11px;font-weight:850;text-decoration:none}
+.profile-shell{padding-top:28px}
+.profile-welcome{display:flex;align-items:center;gap:14px;margin-bottom:21px}
+.profile-avatar{display:grid;width:54px;height:54px;flex:0 0 54px;place-items:center;border:1px solid #dce9d2;border-radius:18px;background:#eaf3e2;color:#557b3c;font:850 23px Manrope,sans-serif}
+.profile-identity .eyebrow{color:#849477;font-size:9px;font-weight:850;letter-spacing:1px}
+.profile-identity h1{margin:4px 0 3px;color:#20271c;font:800 23px/1.2 Manrope,sans-serif;letter-spacing:-.8px}
+.profile-identity p{overflow-wrap:anywhere;margin:0;color:#879080;font-size:11px}
+.profile-page .account-topbar .account-logout{height:35px;padding:0 12px;border:1px solid #e7ecdf;border-radius:10px;background:#fff;color:#526147;font-size:11px;font-weight:750}
+.profile-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:17px}
+.profile-stats>div,.profile-stats>a{min-width:0;padding:13px 12px;border:1px solid #e8eee3;border-radius:13px;background:#fff;text-decoration:none}
+.profile-stats small{color:#899282;font-size:9px;line-height:1.35}
+.profile-stats strong{margin-top:6px;color:#273321;font:850 22px Manrope,sans-serif}
+.profile-stats>a{display:block}
+.profile-section{margin-bottom:10px;padding:16px;border:1px solid #e8eee3;border-radius:15px;background:#fff}
+.profile-section .account-section-head{margin-bottom:8px}
+.profile-section .account-section-head h2{color:#293323;font:800 14px Manrope,sans-serif}
+.profile-section .account-section-head a{display:inline-flex;align-items:center;gap:4px;color:#688752;font-size:10px}
+.profile-section .account-list article{padding:12px 0;border-top:1px solid #f0f2ed}
+.profile-section .account-list b{color:#343d2f;font-size:11px;line-height:1.45}
+.profile-section .account-list small{color:#929a8a;font-size:9px}
+.profile-section .account-list strong{color:#303b28;font-size:12px}
+.profile-section .account-empty{padding:12px 0;color:#929a8a;font-size:11px}
+.account-dock{display:none}
+@media(max-width:650px){
+ .saved-page,.profile-page{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+ .saved-shell,.profile-shell{padding:24px 15px 28px}
+ .saved-heading{margin-bottom:16px}
+ .saved-heading h1{font-size:26px}
+ .saved-heading p{max-width:245px;font-size:11px}
+ .saved-grid{grid-template-columns:1fr;gap:9px}
+ .saved-card{padding:14px}
+ .saved-card h2{font-size:15px!important}
+ .saved-card p{-webkit-line-clamp:2}
+ .saved-empty{padding:38px 20px}
+ .profile-shell{padding-top:23px}
+ .profile-welcome{margin-bottom:16px}
+ .profile-avatar{width:49px;height:49px;flex-basis:49px;border-radius:16px}
+ .profile-identity h1{font-size:21px}
+ .profile-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:13px}
+ .profile-stats>div,.profile-stats>a{padding:12px}
+ .profile-stats strong{font-size:21px}
+ .profile-section{padding:14px;margin-bottom:9px}
+ .profile-section .account-list b{font-size:11px}
+ .account-dock{position:fixed;z-index:30;right:0;bottom:0;left:0;display:flex;height:calc(66px + env(safe-area-inset-bottom));align-items:center;justify-content:space-around;gap:0;padding:7px 12px max(6px,env(safe-area-inset-bottom));border-top:1px solid #e9eee4;background:rgba(255,255,255,.97);box-shadow:0 -5px 20px rgba(26,39,20,.045);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+ .account-dock a{display:flex;min-width:0;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#858d7f;font-size:9px;font-weight:650;text-decoration:none}
+ .account-dock a svg{width:21px;height:21px;stroke-width:1.8}
+ .account-dock a.dock-active{color:#557b3c}
+ .account-dock .dock-money-icon{width:24px;height:24px;background:transparent;color:currentColor;font-size:21px;font-weight:600;letter-spacing:-1.2px}
+ .account-dock .dock-active .dock-money-icon{color:#557b3c}
+}
