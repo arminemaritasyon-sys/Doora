@@ -303,3 +303,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
  .float-two{animation-delay:-2.5s}
 }
 @keyframes doora-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+
+/* DOORA logo contrast: pistachio mark with a dark D */
+.brand-mark{background:#c5e4a5!important;color:#10130f!important}
+.brand:hover .brand-mark{background:#bddd9c!important;color:#10130f!important}
