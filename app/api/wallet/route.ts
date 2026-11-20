@@ -10,13 +10,40 @@ const actionSchema = z.discriminatedUnion("action", [
 ]);
 
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });
-  await db`INSERT INTO public.wallet_accounts(user_id,mode) VALUES(${user.id},'test') ON CONFLICT(user_id) DO NOTHING`;
-  const [account] = await db`SELECT available_balance,held_balance,currency,mode FROM public.wallet_accounts WHERE user_id=${user.id}`;
-  const transactions = await db`SELECT id,type,amount,status,description,created_at FROM public.wallet_transactions WHERE user_id=${user.id} ORDER BY created_at DESC LIMIT 30`;
-  const withdrawals = await db`SELECT id,amount,status,created_at FROM public.wallet_withdrawals WHERE user_id=${user.id} ORDER BY created_at DESC LIMIT 10`;
-  return NextResponse.json({ account, transactions, withdrawals, testMode: true });
+  try {
+    const user = await Promise.race([
+      getCurrentUser(),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Oturum kontrolü zaman aşımına uğradı.")), 10000))
+    ]);
+    if (!user) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });
+
+    const withTimeout = <T,>(query: Promise<T>, label: string): Promise<T> =>
+      Promise.race([
+        query,
+        new Promise<T>((_, reject) => setTimeout(() => reject(new Error(label + " sorgusu zaman aşımına uğradı.")), 12000))
+      ]);
+
+    await withTimeout(
+      db`INSERT INTO public.wallet_accounts(user_id,mode) VALUES(${user.id},'test') ON CONFLICT(user_id) DO NOTHING`,
+      "Cüzdan hazırlığı"
+    );
+
+    // Run independent reads together; sequential queries made the first cold request unnecessarily slow.
+    const [accounts, transactions, withdrawals] = await Promise.all([
+      withTimeout(db`SELECT available_balance,held_balance,currency,mode FROM public.wallet_accounts WHERE user_id=${user.id}`, "Bakiye"),
+      withTimeout(db`SELECT id,type,amount,status,description,created_at FROM public.wallet_transactions WHERE user_id=${user.id} ORDER BY created_at DESC LIMIT 30`, "Hesap hareketleri"),
+      withTimeout(db`SELECT id,amount,status,created_at FROM public.wallet_withdrawals WHERE user_id=${user.id} ORDER BY created_at DESC LIMIT 10`, "Para çekme geçmişi")
+    ]);
+
+    const account = accounts[0] ?? null;
+    if (!account) throw new Error("Cüzdan hesabı bulunamadı.");
+    return NextResponse.json({ account, transactions, withdrawals, testMode: true });
+  } catch (error) {
+    console.error("[wallet] GET failed", error);
+    const message = error instanceof Error ? error.message : "Cüzdan bilgileri alınamadı.";
+    const status = message.includes("zaman aşımına") ? 504 : 500;
+    return NextResponse.json({ error: message }, { status });
+  }
 }
 
 export async function POST(request: NextRequest) {
