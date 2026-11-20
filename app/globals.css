@@ -1540,3 +1540,10 @@ button, a, input, select, textarea { touch-action:manipulation; }
  .account-transactions article>strong{font-size:13px}
  .account-footnote{align-items:flex-start;font-size:10px}
 }
+
+
+.account-review-form{display:grid;grid-template-columns:1fr auto;gap:9px;margin-top:13px;padding:13px;border:1px solid #e7ece3;border-radius:12px;background:#f8faf6}
+.account-review-form b{grid-column:1/-1;color:#35452f;font-size:13px}
+.account-review-form select,.account-review-form input{min-width:0;height:40px;padding:0 10px;border:1px solid #e0e8da;border-radius:9px;background:white;color:#33412e;font-size:13px}
+.account-review-form button{grid-column:1/-1;min-height:39px;border:0;border-radius:9px;background:#294128;color:white;font-size:12px;font-weight:800}
+@media(max-width:650px){.account-review-form{grid-template-columns:1fr}.account-review-form b,.account-review-form button{grid-column:auto}}
