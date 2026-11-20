@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/server";
 import { sendDooraEmail } from "@/lib/mail";
 
-const schema = z.object({ taskId: z.string().uuid(), amount: z.coerce.number().positive(), message: z.string().trim().max(1000).optional() });
+const schema = z.object({ taskId: z.string().uuid(), amount: z.coerce.number().positive().max(10000000), message: z.string().trim().max(1000).optional() });
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();

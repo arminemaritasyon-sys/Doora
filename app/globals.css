@@ -2512,3 +2512,8 @@ body{overflow-x:clip}
 .doora-account-page .doora-bottom-nav a{pointer-events:auto;touch-action:manipulation}
 .doora-account-page .account-modal-backdrop,
 .doora-account-page .listing-offers-backdrop{z-index:1200;pointer-events:auto}
+
+.task-title-link{color:inherit;text-decoration:none}
+.task-title-link:hover{text-decoration:underline;text-underline-offset:3px}
+.auth-resend{align-self:flex-start;border:0;background:transparent;color:#5d7947;font:inherit;font-size:13px;font-weight:700;padding:4px 0;cursor:pointer}
+.auth-resend:disabled{opacity:.55;cursor:not-allowed}

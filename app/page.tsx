@@ -26,7 +26,7 @@ function Brand() {
 function TaskCard({ task, saved, onSave, onOffer }: { task: Task; saved: boolean; onSave: () => void; onOffer: () => void }) {
   return <motion.article className="task-card" layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -3 }}>
     <div className="task-card-top"><span className="task-category">{task.category}</span><button className={`icon-button save-button ${saved ? "is-saved" : ""}`} onClick={onSave} aria-label="Kaydet"><Bookmark size={18} fill={saved ? "currentColor" : "none"} /></button></div>
-    <h3>{task.title}</h3><p className="task-description">{task.description}</p>
+    <h3><a className="task-title-link" href={"/ilan/"+task.id}>{task.title}</a></h3><p className="task-description">{task.description}</p>
     <div className="task-meta"><span><MapPin size={15}/>{task.location}</span><span><Clock3 size={15}/>{task.time || "Yeni ilan"}</span></div>
     <div className="task-card-bottom"><div className="task-owner">{task.owner_avatar ? <img className="avatar task-owner-photo" src={task.owner_avatar} alt="" /> : <span className="avatar">{(task.owner || "D").slice(0,1).toLocaleUpperCase("tr")}</span>}<span><b>{task.owner || "DOORA üyesi"}</b><small>{task.offers} teklif</small></span></div><strong className="task-price">{money(Number(task.budget))}</strong></div>
     <button className="task-offer" onClick={onOffer}>Teklif ver <ArrowUpRight size={16}/></button>
@@ -42,8 +42,8 @@ function TaskDialog({ onClose, onSubmit, busy }: { onClose: () => void; onSubmit
       <form className="task-form" onSubmit={e => {e.preventDefault();onSubmit(form);}}>
         <label>İlan başlığı<input value={form.title} onChange={e=>set("title",e.target.value)} placeholder="Örn. Market alışverişi" minLength={5} maxLength={100} required /></label>
         <label>Kategori<select value={form.category} onChange={e=>set("category",e.target.value)}>{categories.filter(c=>c.name!=="Tümü").map(c=><option key={c.name}>{c.name}</option>)}</select></label>
-        <label>İşin detayı<textarea value={form.description} onChange={e=>set("description",e.target.value)} placeholder="İhtiyacını kısaca anlat..." minLength={10} rows={3} required /></label>
-        <div className="form-two"><label>Bütçe (₺)<input type="number" min="1" value={form.budget} onChange={e=>set("budget",e.target.value)} placeholder="500" required /></label><label>İlçe<input value={form.district} onChange={e=>set("district",e.target.value)} placeholder="Muratpaşa" required /></label></div>
+        <label>İşin detayı<textarea value={form.description} onChange={e=>set("description",e.target.value)} placeholder="İhtiyacını kısaca anlat..." minLength={10} maxLength={5000} rows={3} required /></label>
+        <div className="form-two"><label>Bütçe (₺)<input type="number" min="1" max="10000000" value={form.budget} onChange={e=>set("budget",e.target.value)} placeholder="500" required /></label><label>İlçe<input value={form.district} onChange={e=>set("district",e.target.value)} placeholder="Muratpaşa" maxLength={100} required /></label></div>
         <button className="button button-primary button-full" disabled={busy}>{busy ? "Yayınlanıyor…" : "İlanı yayınla"}<ArrowRight size={17}/></button>
       </form>
     </motion.section>
@@ -55,7 +55,7 @@ function OfferDialog({ task, onClose, onSubmit, busy }: { task: Task; onClose: (
   return <div className="dialog-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><motion.section className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="offer-dialog-title" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:10}}>
     <div className="dialog-heading"><div><span className="eyebrow">TEKLİFİNİ GÖNDER</span><h2 id="offer-dialog-title">{task.title}</h2></div><button className="icon-button" onClick={onClose} aria-label="Kapat"><X/></button></div>
     <form className="task-form" onSubmit={e=>{e.preventDefault();onSubmit(amount,message);}}>
-      <label>Teklif tutarı (₺)<input type="number" min="1" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="Teklifin" required /></label>
+      <label>Teklif tutarı (₺)<input type="number" min="1" max="10000000" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="Teklifin" required /></label>
       <label>Mesaj <span className="optional-label">İsteğe bağlı</span><textarea rows={3} value={message} onChange={e=>setMessage(e.target.value)} placeholder="Kısaca kendinden ve çözümünden bahset..." maxLength={1000}/></label>
       <button className="button button-primary button-full" disabled={busy}>{busy?"Gönderiliyor…":"Teklifi gönder"}<ArrowRight size={17}/></button>
     </form>
