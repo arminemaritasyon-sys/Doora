@@ -81,7 +81,7 @@ export default function AccountDashboard({name,tasks,assigned,received,taskCount
   <section className="account-section">
    <div className="account-section-head"><h2>İlanlarım</h2><span>{taskCount} ilan</span><button className="account-inline-create" onClick={()=>{setTaskForm({title:"",description:"",category:"Alışveriş",budget:"",district:"Muratpaşa"});setModal("task")}}><Plus size={15}/> İlan oluştur</button></div>
    {tasks.length?tasks.map(t=><article className="account-task-card" key={t.id}>
-    <div className="account-task-main"><span className={"account-state "+t.status}>{taskLabel[t.status]||t.status}</span><b>{t.title}</b><strong>{money(t.budget)}</strong></div>
+    <div className="account-task-main"><span className={"account-state "+t.status}>{t.status==="assigned"&&t.completion_requested_at?"Onay bekliyor":t.status==="assigned"&&t.work_started_at?"İş üzerinde":taskLabel[t.status]||t.status}</span><b>{t.title}</b><strong>{money(t.budget)}</strong></div>
     <div className="account-task-controls">
      {t.status==="open"?<button className="pause-action" onClick={()=>taskAction(t.id,"pause")}><Pause size={15}/> Pasife al</button>:null}
      {t.status==="paused"?<button className="publish-action" onClick={()=>taskAction(t.id,"publish")}><Play size={15}/> Aktife al</button>:null}
