@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 type Task = {
   id: string; title: string; description: string; category: string; budget: number;
-  location: string; time: string; owner: string; offers: number;
+  location: string; time: string; owner: string; offers: number; created_at?: string;
 };
 const categories = [
   { name: "Tümü", icon: Compass }, { name: "Alışveriş", icon: ShoppingBag },
