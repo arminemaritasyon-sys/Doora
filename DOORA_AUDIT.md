@@ -16,12 +16,12 @@ Durum: Devam ediyor. Tamamlanan inceleme ve düzeltmeler, canlı ortamda onay be
 
 | Öncelik | Bulgu | Durum |
 |---|---|---|
-| Kritik | OpenNext 1.20.17, Next 16.3.8 sürümünü desteklemediği için üretim kurulumunda ERESOLVE oluşuyordu. | Kaynakta sürüm eşleştirmesi düzeltildi; yeni derleme bekleniyor. |
+| Kritik | OpenNext 1.20.17, Next 16.3.8 sürümünü desteklemediği için üretim kurulumunda ERESOLVE oluşuyordu. | Kaynakta sürüm eşleştirmesi düzeltildi; Vercel üretim derlemesi sıraya alındı. |
 | Kritik | Wrangler yapılandırması `doora-app` Worker'ını hedefliyordu; mevcut üretim Worker adı `doora`. | Kaynakta hedef adı düzeltildi; Cloudflare sürümü henüz doğrulanmadı. |
 | Yüksek | Veritabanı görev durum kısıtı `disputed` değerini kabul etmiyor; anlaşmazlık akışı bu nedenle başarısız oluyor. | 0007 migration hazırlandı; canlı veritabanına uygulanmadı. |
-| Yüksek | Teklif kabulü / emanet serbest bırakma sonrasında bildirim hatası ana işlemi başarısız gösterebiliyordu. | Kaynakta düzeltme hazırlanıyor. |
-| Yüksek | Anlaşmazlık kaydı ile görev durum güncellemesi ayrı sorgulardı; biri başarılı diğeri başarısız olabiliyordu. | Kaynakta atomik sorguya dönüştürülüyor. |
-| Yüksek | Oturum açmış kullanıcı ilan detayında teklif veremiyor, tekrar giriş sayfasına yönlendiriliyordu. | Kaynakta düzeltme hazırlanıyor. |
+| Yüksek | Teklif kabulü / emanet serbest bırakma sonrasında bildirim hatası ana işlemi başarısız gösterebiliyordu. | Kaynakta düzeltildi; canlı doğrulama bekleniyor. |
+| Yüksek | Anlaşmazlık kaydı ile görev durum güncellemesi ayrı sorgulardı; biri başarılı diğeri başarısız olabiliyordu. | Tek SQL ifadesiyle atomik hale getirildi; canlı migration uygulanmadan test tamamlanamaz. |
+| Yüksek | Oturum açmış kullanıcı ilan detayında teklif veremiyor, tekrar giriş sayfasına yönlendiriliyordu. | Kaynakta düzeltildi; canlı doğrulama bekleniyor. |
 | Orta | Kaydedilen ilandaki detay bağlantısı genel iş listesine gidiyordu. | Düzeltildi. |
 | Orta | Profilde değiştirilen ad, para çekme hesap sahibi adı olarak kullanılmıyordu. | Kaynakta düzeltme hazırlanıyor. |
 | Orta | Çıkış hatası yakalanmadığı için kullanıcıya açıklama gösterilmiyordu. | Düzeltildi. |
