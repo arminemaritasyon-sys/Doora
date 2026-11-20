@@ -37,7 +37,7 @@ export async function PATCH(request: NextRequest) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message || "Profil bilgilerini kontrol et." }, { status: 400 });
   const { name, district, bio, avatarUrl, notifications } = parsed.data;
-  if (avatarUrl && !/^data:image\\/(png|jpeg|webp);base64,/.test(avatarUrl)) return NextResponse.json({ error: "Profil fotoğrafı PNG, JPG veya WEBP olmalı." }, { status: 400 });
+  if (avatarUrl && !/^data:image\/(png|jpeg|webp);base64,/.test(avatarUrl)) return NextResponse.json({ error: "Profil fotoğrafı PNG, JPG veya WEBP olmalı." }, { status: 400 });
   try {
     await db`
       INSERT INTO public.user_profiles(user_id, display_name, district, bio, avatar_url)
