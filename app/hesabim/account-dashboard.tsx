@@ -21,7 +21,7 @@ export default function AccountDashboard({name,tasks,received,taskCount,pendingO
  useEffect(()=>{loadWallet()},[]);
  async function walletAction(action:"test_topup"|"withdraw"){
   setBusy(true);try{
-   const payload=action==="test_topup"?{action,amount:Number(amount),idempotencyKey:crypto.randomUUID()}:{action,amount:Number(amount),iban:iban.replace(/\\s/g,"").toUpperCase()};
+   const payload=action==="test_topup"?{action,amount:Number(amount),idempotencyKey:crypto.randomUUID()}:{action,amount:Number(amount),iban:iban.replace(/\s/g,"").toUpperCase()};
    const r=await fetch("/api/wallet",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)}),d=await r.json();
    if(!r.ok)throw new Error(d.error||"İşlem başarısız");
    toast.success(action==="test_topup"?"Test bakiyesi eklendi":"Para çekme talebin alındı");setModal(null);setAmount("");setIban("");await loadWallet();
