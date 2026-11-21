@@ -9,7 +9,7 @@ export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });
   const [profile] = await db`
-    SELECT p.display_name, p.avatar_url, p.district, p.bio, COALESCE(p.is_verified,false) AS is_verified,
+    SELECT p.display_name, p.avatar_url, p.district, p.bio,
       COALESCE(n.task_updates, true) AS task_updates,
       COALESCE(n.offer_updates, true) AS offer_updates,
       COALESCE(n.wallet_updates, true) AS wallet_updates,
@@ -18,7 +18,7 @@ export async function GET() {
     LEFT JOIN public.user_profiles p ON p.user_id = ${user.id}
     LEFT JOIN public.user_notification_preferences n ON n.user_id = ${user.id}
   `;
-  return NextResponse.json({ profile: { name: profile?.display_name || user.name || "", avatarUrl: profile?.avatar_url || "", district: profile?.district || "", bio: profile?.bio || "", isVerified: profile?.is_verified ?? false, notifications: { taskUpdates: profile?.task_updates ?? true, offerUpdates: profile?.offer_updates ?? true, walletUpdates: profile?.wallet_updates ?? true, productUpdates: profile?.product_updates ?? false } } });
+  return NextResponse.json({ profile: { name: profile?.display_name || user.name || "", avatarUrl: profile?.avatar_url || "", district: profile?.district || "", bio: profile?.bio || "", isVerified: false, notifications: { taskUpdates: profile?.task_updates ?? true, offerUpdates: profile?.offer_updates ?? true, walletUpdates: profile?.wallet_updates ?? true, productUpdates: profile?.product_updates ?? false } } });
 }
 
 const schema = z.object({
