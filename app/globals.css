@@ -2633,3 +2633,41 @@ body{overflow-x:clip}
 .doora-bottom-nav a .dock-money-icon{color:#000!important}
 .doora-bottom-nav a.dock-active svg,
 .mobile-dock a.dock-active svg{color:#000!important;stroke:#000!important}
+
+
+/* Provider portfolio, verification badge and nearby jobs */
+.provider-verified,.provider-verified-inline,.provider-verified-mini,.settings-verified{display:inline-flex;align-items:center;gap:5px;color:#23734d;font-weight:700}
+.provider-verified{padding:5px 9px;border-radius:99px;background:#eaf6ef;font-size:11px;white-space:nowrap}
+.provider-verified-inline{font-size:10px;vertical-align:middle}
+.provider-verified-mini{margin-left:3px;vertical-align:middle}
+.provider-profile-link,.job-provider-link{display:inline-flex;margin-top:4px;color:#64735e;font-size:11px;text-decoration:underline;text-underline-offset:3px}
+.provider-page{min-height:100svh;background:#f7f8f5;color:#20251f;padding:0 18px 60px}
+.provider-topbar{max-width:900px;height:66px;margin:auto;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e7ebe4}
+.provider-topbar>a:first-child{display:flex;align-items:center;gap:7px;color:#5f6c59;font-size:13px}
+.provider-brand{font-size:23px;font-weight:850;letter-spacing:-1.2px;color:#20251f}.provider-brand span{color:#a9b98e}
+.provider-content{max-width:900px;margin:28px auto}
+.provider-hero{display:flex;align-items:center;gap:18px;padding:24px;background:#fff;border:1px solid #e9ede6;border-radius:22px;box-shadow:0 8px 28px rgba(25,40,20,.04)}
+.provider-avatar{width:84px;height:84px;flex:0 0 84px;display:grid;place-items:center;border-radius:50%;overflow:hidden;background:#edf1e9;color:#607454;font-size:30px;font-weight:700}
+.provider-avatar img{width:100%;height:100%;object-fit:cover}
+.provider-identity{min-width:0}.provider-name-row{display:flex;align-items:center;flex-wrap:wrap;gap:9px}.provider-name-row h1{margin:0;font-size:25px;letter-spacing:-.8px}
+.provider-location,.provider-stats,.provider-stats span{display:flex;align-items:center;gap:6px;color:#73806d;font-size:12px}
+.provider-location{margin-top:8px}.provider-stats{flex-wrap:wrap;gap:13px;margin-top:11px}.provider-stats span:first-child{color:#a47b32}
+.provider-about,.provider-portfolio{margin-top:18px;padding:22px;background:#fff;border:1px solid #e9ede6;border-radius:20px}
+.provider-about h2,.provider-section-head h2{margin:0;font-size:19px;letter-spacing:-.4px}.provider-about p{margin:9px 0 0;color:#657060;font-size:14px;line-height:1.7;white-space:pre-wrap}
+.provider-section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:17px}.provider-section-head small{display:block;margin-bottom:5px;color:#98a38f;font-size:9px;font-weight:800;letter-spacing:1.5px}.provider-section-head>span{color:#899384;font-size:12px}
+.provider-portfolio-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.provider-work{overflow:hidden;border:1px solid #edf0ea;border-radius:14px;background:#fff}.provider-work>img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#f0f2ee}.provider-work>div{padding:11px}.provider-work b{font-size:13px}.provider-work p{margin:5px 0 0;color:#7a8474;font-size:11px;line-height:1.5}.provider-empty{padding:35px 10px;text-align:center;color:#899384;font-size:13px}
+.settings-verified{margin:0 0 14px;padding:10px 12px;border-radius:12px;background:#edf7f0;font-size:12px}
+.settings-portfolio{margin:18px 0;padding:17px;border:1px solid #e8ede4;border-radius:16px;background:#fbfcfa}
+.settings-portfolio .settings-section-title{margin-bottom:14px}
+.portfolio-add-form{display:grid;gap:9px}.portfolio-add-form>input,.portfolio-add-form>textarea{width:100%;padding:11px 12px;border:1px solid #e2e8de;border-radius:10px;background:#fff;font:inherit;font-size:13px;outline:none}.portfolio-add-form>textarea{resize:vertical}
+.portfolio-add-actions{display:flex;gap:8px;flex-wrap:wrap}.portfolio-add-actions button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 12px;border:1px solid #dfe6da;border-radius:10px;background:#fff;color:#52644b;font-size:12px;font-weight:700}.portfolio-add-actions button:last-child{background:#263b2b;border-color:#263b2b;color:#fff}.portfolio-add-actions button:disabled{opacity:.45}
+.portfolio-preview{width:100%;max-height:180px;object-fit:contain;border-radius:10px;background:#eef1eb}
+.settings-portfolio-list{display:grid;gap:8px;margin-top:13px}.settings-portfolio-list article{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid #e8ede4;border-radius:11px;background:#fff}.settings-portfolio-list article>img{width:52px;height:46px;object-fit:cover;border-radius:8px}.settings-portfolio-list article>div{display:grid;gap:3px;flex:1;min-width:0}.settings-portfolio-list article b{font-size:12px}.settings-portfolio-list article small{overflow:hidden;color:#83907c;font-size:10px;text-overflow:ellipsis;white-space:nowrap}.settings-portfolio-list article>button{display:grid;width:32px;height:32px;place-items:center;border:0;border-radius:9px;background:#fff0ef;color:#b64d45}
+.settings-portfolio-empty{margin:10px 0;color:#8a9483;font-size:12px}.settings-public-profile{display:flex;align-items:center;gap:6px;margin-top:12px;color:#526b4c;font-size:12px;font-weight:700}
+.nearby-jobs{margin:0 0 20px;padding:17px 0 4px}.nearby-jobs-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:12px}.nearby-jobs-head small{color:#9aa58f;font-size:9px;font-weight:800;letter-spacing:1.5px}.nearby-jobs-head h2{margin:4px 0 0;font-size:19px;letter-spacing:-.5px}.nearby-jobs-head p{display:flex;align-items:center;gap:4px;margin:5px 0 0;color:#84907e;font-size:11px}.nearby-jobs-head>span{color:#899384;font-size:11px}
+.nearby-jobs-scroll{display:grid;grid-auto-columns:minmax(190px,220px);grid-auto-flow:column;gap:10px;overflow-x:auto;padding:2px 0 12px;scroll-snap-type:x mandatory}
+.nearby-job-card{display:flex;flex-direction:column;gap:8px;min-height:164px;padding:13px;border:1px solid #e8ede4;border-radius:15px;background:#fff;scroll-snap-align:start}
+.nearby-job-card>span{color:#91a084;font-size:10px;font-weight:700}.nearby-job-card>b{font-size:13px;line-height:1.35}.nearby-job-card>small{display:flex;align-items:center;gap:4px;color:#8a9483;font-size:10px}.nearby-job-card>strong{margin-top:auto;font-size:16px}.nearby-job-card>button{display:flex;align-items:center;justify-content:center;gap:5px;min-height:34px;border:0;border-radius:9px;background:#263b2b;color:#fff;font-size:11px;font-weight:700}
+.nearby-location-hint{display:flex;align-items:center;gap:7px;margin:0 0 16px;padding:12px;border:1px solid #e8ede4;border-radius:12px;background:#fff;color:#74816e;font-size:12px}.nearby-location-hint a{color:#405d3c;text-decoration:underline}
+@media(max-width:600px){.provider-page{padding:0 13px 45px}.provider-content{margin:18px auto}.provider-hero{align-items:flex-start;padding:17px;gap:12px}.provider-avatar{width:64px;height:64px;flex-basis:64px}.provider-name-row h1{font-size:20px}.provider-stats{display:grid;gap:6px}.provider-about,.provider-portfolio{padding:17px}.provider-portfolio-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.provider-work>div{padding:9px}.provider-settings-panel{max-height:90dvh;overflow-y:auto}.nearby-jobs{margin-right:-2px}.nearby-jobs-head h2{font-size:18px}}
