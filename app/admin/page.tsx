@@ -3,7 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import {
   Activity, ArrowDownLeft, ArrowUpRight, BadgeCheck, BriefcaseBusiness,
   CircleAlert, ClipboardList, LayoutDashboard, LifeBuoy, ShieldCheck,
-  Users, Wallet, Clock3, ExternalLink
+  Users, Clock3, ExternalLink
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/server";
 import { isDooraAdmin } from "@/lib/admin";
