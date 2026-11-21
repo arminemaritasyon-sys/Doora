@@ -44,7 +44,7 @@ export default function JobsPage(){
   const [offerTask,setOfferTask]=useState<Task|null>(null);
   const [busy,setBusy]=useState(false);
 
-  useEffect(()=>{let live=true;Promise.all([
+  useEffect(()=>{let live=true;fetch("/api/tasks/nearby",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(d=>{if(live&&d){setNearbyTasks(d.tasks||[]);setNearbyDistrict(d.district||null)}}).catch(()=>{});Promise.all([
     fetch("/api/tasks").then(r=>{if(!r.ok)throw new Error("İşler alınamadı");return r.json()}),
     fetch("/api/saved").then(r=>r.ok?r.json():null).catch(()=>null),
     fetch("/api/auth/get-session").then(r=>r.ok?r.json():null).catch(()=>null)
