@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
       t.district AS location,
       COALESCE(to_char(t.scheduled_at, 'DD.MM.YYYY HH24:MI'), 'Yeni ilan') AS time,
       t.created_at, t.status,
-      COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS owner,\n      COALESCE(p.is_verified,false) AS owner_verified,
+      COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS owner,
+      COALESCE(p.is_verified,false) AS owner_verified,
       CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || floor(extract(epoch from p.updated_at)*1000)::bigint::text END AS owner_avatar,
       (SELECT count(*)::int FROM public.offers o WHERE o.task_id=t.id) AS offers
     FROM public.tasks t
