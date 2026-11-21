@@ -8,30 +8,34 @@ import { createNotification } from "@/lib/notifications";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const params = request.nextUrl.searchParams;
-  const search = params.get("q")?.trim() || null;
-  const category = params.get("category") || null;
-  const district = params.get("district") || null;
-  const rows = await db`
-    SELECT t.id, t.owner_id, t.title, t.description, t.category, t.budget, t.city,
-      t.district AS location,
-      COALESCE(to_char(t.scheduled_at, 'DD.MM.YYYY HH24:MI'), 'Yeni ilan') AS time,
-      t.created_at, t.status,
-      COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS owner,
-      COALESCE(p.is_verified,false) AS owner_verified,
-      CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || floor(extract(epoch from p.updated_at)*1000)::bigint::text END AS owner_avatar,
-      (SELECT count(*)::int FROM public.offers o WHERE o.task_id=t.id) AS offers
-    FROM public.tasks t
-    LEFT JOIN public.user_profiles p ON p.user_id = t.owner_id
-    LEFT JOIN neon_auth.user u ON u.id::text = t.owner_id
-    WHERE t.status = 'open'
-      AND (${category}::text IS NULL OR t.category = ${category})
-      AND (${district}::text IS NULL OR t.district ILIKE ${district ? `%${district}%` : null})
-      AND (${search}::text IS NULL OR (t.title || ' ' || t.description || ' ' || t.district) ILIKE ${search ? `%${search}%` : null})
-    ORDER BY t.created_at DESC
-    LIMIT 60
-  `;
-  return NextResponse.json({ tasks: rows });
+  try {
+    const params = request.nextUrl.searchParams;
+    const search = params.get("q")?.trim() || null;
+    const category = params.get("category") || null;
+    const district = params.get("district") || null;
+    const rows = await db`
+      SELECT t.id, t.owner_id, t.title, t.description, t.category, t.budget, t.city,
+        t.district AS location,
+        COALESCE(to_char(t.scheduled_at, 'DD.MM.YYYY HH24:MI'), 'Yeni ilan') AS time,
+        t.created_at, t.status,
+        COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS owner,
+        CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || floor(extract(epoch from p.updated_at)*1000)::bigint::text END AS owner_avatar,
+        (SELECT count(*)::int FROM public.offers o WHERE o.task_id=t.id) AS offers
+      FROM public.tasks t
+      LEFT JOIN public.user_profiles p ON p.user_id = t.owner_id
+      LEFT JOIN neon_auth.user u ON u.id::text = t.owner_id
+      WHERE t.status = 'open'
+        AND (${category}::text IS NULL OR t.category = ${category})
+        AND (${district}::text IS NULL OR t.district ILIKE ${district ? `%${district}%` : null})
+        AND (${search}::text IS NULL OR (t.title || ' ' || t.description || ' ' || t.district) ILIKE ${search ? `%${search}%` : null})
+      ORDER BY t.created_at DESC
+      LIMIT 60
+    `;
+    return NextResponse.json({ tasks: rows });
+  } catch (error) {
+    console.error("[tasks] Listing query failed:", error);
+    return NextResponse.json({ error: "İlanlar şu anda alınamıyor." }, { status: 503 });
+  }
 }
 
 const taskSchema = z.object({
@@ -62,7 +66,7 @@ export async function POST(request: NextRequest) {
   `;
   await createNotification({ userId: user.id, preference: "task_updates", type: "task_created", title: "İlanın yayınlandı", body: title, href: `/ilan/${task.id}` });
   try {
-  await sendDooraEmail({ to:user.email, userId:user.id, template:"task_created", subject:"İlanın DOORA'da yayında", html:`<h2>Merhaba ${escapeHtml(user.name || "DOORA üyesi")},</h2><p><strong>${escapeHtml(title)}</strong> ilanını aldık. İlanın DOORA'da yayınlandı.</p><p>Teklif geldikçe seni bilgilendireceğiz.</p>` });
+    await sendDooraEmail({ to:user.email, userId:user.id, template:"task_created", subject:"İlanın DOORA'da yayında", html:`<h2>Merhaba ${escapeHtml(user.name || "DOORA üyesi")},</h2><p><strong>${escapeHtml(title)}</strong> ilanını aldık. İlanın DOORA'da yayınlandı.</p><p>Teklif geldikçe seni bilgilendireceğiz.</p>` });
   } catch (error) { console.error("[mail] Delivery failed; marketplace action remains successful:", error); }
   return NextResponse.json({ task: { ...task, time: "Yeni ilan", owner: user.name || "Sen", offers: 0 } }, { status: 201 });
 }
