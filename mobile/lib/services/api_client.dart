@@ -39,7 +39,7 @@ class DooraApi {
   late final Dio _dio;
 
   Future<void> _saveCookies(Headers headers) async {
-    final values = headers[Headers.setCookieHeader];
+    final values = headers['set-cookie'];
     if (values == null || values.isEmpty) return;
     final raw = await _storage.read(key: _cookieKey);
     final cookies = raw == null
