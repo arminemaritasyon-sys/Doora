@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, Bookmark, Check, ChevronDown, Clock3, Compass, MapPin, Search, UserRound, X } from "lucide-react";
+import { ArrowUpRight, Bookmark, Check, ChevronDown, Clock3, Compass, MapPin, Search, UserRound, X, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 type Task = {
-  id:string; title:string; description:string; category:string; budget:number;
+  id:string; owner_id?:string; owner_verified?:boolean; title:string; description:string; category:string; budget:number;
   location:string; time:string; owner:string; owner_avatar?:string|null; offers:number; created_at?:string;
 };
 const categories=["Tümü","Alışveriş","Teslimat","Ev işleri","Taşıma","Tamir","Diğer"];
@@ -31,7 +31,7 @@ function OfferSheet({task,onClose,onSubmit,busy}:{task:Task;onClose:()=>void;onS
 }
 
 export default function JobsPage(){
-  const [tasks,setTasks]=useState<Task[]>([]);
+  const [tasks,setTasks]=useState<Task[]>([]);\n  const [nearbyTasks,setNearbyTasks]=useState<Task[]>([]);\n  const [nearbyDistrict,setNearbyDistrict]=useState<string|null>(null);
   const [saved,setSaved]=useState<string[]>([]);
   const [signedIn,setSignedIn]=useState(false);
   const [loading,setLoading]=useState(true);
@@ -63,6 +63,7 @@ export default function JobsPage(){
     <header className="jobs-topbar"><a className="brand" href="/" aria-label="DOORA ana sayfa"><span className="brand-mark">d</span><span>doora<span className="brand-dot">.</span></span></a><a className="jobs-top-account" href={signedIn?"/hesabim":"/giris?next=%2Fhesabim"}>{signedIn?"Hesabım":"Giriş yap"} <ArrowUpRight size={15}/></a></header>
     <section className="jobs-content">
       <div className="jobs-intro"><h1>İşler</h1><span className="jobs-total">{tasks.length} açık iş</span></div>
+      {nearbyTasks.length>0?<section className="nearby-jobs"><div className="nearby-jobs-head"><div><small>ÇEVRENDEKİ FIRSATLAR</small><h2>Yakınındaki işler</h2><p><MapPin size={13}/>{nearbyDistrict}</p></div><span>{nearbyTasks.length} ilan</span></div><div className="nearby-jobs-scroll">{nearbyTasks.map(task=><article className="nearby-job-card" key={task.id}><span>{task.category}</span><b>{task.title}</b><small><MapPin size={13}/>{task.location}</small><strong>{money(task.budget)}</strong><button onClick={()=>setOfferTask(task)}>Ben yaparım <ArrowUpRight size={14}/></button></article>)}</div></section>:signedIn&&!nearbyDistrict?<div className="nearby-location-hint"><MapPin size={16}/> Yakınındaki işleri görmek için <a href="/hesabim">profil ayarlarından ilçeni ekle.</a></div>:null}
       <div className="jobs-search"><Search size={18}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="İş veya konum ara..." aria-label="İş ara"/>{query&&<button onClick={()=>setQuery("")} aria-label="Aramayı temizle"><X size={17}/></button>}</div>
       <div className="jobs-filter-row"><div className="jobs-category-scroll">{categories.map(c=><button key={c} className={category===c?"active":""} onClick={()=>setCategory(c)}>{c}</button>)}</div></div>
       <div className="jobs-list-head"><label><select value={sort} onChange={e=>setSort(e.target.value)} aria-label="Sıralama"><option value="newest">En yeni</option><option value="low">Bütçe: düşük</option><option value="high">Bütçe: yüksek</option></select><ChevronDown size={14}/></label></div>
@@ -71,7 +72,7 @@ export default function JobsPage(){
         <div className="job-row-top"><span className="job-category">{task.category}</span><button className={saved.includes(task.id)?"job-save saved":"job-save"} onClick={()=>toggleSave(task.id)} aria-label="İşi kaydet"><Bookmark size={18} fill={saved.includes(task.id)?"currentColor":"none"}/></button></div>
         <h3><a className="task-title-link" href={"/ilan/"+task.id}>{task.title}</a></h3><p className="job-description">{task.description}</p>
         <div className="job-details"><span><MapPin size={15}/>{task.location}</span><span><Clock3 size={15}/>{task.time||"Yeni ilan"}</span><span>{task.offers} teklif</span></div>
-        <div className="job-owner"><span className="job-owner-avatar">{task.owner_avatar?<img src={task.owner_avatar} alt="" loading="lazy" decoding="async"/>:(task.owner||"D").slice(0,1).toLocaleUpperCase("tr")}</span><span><small>İLAN SAHİBİ</small><b>{task.owner||"DOORA üyesi"}</b></span></div>
+        <div className="job-owner"><span className="job-owner-avatar">{task.owner_avatar?<img src={task.owner_avatar} alt="" loading="lazy" decoding="async"/>:(task.owner||"D").slice(0,1).toLocaleUpperCase("tr")}</span><span><small>İLAN SAHİBİ</small><b>{task.owner||"DOORA üyesi"} {task.owner_verified?<span className="provider-verified-mini" title="Doğrulanmış kullanıcı"><ShieldCheck size={12}/></span>:null}</b><a className="job-provider-link" href={task.owner_id?"/hizmet-veren/"+task.owner_id:"#"}>Profili gör</a></span></div>
         <div className="job-row-bottom"><div><small>Bütçe</small><strong>{money(task.budget)}</strong></div><button onClick={()=>setOfferTask(task)}>Ben yaparım <ArrowUpRight size={16}/></button></div>
       </motion.article>)}</div>}
     </section>
