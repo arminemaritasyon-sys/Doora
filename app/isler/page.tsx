@@ -31,7 +31,9 @@ function OfferSheet({task,onClose,onSubmit,busy}:{task:Task;onClose:()=>void;onS
 }
 
 export default function JobsPage(){
-  const [tasks,setTasks]=useState<Task[]>([]);\n  const [nearbyTasks,setNearbyTasks]=useState<Task[]>([]);\n  const [nearbyDistrict,setNearbyDistrict]=useState<string|null>(null);
+  const [tasks,setTasks]=useState<Task[]>([]);
+  const [nearbyTasks,setNearbyTasks]=useState<Task[]>([]);
+  const [nearbyDistrict,setNearbyDistrict]=useState<string|null>(null);
   const [saved,setSaved]=useState<string[]>([]);
   const [signedIn,setSignedIn]=useState(false);
   const [loading,setLoading]=useState(true);
