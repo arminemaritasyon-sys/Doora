@@ -6,7 +6,7 @@ import {
   Users, Clock3, ExternalLink
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/server";
-import { isDooraAdmin } from "@/lib/admin";
+import { getDooraAdminAccess } from "@/lib/admin";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -23,8 +23,8 @@ async function safeCount(query: Promise<any>) {
 export default async function AdminDashboard() {
   const user = await getCurrentUser();
   if (!user) redirect("/giris?next=%2Fadmin");
-  if (!isDooraAdmin(user)) {
-    const adminEmailsConfigured = Boolean(process.env.DOORA_ADMIN_EMAILS?.trim());
+  const adminAccess = getDooraAdminAccess(user);
+  if (!adminAccess.allowed) {
     return (
       <main style={{ minHeight: "100svh", display: "grid", placeItems: "center", padding: 24, background: "#f7f8fa", color: "#17191c", fontFamily: "Arial, sans-serif" }}>
         <section style={{ width: "100%", maxWidth: 460, padding: 28, border: "1px solid #e5e7eb", borderRadius: 20, background: "#fff" }}>
@@ -37,9 +37,20 @@ export default async function AdminDashboard() {
           </div>
           <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: "#f5f6f8", fontSize: 14 }}>
             <div style={{ color: "#777", marginBottom: 5 }}>DOORA_ADMIN_EMAILS değişkeni</div>
-            <strong>{adminEmailsConfigured ? "Worker tarafından okunuyor" : "Worker tarafından okunamıyor / boş"}</strong>
+            <strong>{adminAccess.configured
+              ? adminAccess.source === "cloudflare-runtime"
+                ? "Cloudflare Worker Runtime'dan okunuyor"
+                : "Yalnızca process.env üzerinden okunuyor"
+              : adminAccess.source === "runtime-error"
+                ? "Cloudflare Runtime erişiminde hata oluştu"
+                : "Cloudflare Runtime değişkeni bulunamadı / boş"}</strong>
           </div>
-          <p style={{ marginTop: 18, color: "#777", fontSize: 13, lineHeight: 1.5 }}>E-posta adresinin Cloudflare Production Runtime değişkenindeki adresle aynı olduğundan emin ol. Değerin kendisi bu ekranda gösterilmez.</p>
+          <p style={{ marginTop: 18, color: "#777", fontSize: 13, lineHeight: 1.5 }}>
+            {adminAccess.configured
+              ? "Değişken bulundu ancak giriş e-postası izin listesiyle eşleşmiyor. E-posta değerini ve virgül/boşluk ayrımını kontrol et."
+              : "Değişken Cloudflare Worker isteğinin Runtime ortamında bulunamadı. Production Worker değişken ayarını kontrol et."}
+            {" "}Gizli değer ekranda gösterilmez.
+          </p>
           <a href="/" style={{ display: "inline-block", marginTop: 8, color: "#17191c", fontWeight: 700 }}>DOORA ana sayfasına dön</a>
         </section>
       </main>
