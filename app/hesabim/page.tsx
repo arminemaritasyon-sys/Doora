@@ -33,14 +33,14 @@ export default async function AccountPage() {
     withTimeout(db`SELECT o.id,o.amount,o.status,o.rejection_reason,o.message,o.created_at,t.id AS task_id,t.title,o.user_id AS bidder_id,
       COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS bidder,
       CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || floor(extract(epoch from p.updated_at)*1000)::bigint::text END AS avatar_url,p.district,
-      COALESCE(rv.rating,0)::numeric AS rating,COALESCE(rv.review_count,0)::int AS review_count
+      COALESCE(rv.rating,0)::numeric AS rating,COALESCE(rv.review_count,0)::int AS review_count,COALESCE(p.is_verified,false) AS is_verified
       FROM public.offers o JOIN public.tasks t ON t.id=o.task_id
       LEFT JOIN public.user_profiles p ON p.user_id=o.user_id
       LEFT JOIN neon_auth.user u ON u.id::text=o.user_id
       LEFT JOIN LATERAL (SELECT avg(rating) AS rating,count(*) AS review_count FROM public.task_reviews WHERE reviewee_id=o.user_id) rv ON true
       WHERE t.owner_id=${user.id} ORDER BY o.created_at DESC LIMIT 30`, "received offers"),
     withTimeout(db`SELECT o.id,o.task_id,o.amount,o.status,o.rejection_reason,o.message,o.created_at,t.title,t.owner_id AS bidder_id,
-      COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS bidder,CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || floor(extract(epoch from p.updated_at)*1000)::bigint::text END AS avatar_url,p.district
+      COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS bidder,COALESCE(p.is_verified,false) AS is_verified,CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || floor(extract(epoch from p.updated_at)*1000)::bigint::text END AS avatar_url,p.district
       FROM public.offers o JOIN public.tasks t ON t.id=o.task_id
       LEFT JOIN public.user_profiles p ON p.user_id=t.owner_id LEFT JOIN neon_auth.user u ON u.id::text=t.owner_id
       WHERE o.user_id=${user.id} ORDER BY o.created_at DESC LIMIT 30`, "sent offers"),
