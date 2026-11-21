@@ -21,6 +21,9 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Generate Android platform project
+        working-directory: mobile
+        run: flutter create --platforms=android --project-name doora_mobile .
       - name: Install dependencies
         working-directory: mobile
         run: flutter pub get
