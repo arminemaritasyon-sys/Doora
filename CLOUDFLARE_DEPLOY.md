@@ -37,3 +37,8 @@ Set variables needed at build time in the build environment too, if Cloudflare p
 - The existing Neon database is unchanged; no schema migration is performed by this hosting setup. Apply reviewed SQL migrations separately after testing them on a Neon branch.
 - The wallet remains in test mode. This deployment does not enable real-money payments or bank payouts.
 - This repository currently has no package lockfile, so the build command uses `npm install`, not `npm ci`.
+
+
+## DOORA admin dashboard
+
+The admin dashboard is available at `/admin`. Access is denied by default and is granted only to email addresses listed in the Cloudflare Worker variable `DOORA_ADMIN_EMAILS` (comma-separated, case-insensitive). Add the exact email address used by the administrator's Neon Auth account in Cloudflare Workers & Pages → doora → Settings → Variables and Secrets, then redeploy the Worker. Do not place administrator emails in client-side code. Local development can use the same variable in `.env.local`.
