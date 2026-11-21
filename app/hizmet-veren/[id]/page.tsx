@@ -17,9 +17,10 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
     `;
     profile = rows[0] || null;
   } catch {
-    notFound();
+    profile = null;
   }
-  if(!profile) notFound();
+  // Bazı kullanıcıların henüz user_profiles kaydı olmayabilir; profil bağlantısı yine de açılmalı.
+  if(!profile) profile = { user_id: id, display_name: "DOORA üyesi", avatar_url: null, district: null, bio: null };
 
   // İstatistik ve portföy tabloları henüz veritabanına eklenmemiş olsa da
   // temel hizmet veren profili açılmaya devam etsin.
