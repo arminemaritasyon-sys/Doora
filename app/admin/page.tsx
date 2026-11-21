@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { redirect, notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import {
   Activity, ArrowDownLeft, ArrowUpRight, BadgeCheck, BriefcaseBusiness,
   CircleAlert, ClipboardList, LayoutDashboard, LifeBuoy, ShieldCheck,
@@ -23,7 +23,28 @@ async function safeCount(query: Promise<any>) {
 export default async function AdminDashboard() {
   const user = await getCurrentUser();
   if (!user) redirect("/giris?next=%2Fadmin");
-  if (!isDooraAdmin(user)) notFound();
+  if (!isDooraAdmin(user)) {
+    const adminEmailsConfigured = Boolean(process.env.DOORA_ADMIN_EMAILS?.trim());
+    return (
+      <main style={{ minHeight: "100svh", display: "grid", placeItems: "center", padding: 24, background: "#f7f8fa", color: "#17191c", fontFamily: "Arial, sans-serif" }}>
+        <section style={{ width: "100%", maxWidth: 460, padding: 28, border: "1px solid #e5e7eb", borderRadius: 20, background: "#fff" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.2, color: "#777" }}>DOORA / YÖNETİM ERİŞİMİ</div>
+          <h1 style={{ margin: "14px 0 8px", fontSize: 25 }}>Yönetici yetkisi doğrulanamadı</h1>
+          <p style={{ color: "#626873", lineHeight: 1.6 }}>Giriş yaptığın hesap tanımlı yönetici listesiyle eşleşmiyor veya Worker değişkeni çalışma anında okunamıyor.</p>
+          <div style={{ marginTop: 20, padding: 14, borderRadius: 12, background: "#f5f6f8", fontSize: 14 }}>
+            <div style={{ color: "#777", marginBottom: 5 }}>Şu an giriş yapılan e-posta</div>
+            <strong style={{ overflowWrap: "anywhere" }}>{user.email}</strong>
+          </div>
+          <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: "#f5f6f8", fontSize: 14 }}>
+            <div style={{ color: "#777", marginBottom: 5 }}>DOORA_ADMIN_EMAILS değişkeni</div>
+            <strong>{adminEmailsConfigured ? "Worker tarafından okunuyor" : "Worker tarafından okunamıyor / boş"}</strong>
+          </div>
+          <p style={{ marginTop: 18, color: "#777", fontSize: 13, lineHeight: 1.5 }}>E-posta adresinin Cloudflare Production Runtime değişkenindeki adresle aynı olduğundan emin ol. Değerin kendisi bu ekranda gösterilmez.</p>
+          <a href="/" style={{ display: "inline-block", marginTop: 8, color: "#17191c", fontWeight: 700 }}>DOORA ana sayfasına dön</a>
+        </section>
+      </main>
+    );
+  }
 
   const [users, tasks, openTasks, offers, pendingOffers, reports, withdrawals, recentTasks, recentUsers] = await Promise.all([
     safeCount(db`SELECT count(*)::int AS count FROM public.user_profiles`),
