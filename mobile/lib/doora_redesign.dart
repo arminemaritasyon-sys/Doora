@@ -41,16 +41,57 @@ class _DiscoverState extends State<Discover>{final search=TextEditingController(
  const SizedBox(height:20),Row(children:[const Expanded(child:Text('Yakınındaki işler',style:TextStyle(color:ink,fontSize:16,fontWeight:FontWeight.w800))),IconButton(tooltip:'Bütçe filtresi',onPressed:budgetFilter,icon:Icon(Icons.tune_rounded,color:(minBudget>0||maxBudget<50000)?darkGreen:muted,size:19)),PopupMenuButton<String>(onSelected:(v){setState(()=>sort=v);load();},itemBuilder:(_)=>['En yeni','En düşük bütçe','En yüksek bütçe'].map((v)=>PopupMenuItem(value:v,child:Text(v))).toList(),child:Row(children:[Text(sort,style:const TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700)),const Icon(Icons.keyboard_arrow_down,color:muted,size:16)]))]),
  const SizedBox(height:10),if(busy)const Skeletons()else if(error!=null)EmptyState(title:'İlanlar yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)else if(tasks.isEmpty)EmptyState(title:'Henüz ilan yok',message:'Bu bölgede listelenecek bir iş bulamadık. İlk ilanı sen oluşturabilirsin.',action:'İlan oluştur',onTap:widget.onCreate)else ...tasks.map((t)=>Padding(padding:const EdgeInsets.only(bottom:10),child:TaskCard(task:t,saved:saved.contains(t.id),onSave:()=>save(t),onTap:()=>openTask(c,t,widget.user,widget.onLogin,load),onOffer:(){if(widget.user==null){widget.onLogin();}else{showModalBottomSheet(context:c,isScrollControlled:true,backgroundColor:Colors.transparent,builder:(_)=>OfferSheet(task:t,onSent:load));}})))
  ])));
- Future<void> budgetFilter()async{
-  var draft=RangeValues(minBudget,maxBudget);
-  final result=await showModalBottomSheet<RangeValues>(context:context,backgroundColor:white,showDragHandle:true,builder:(sheetContext)=>StatefulBuilder(builder:(context,setSheet)=>Padding(padding:const EdgeInsets.fromLTRB(20,8,20,22),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[
-   const Text('Bütçe aralığı',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w900)),
-   const SizedBox(height:6),
-   Text('${draft.start.round()} ₺ – ${draft.end.round()} ₺',style:const TextStyle(color:darkGreen,fontSize:13,fontWeight:FontWeight.w800)),
-   RangeSlider(values:draft,min:0,max:50000,divisions:100,activeColor:darkGreen,labels:RangeLabels('${draft.start.round()} ₺','${draft.end.round()} ₺'),onChanged:(v)=>setSheet(()=>draft=v)),
-   Row(children:[TextButton(onPressed:()=>setSheet(()=>draft=const RangeValues(0,50000)),child:const Text('Sıfırla')),const Spacer(),FilledButton(onPressed:()=>Navigator.pop(sheetContext,draft),style:FilledButton.styleFrom(backgroundColor:darkGreen),child:const Text('Uygula'))])
-  ]))));
-  if(result!=null&&mounted){setState(() { minBudget=result.start; maxBudget=result.end; });load();}
+ Future<void> budgetFilter() async {
+  var draft = RangeValues(minBudget, maxBudget);
+  final result = await showModalBottomSheet<RangeValues>(
+    context: context,
+    backgroundColor: white,
+    showDragHandle: true,
+    builder: (sheetContext) {
+      return StatefulBuilder(
+        builder: (context, setSheet) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 22),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Bütçe aralığı', style: TextStyle(color: ink, fontSize: 17, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 6),
+                Text('${draft.start.round()} ₺ – ${draft.end.round()} ₺', style: const TextStyle(color: darkGreen, fontSize: 13, fontWeight: FontWeight.w800)),
+                RangeSlider(
+                  values: draft,
+                  min: 0,
+                  max: 50000,
+                  divisions: 100,
+                  activeColor: darkGreen,
+                  labels: RangeLabels('${draft.start.round()} ₺', '${draft.end.round()} ₺'),
+                  onChanged: (value) => setSheet(() => draft = value),
+                ),
+                Row(children: [
+                  TextButton(
+                    onPressed: () => setSheet(() => draft = const RangeValues(0, 50000)),
+                    child: const Text('Sıfırla'),
+                  ),
+                  const Spacer(),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(sheetContext, draft),
+                    style: FilledButton.styleFrom(backgroundColor: darkGreen),
+                    child: const Text('Uygula'),
+                  ),
+                ]),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
+  if (result != null && mounted) {
+    setState(() => minBudget = result.start);
+    setState(() => maxBudget = result.end);
+    load();
+  }
  }
  Widget categoryTile(String value,IconData icon){final active=category==value;return GestureDetector(onTap:(){setState(()=>category=value);load();},child:SizedBox(width:65,child:Column(children:[AnimatedContainer(duration:const Duration(milliseconds:180),width:52,height:52,decoration:BoxDecoration(color:active?green:const Color(0xFFEAF0EF),borderRadius:BorderRadius.circular(16)),child:Icon(icon,color:active?white:ink,size:22)),const SizedBox(height:6),Text(value,style:TextStyle(color:active?darkGreen:ink,fontSize:9,fontWeight:FontWeight.w700))])));}
 }
