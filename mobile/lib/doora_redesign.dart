@@ -15,13 +15,16 @@ const categories=['Alışveriş','Teslimat','Ev işleri','Taşıma','Tamir','Di�
 IconData catIcon(String c){switch(c){case 'Alışveriş':return PhosphorIconsRegular.shoppingBag;case 'Teslimat':return PhosphorIconsRegular.truck;case 'Ev işleri':return PhosphorIconsRegular.broom;case 'Taşıma':return PhosphorIconsRegular.package;case 'Tamir':return PhosphorIconsRegular.wrench;default:return PhosphorIconsRegular.squaresFour;}}
 void main(){WidgetsFlutterBinding.ensureInitialized();SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarColor:Colors.transparent,statusBarIconBrightness:Brightness.dark,systemNavigationBarColor:white,systemNavigationBarIconBrightness:Brightness.dark));runApp(const DooraApp());}
 
+final GlobalKey<NavigatorState> dooraNavigatorKey=GlobalKey<NavigatorState>();
+
 class DooraApp extends StatefulWidget{const DooraApp({super.key});@override State<DooraApp> createState()=>_DooraAppState();}
 class _DooraAppState extends State<DooraApp>{
  Map<String,dynamic>? user;bool loading=true;
  @override void initState(){super.initState();DooraAuth.instance.restore().then((u){if(mounted)setState((){user=u;loading=false;});});}
- Future<void> login()async{final u=await Navigator.push<Map<String,dynamic>>(context,MaterialPageRoute(builder:(_)=>const AuthPage()));if(u!=null&&mounted)setState(()=>user=u);}
+ Future<void> login()async{final navigator=dooraNavigatorKey.currentState;if(navigator==null)return;final u=await navigator.push<Map<String,dynamic>>(MaterialPageRoute(builder:(_)=>const AuthPage()));if(u!=null&&mounted)setState(()=>user=u);}
  Future<void> logout()async{
-  final confirmed=await showDialog<bool>(context:context,builder:(dialogContext)=>AlertDialog(
+  final navContext=dooraNavigatorKey.currentContext;if(navContext==null)return;
+  final confirmed=await showDialog<bool>(context:navContext,builder:(dialogContext)=>AlertDialog(
     backgroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(20)),
     title:const Text('Çıkış yapmak istiyor musun?',style:TextStyle(color:ink,fontWeight:FontWeight.w900,fontSize:17)),
     content:const Text('Hesabından güvenli şekilde çıkış yapılacak.',style:TextStyle(color:muted,fontSize:12)),
@@ -35,7 +38,7 @@ class _DooraAppState extends State<DooraApp>{
   catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(DooraApi.instance.errorMessage(e))));}
   finally{if(mounted)setState(()=>user=null);}
 }
- @override Widget build(BuildContext c)=>MaterialApp(title:'DOORA',debugShowCheckedModeBanner:false,theme:ThemeData(useMaterial3:true,scaffoldBackgroundColor:bg,colorScheme:ColorScheme.fromSeed(seedColor:green),textTheme:GoogleFonts.plusJakartaSansTextTheme(),appBarTheme:const AppBarTheme(backgroundColor:white,foregroundColor:ink,elevation:0)),home:loading?const Scaffold(body:Center(child:CircularProgressIndicator(color:green))):Shell(user:user,onLogin:login,onLogout:logout,onUser:(u)=>setState(()=>user=u)));
+ @override Widget build(BuildContext c)=>MaterialApp(navigatorKey:dooraNavigatorKey,title:'DOORA',debugShowCheckedModeBanner:false,theme:ThemeData(useMaterial3:true,scaffoldBackgroundColor:bg,colorScheme:ColorScheme.fromSeed(seedColor:green),textTheme:GoogleFonts.plusJakartaSansTextTheme(),appBarTheme:const AppBarTheme(backgroundColor:white,foregroundColor:ink,elevation:0)),home:loading?const Scaffold(body:Center(child:CircularProgressIndicator(color:green))):Shell(user:user,onLogin:login,onLogout:logout,onUser:(u)=>setState(()=>user=u)));
 }
 class Shell extends StatefulWidget{const Shell({super.key,required this.user,required this.onLogin,required this.onLogout,required this.onUser});final Map<String,dynamic>? user;final VoidCallback onLogin,onLogout;final ValueChanged<Map<String,dynamic>?> onUser;@override State<Shell> createState()=>_ShellState();}
 class _ShellState extends State<Shell>{int tab=0,refresh=0;Future<void> create()async{if(widget.user==null){widget.onLogin();return;}if(!mounted)return;Navigator.push(context,MaterialPageRoute(builder:(_)=>CreatePage(onDone:(){setState((){refresh++;tab=1;});})));} @override Widget build(BuildContext c){final pages=[Discover(user:widget.user,onLogin:widget.onLogin,onCreate:create,refresh:refresh),MyTasks(user:widget.user,onLogin:widget.onLogin,onCreate:create,refresh:refresh),Saved(user:widget.user,onLogin:widget.onLogin),Profile(user:widget.user,onLogin:widget.onLogin,onLogout:widget.onLogout)];return Scaffold(extendBody:true,body:IndexedStack(index:tab,children:pages),bottomNavigationBar:SafeArea(top:false,minimum:const EdgeInsets.fromLTRB(14,0,14,8),child:Container(height:69,padding:const EdgeInsets.all(5),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(23),border:Border.all(color:line),boxShadow:[BoxShadow(color:ink.withValues(alpha:.09),blurRadius:25,offset:const Offset(0,7))]),child:Row(children:[nav(PhosphorIconsRegular.compass,'Keşfet',0),nav(PhosphorIconsRegular.briefcase,'İşler',1),Expanded(child:Center(child:InkWell(onTap:create,borderRadius:BorderRadius.circular(16),child:Container(width:48,height:48,decoration:BoxDecoration(color:const Color(0xFFE4EBD9),borderRadius:BorderRadius.circular(16),border:Border.all(color:const Color(0xFFD5DFC9)),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.10),blurRadius:14,offset:const Offset(0,5))]),child:const Icon(Icons.add,color:Color(0xFF171B17),size:27))))),nav(PhosphorIconsRegular.heart,'Kaydedilen',2),nav(PhosphorIconsRegular.user,'Hesabım',3)]))));}
