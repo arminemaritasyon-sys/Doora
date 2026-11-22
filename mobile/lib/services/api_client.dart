@@ -185,6 +185,29 @@ class DooraApi {
     });
   }
 
+  Future<List<Map<String, dynamic>>> getPortfolio(String userId) async {
+    final response = await _dio.get('/api/portfolio', queryParameters: {'userId': userId});
+    final rows = _asMap(response.data)['items'];
+    if (rows is! List) return [];
+    return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
+  Future<void> addPortfolioItem({
+    required String title,
+    required String description,
+    required String imageData,
+  }) async {
+    await _dio.post('/api/portfolio', data: {
+      'title': title.trim(),
+      'description': description.trim(),
+      'imageData': imageData,
+    });
+  }
+
+  Future<void> deletePortfolioItem(String id) async {
+    await _dio.delete('/api/portfolio', queryParameters: {'id': id});
+  }
+
   Future<List<Map<String, dynamic>>> getNotifications() async {
     final response = await _dio.get('/api/notifications');
     final rows = _asMap(response.data)['notifications'];
