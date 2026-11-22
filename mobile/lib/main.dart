@@ -386,36 +386,37 @@ class _HeroPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     width: double.infinity,
-    padding: const EdgeInsets.fromLTRB(21, 22, 18, 19),
+    padding: const EdgeInsets.fromLTRB(22, 22, 18, 20),
+    clipBehavior: Clip.antiAlias,
     decoration: BoxDecoration(
-      gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF245B49), Color(0xFF183E34)]),
-      borderRadius: BorderRadius.circular(25),
-      boxShadow: [BoxShadow(color: forest.withValues(alpha: .17), blurRadius: 22, offset: const Offset(0, 10))],
+      gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF234F40), Color(0xFF102F27)]),
+      borderRadius: BorderRadius.circular(27),
+      boxShadow: [BoxShadow(color: forest.withValues(alpha: .16), blurRadius: 24, offset: const Offset(0, 10))],
     ),
     child: Stack(children: [
-      Positioned(right: -28, top: -43, child: Container(width: 155, height: 155, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: white.withValues(alpha: .09), width: 24)))),
-      Positioned(right: 19, bottom: 4, child: PhosphorIcon(PhosphorIconsDuotone.sparkle, size: 70, color: white.withValues(alpha: .12))),
+      Positioned(right: -43, top: -58, child: Container(width: 190, height: 190, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: white.withValues(alpha: .075), width: 29)))),
+      Positioned(right: 10, bottom: -34, child: Icon(PhosphorIconsDuotone.compassTool, size: 126, color: white.withValues(alpha: .075))),
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(color: white.withValues(alpha: .12), borderRadius: BorderRadius.circular(30)),
+          decoration: BoxDecoration(color: white.withValues(alpha: .11), borderRadius: BorderRadius.circular(30), border: Border.all(color: white.withValues(alpha: .12))),
           child: const Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(PhosphorIconsFill.lightning, size: 12, color: Color(0xFFD6E8D9)),
+            Icon(PhosphorIconsFill.sparkle, size: 12, color: Color(0xFFD9E8B5)),
             SizedBox(width: 6),
-            Text('İHTİYACIN OLAN HER ŞEY', style: TextStyle(color: Color(0xFFE3EFE7), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.1)),
+            Text('İŞİNİ KOLAYLAŞTIR', style: TextStyle(color: Color(0xFFE6F0E9), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.15)),
           ]),
         ),
         const SizedBox(height: 17),
-        const Text('İşini kolayca\nhalledebilirsin.', style: TextStyle(color: white, fontSize: 26, height: 1.13, fontWeight: FontWeight.w800, letterSpacing: -.8)),
+        const Text('İhtiyacın var.\\nÇözümü DOORA’da.', style: TextStyle(color: white, fontSize: 27, height: 1.12, fontWeight: FontWeight.w800, letterSpacing: -1.05)),
         const SizedBox(height: 9),
-        Text('İhtiyacını paylaş, doğru kişiyle buluş.', style: TextStyle(color: white.withValues(alpha: .75), fontSize: 12)),
+        Text('İşini paylaş, sana uygun kişilerle buluş.', style: TextStyle(color: white.withValues(alpha: .76), fontSize: 12, fontWeight: FontWeight.w500)),
         const SizedBox(height: 19),
         FilledButton(
           onPressed: onCreate,
-          style: FilledButton.styleFrom(backgroundColor: const Color(0xFFF4F6F1), foregroundColor: forest, elevation: 0, padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13))),
+          style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE4EDDB), foregroundColor: const Color(0xFF183F33), elevation: 0, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
           child: const Row(mainAxisSize: MainAxisSize.min, children: [
-            Text('İlan oluştur', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
-            SizedBox(width: 8),
+            Text('Hemen ilan oluştur', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+            SizedBox(width: 9),
             Icon(PhosphorIconsRegular.arrowUpRight, size: 16),
           ]),
         ),
