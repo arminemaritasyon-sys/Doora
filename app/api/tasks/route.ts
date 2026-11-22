@@ -11,6 +11,9 @@ export async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams;
     const search = params.get("q")?.trim() || null;
+    const mine = params.get("mine") === "1";
+    const currentUser = mine ? await getCurrentUser() : null;
+    if (mine && !currentUser) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });
     const category = params.get("category") || null;
     const district = params.get("district") || null;
     const rows = await db`
@@ -24,12 +27,15 @@ export async function GET(request: NextRequest) {
       FROM public.tasks t
       LEFT JOIN public.user_profiles p ON p.user_id = t.owner_id
       LEFT JOIN neon_auth.user u ON u.id::text = t.owner_id
-      WHERE t.status = 'open'
+      WHERE (
+          (${mine}::boolean = false AND t.status = 'open')
+          OR (${mine}::boolean = true AND t.owner_id = ${currentUser?.id ?? ""})
+        )
         AND (${category}::text IS NULL OR t.category = ${category})
         AND (${district}::text IS NULL OR t.district ILIKE ${district ? `%${district}%` : null})
         AND (${search}::text IS NULL OR (t.title || ' ' || t.description || ' ' || t.district) ILIKE ${search ? `%${search}%` : null})
       ORDER BY t.created_at DESC
-      LIMIT 60
+      LIMIT 100
     `;
     return NextResponse.json({ tasks: rows });
   } catch (error) {
