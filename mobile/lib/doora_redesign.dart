@@ -175,6 +175,7 @@ class _CreatePageState extends State<CreatePage>{final title=TextEditingControll
     if(error!=null)Padding(padding:const EdgeInsets.only(top:12),child:Text(error!,style:const TextStyle(color:Colors.red,fontSize:11,fontWeight:FontWeight.w600))),
    ]))
   );
+ }
 class FormLabel extends StatelessWidget{const FormLabel(this.text,{super.key});final String text;@override Widget build(BuildContext c)=>Text(text,style:const TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w800));}
 
 class MyTasks extends StatefulWidget {
