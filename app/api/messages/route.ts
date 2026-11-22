@@ -91,6 +91,20 @@ export async function POST(request: NextRequest) {
   if (recipientId === user.id) return NextResponse.json({ error: "Kendine mesaj gönderemezsin." }, { status: 400 });
 
   try {
+    const [recipient] = await db`
+      SELECT id FROM neon_auth.user WHERE id::text = ${recipientId} LIMIT 1
+    `;
+    if (!recipient) return NextResponse.json({ error: "Kullanıcı bulunamadı." }, { status: 404 });
+
+    const [rate] = await db`
+      SELECT count(*)::int AS count
+      FROM public.direct_messages
+      WHERE sender_id = ${user.id} AND created_at > now() - interval '1 minute'
+    `;
+    if (Number(rate?.count || 0) >= 30) {
+      return NextResponse.json({ error: "Çok sık mesaj gönderiyorsun. Biraz bekleyip tekrar dene." }, { status: 429 });
+    }
+
     const [blocked] = await db`
       SELECT 1 FROM public.user_blocks
       WHERE (blocker_id = ${user.id} AND blocked_id = ${recipientId})
@@ -100,8 +114,20 @@ export async function POST(request: NextRequest) {
     if (blocked) return NextResponse.json({ error: "Bu kullanıcıyla mesajlaşma mümkün değil." }, { status: 403 });
 
     if (taskId) {
-      const [task] = await db`SELECT id FROM public.tasks WHERE id = ${taskId} LIMIT 1`;
-      if (!task) return NextResponse.json({ error: "İlan bulunamadı." }, { status: 404 });
+      const [task] = await db`
+        SELECT t.id FROM public.tasks t
+        WHERE t.id = ${taskId}::uuid
+          AND (
+            t.owner_id = ${user.id}
+            OR t.owner_id = ${recipientId}
+            OR EXISTS (
+              SELECT 1 FROM public.offers o
+              WHERE o.task_id = t.id AND o.user_id IN (${user.id}, ${recipientId})
+            )
+          )
+        LIMIT 1
+      `;
+      if (!task) return NextResponse.json({ error: "Bu ilan için mesajlaşma yetkin bulunmuyor." }, { status: 403 });
     }
 
     const [created] = await db`
