@@ -261,6 +261,36 @@ class DooraApi {
     return _asMap(response.data);
   }
 
+  Future<List<Map<String, dynamic>>> getConversations() async {
+    final response = await _dio.get('/api/messages');
+    final rows = _asMap(response.data)['conversations'];
+    if (rows is! List) return [];
+    return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
+  Future<Map<String, dynamic>> getConversation(String peerId, {String? taskId}) async {
+    final response = await _dio.get('/api/messages', queryParameters: {
+      'peerId': peerId,
+      if (taskId != null && taskId.isNotEmpty) 'taskId': taskId,
+    });
+    final data = _asMap(response.data);
+    final rows = data['messages'];
+    return {
+      'peer': _asMap(data['peer']),
+      'messages': rows is List
+          ? rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList()
+          : <Map<String, dynamic>>[],
+    };
+  }
+
+  Future<void> sendMessage(String recipientId, String message, {String? taskId}) async {
+    await _dio.post('/api/messages', data: {
+      'recipientId': recipientId,
+      'message': message.trim(),
+      if (taskId != null && taskId.isNotEmpty) 'taskId': taskId,
+    });
+  }
+
   Future<List<Map<String, dynamic>>> getNotifications() async {
     final response = await _dio.get('/api/notifications');
     final rows = _asMap(response.data)['notifications'];
