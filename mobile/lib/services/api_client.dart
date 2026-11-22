@@ -112,6 +112,25 @@ class DooraApi {
     return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
+  Future<List<Map<String, dynamic>>> getNearbyTasks() async {
+    final response = await _dio.get('/api/tasks/nearby');
+    final rows = _asMap(response.data)['tasks'];
+    if (rows is! List) return [];
+    return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
+  Future<Set<String>> getSavedTaskIds() async {
+    final response = await _dio.get('/api/saved');
+    final rows = _asMap(response.data)['taskIds'];
+    if (rows is! List) return <String>{};
+    return rows.map((value) => value.toString()).toSet();
+  }
+
+  Future<bool> toggleSavedTask(String taskId) async {
+    final response = await _dio.post('/api/saved', data: {'taskId': taskId});
+    return _asMap(response.data)['saved'] == true;
+  }
+
   Future<Map<String, dynamic>> createTask({
     required String title,
     required String description,
