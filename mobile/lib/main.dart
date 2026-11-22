@@ -352,19 +352,31 @@ class _DiscoverPageState extends State<DiscoverPage> {
               ]),
               const SizedBox(height: 12),
               SizedBox(
-                height: 104,
+                height: 44,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: categories.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 10),
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
                   itemBuilder: (_, index) {
                     final item = categories[index];
                     final selected = category == item;
-                    return _CategoryTile(label: item, icon: _categoryIcon(item), selected: selected, onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() => category = item);
-                      load();
-                    });
+                    return ChoiceChip(
+                      avatar: Icon(_categoryIcon(item), size: 15, color: selected ? white : const Color(0xFF64756C)),
+                      label: Text(item),
+                      selected: selected,
+                      onSelected: (_) {
+                        HapticFeedback.selectionClick();
+                        setState(() => category = item);
+                        load();
+                      },
+                      showCheckmark: false,
+                      backgroundColor: white,
+                      selectedColor: const Color(0xFF087A50),
+                      side: BorderSide(color: selected ? const Color(0xFF087A50) : line),
+                      labelStyle: TextStyle(color: selected ? white : ink, fontSize: 11, fontWeight: FontWeight.w800),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+                    );
                   },
                 ),
               ),
@@ -489,7 +501,7 @@ class _HeroPanel extends StatelessWidget {
           ]),
         ),
         const SizedBox(height: 17),
-        const Text('İhtiyacın var.\\nÇözümü DOORA’da.', style: TextStyle(color: white, fontSize: 27, height: 1.12, fontWeight: FontWeight.w800, letterSpacing: -1.05)),
+        const Text('İşin mi var?\\nDOORA var.', style: TextStyle(color: white, fontSize: 27, height: 1.12, fontWeight: FontWeight.w800, letterSpacing: -1.05)),
         const SizedBox(height: 9),
         Text('İşini paylaş, sana uygun kişilerle buluş.', style: TextStyle(color: white.withValues(alpha: .76), fontSize: 12, fontWeight: FontWeight.w500)),
         const SizedBox(height: 19),
@@ -497,7 +509,7 @@ class _HeroPanel extends StatelessWidget {
           onPressed: onCreate,
           style: FilledButton.styleFrom(backgroundColor: const Color(0xFFE4EDDB), foregroundColor: const Color(0xFF183F33), elevation: 0, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
           child: const Row(mainAxisSize: MainAxisSize.min, children: [
-            Text('Hemen ilan oluştur', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+            Text('Hemen İlan Oluştur', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
             SizedBox(width: 9),
             Icon(PhosphorIconsRegular.arrowUpRight, size: 16),
           ]),
@@ -1005,8 +1017,8 @@ class _MyWorkPageState extends State<MyWorkPage> {
         const Text('İlanlarını ve iş akışını buradan takip et.', style: TextStyle(color: muted, fontSize: 13)),
         const SizedBox(height: 22),
         Container(padding: const EdgeInsets.all(4), decoration: BoxDecoration(color: const Color(0xFFEDF0ED), borderRadius: BorderRadius.circular(14)), child: Row(children: [
-          _Segment(label: 'Açtığım ilanlar', selected: filter == 0, onTap: () => setState(() => filter = 0)),
-          _Segment(label: 'Tekliflerim', selected: filter == 1, onTap: () => setState(() => filter = 1)),
+          _Segment(label: 'Paylaştıklarım', selected: filter == 0, onTap: () => setState(() => filter = 0)),
+          _Segment(label: 'Teklif Verdiklerim', selected: filter == 1, onTap: () => setState(() => filter = 1)),
         ])),
         const SizedBox(height: 18),
         if (widget.user == null)
