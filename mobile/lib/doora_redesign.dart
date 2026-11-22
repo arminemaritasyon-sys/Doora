@@ -26,7 +26,7 @@ class _ShellState extends State<Shell>{int tab=0,refresh=0;Future<void> create()
 }
 
 class Discover extends StatefulWidget{const Discover({super.key,required this.user,required this.onLogin,required this.onCreate,required this.refresh});final Map<String,dynamic>? user;final VoidCallback onLogin,onCreate;final int refresh;@override State<Discover> createState()=>_DiscoverState();}
-class _DiscoverState extends State<Discover>{final search=TextEditingController();List<DooraTask> tasks=[];Set<String> saved={};String district='Muratpaşa',category='Tümü',sort='En yeni';bool busy=true;String? error;
+class _DiscoverState extends State<Discover>{final search=TextEditingController();List<DooraTask> tasks=[];Set<String> saved={};String district='Tüm Antalya',category='Tümü',sort='En yeni';bool busy=true;String? error;
  @override void initState(){super.initState();load();}@override void didUpdateWidget(covariant Discover old){super.didUpdateWidget(old);if(old.refresh!=widget.refresh||old.user!=widget.user)load();}@override void dispose(){search.dispose();super.dispose();}
  Future<void> load()async{setState((){busy=true;error=null;});try{List<Map<String,dynamic>> rows;try{rows=widget.user!=null&&search.text.isEmpty&&category=='Tümü'?await DooraApi.instance.getNearbyTasks():await DooraApi.instance.getTasks(query:search.text,category:category);if(rows.isEmpty)rows=await DooraApi.instance.getTasks(query:search.text,category:category);}catch(_){rows=await DooraApi.instance.getTasks(query:search.text,category:category);}if(widget.user!=null){try{saved=await DooraApi.instance.getSavedTaskIds();}catch(_){saved={};}}var list=rows.map(DooraTask.fromJson).toList();if(district!='Tüm Antalya')list=list.where((t)=>t.location.toLowerCase().contains(district.toLowerCase())).toList();if(sort=='En düşük bütçe')list.sort((a,b)=>a.budget.compareTo(b.budget));if(sort=='En yüksek bütçe')list.sort((a,b)=>b.budget.compareTo(a.budget));if(mounted)setState(()=>tasks=list);}catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}finally{if(mounted)setState(()=>busy=false);}}
  Future<void> save(DooraTask t)async{if(widget.user==null){widget.onLogin();return;}final old=saved.contains(t.id);setState((){if(old){saved.remove(t.id);}else{saved.add(t.id);}});try{final v=await DooraApi.instance.toggleSavedTask(t.id);if(mounted)setState((){if(v){saved.add(t.id);}else{saved.remove(t.id);}});}catch(e){if(mounted){setState((){if(old){saved.add(t.id);}else{saved.remove(t.id);}});toast(context,DooraApi.instance.errorMessage(e));}}}
@@ -54,7 +54,43 @@ class _TaskAvatar extends StatelessWidget {
  }
 }
 
-class TaskCard extends StatelessWidget{const TaskCard({super.key,required this.task,required this.onTap,this.saved=false,this.onSave});final DooraTask task;final VoidCallback onTap;final bool saved;final VoidCallback? onSave;@override Widget build(BuildContext c)=>Material(color:white,borderRadius:BorderRadius.circular(18),child:InkWell(onTap:onTap,borderRadius:BorderRadius.circular(18),child:Container(padding:const EdgeInsets.all(14),decoration:BoxDecoration(borderRadius:BorderRadius.circular(18),border:Border.all(color:line),boxShadow:[BoxShadow(color:ink.withValues(alpha:.025),blurRadius:12,offset:const Offset(0,4))]),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Expanded(child:Text(task.title,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:13,fontWeight:FontWeight.w800))),if(onSave!=null)InkWell(onTap:onSave,child:Icon(saved?PhosphorIconsFill.heart:PhosphorIconsRegular.heart,color:saved?const Color(0xFFE36B75):muted,size:17))]),const SizedBox(height:5),Text(task.time+' · '+(task.location.isEmpty?'Antalya':task.location),style:const TextStyle(color:muted,fontSize:10)),const SizedBox(height:10),Row(children:[Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:5),decoration:BoxDecoration(color:const Color(0xFFEDF1E9),borderRadius:BorderRadius.circular(20)),child:Text(task.status=='completed'?'Tamamlandı':task.status=='assigned'?'Atandı':task.status=='open'?'Teklif bekliyor':task.status,style:TextStyle(color:task.status=='completed'?const Color(0xFF42633D):const Color(0xFF52634B),fontSize:9,fontWeight:FontWeight.w700))),const Spacer(),Text(task.formattedBudget,style:const TextStyle(color:ink,fontSize:16,fontWeight:FontWeight.w900))]),const SizedBox(height:9),Row(children:[_TaskAvatar(name:task.owner,url:task.ownerAvatar,radius:13),const SizedBox(width:7),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(task.owner,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:9,fontWeight:FontWeight.w800)),const Text('DOORA üyesi',style:TextStyle(color:muted,fontSize:8))])),const Icon(Icons.chat_bubble_outline,color:muted,size:13),const SizedBox(width:4),Text(task.offers.toString()+' teklif',style:const TextStyle(color:muted,fontSize:9))])]))));}
+class TaskCard extends StatelessWidget {
+ const TaskCard({super.key,required this.task,required this.onTap,this.saved=false,this.onSave});
+ final DooraTask task; final VoidCallback onTap; final bool saved; final VoidCallback? onSave;
+ @override Widget build(BuildContext context)=>Material(
+  color:white,borderRadius:BorderRadius.circular(18),
+  child:InkWell(onTap:onTap,borderRadius:BorderRadius.circular(18),child:Container(
+   padding:const EdgeInsets.all(15),
+   decoration:BoxDecoration(borderRadius:BorderRadius.circular(18),border:Border.all(color:line),boxShadow:[BoxShadow(color:ink.withValues(alpha:.035),blurRadius:14,offset:const Offset(0,4))]),
+   child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    Row(children:[
+     Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:5),decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(20)),child:Text(task.category,style:const TextStyle(color:darkGreen,fontSize:9,fontWeight:FontWeight.w800))),
+     const Spacer(),
+     if(onSave!=null)InkWell(onTap:onSave,borderRadius:BorderRadius.circular(20),child:Padding(padding:const EdgeInsets.all(3),child:Icon(saved?PhosphorIconsFill.heart:PhosphorIconsRegular.heart,color:saved?const Color(0xFFE36B75):muted,size:19)))
+    ]),
+    const SizedBox(height:10),
+    Text(task.title,maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w900,height:1.25)),
+    if(task.description.isNotEmpty)Padding(padding:const EdgeInsets.only(top:5),child:Text(task.description,maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:10,height:1.45))),
+    const SizedBox(height:10),
+    Row(children:[const Icon(Icons.location_on_outlined,color:muted,size:13),const SizedBox(width:3),Expanded(child:Text(task.location.isEmpty?'Antalya':task.location,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:9))),const Icon(Icons.schedule_outlined,color:muted,size:13),const SizedBox(width:4),Text(task.time,style:const TextStyle(color:muted,fontSize:9))]),
+    const Padding(padding:EdgeInsets.symmetric(vertical:11),child:Divider(height:1,color:line)),
+    Row(children:[
+     _TaskAvatar(name:task.owner,url:task.ownerAvatar,radius:16),const SizedBox(width:8),
+     Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+      Text(task.owner,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w800)),
+      Text('${task.offers} teklif · DOORA üyesi',style:const TextStyle(color:muted,fontSize:8))
+     ])),
+     Column(crossAxisAlignment:CrossAxisAlignment.end,children:[
+      const Text('İLAN BÜTÇESİ',style:TextStyle(color:muted,fontSize:7,fontWeight:FontWeight.w800,letterSpacing:.5)),
+      Text(task.formattedBudget,style:const TextStyle(color:darkGreen,fontSize:16,fontWeight:FontWeight.w900))
+     ])
+    ]),
+    const SizedBox(height:10),
+    SizedBox(width:double.infinity,height:38,child:OutlinedButton(onPressed:onTap,style:OutlinedButton.styleFrom(foregroundColor:darkGreen,side:const BorderSide(color:line),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(11))),child:const Text('İlanı incele',style:TextStyle(fontSize:10,fontWeight:FontWeight.w800))))
+   ])
+  ))
+ );
+}
 
 void openTask(BuildContext c,DooraTask t,Map<String,dynamic>? user,VoidCallback login,VoidCallback? changed){Navigator.push(c,MaterialPageRoute(builder:(_)=>TaskDetail(task:t,user:user,onLogin:login,onChanged:changed)));}
 class TaskDetail extends StatelessWidget {
@@ -200,7 +236,54 @@ class Notifications extends StatefulWidget{const Notifications({super.key});@ove
 class _NotificationsState extends State<Notifications>{List<Map<String,dynamic>> items=[];bool busy=true;String? error;@override void initState(){super.initState();load();}Future<void> load()async{try{items=await DooraApi.instance.getNotifications();await DooraApi.instance.markNotificationsRead();}catch(e){error=DooraApi.instance.errorMessage(e);}if(mounted)setState(()=>busy=false);}@override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('Bildirimler')),body:busy?const Center(child:CircularProgressIndicator(color:green)):error!=null?EmptyState(title:'Yüklenemedi',message:error!):items.isEmpty?const EmptyState(title:'Yeni bildirim yok',message:'İşlerinle ilgili gelişmeler burada görünecek.'):ListView(padding:const EdgeInsets.all(18),children:items.map((n)=>ListTile(tileColor:white,title:Text(n['title']?.toString()??'Bildirim'),subtitle:Text(n['message']?.toString()??''),leading:Icon(Icons.notifications_active_outlined,color:darkGreen),isThreeLine:true)).toList()));}
 
 class AuthPage extends StatefulWidget{const AuthPage({super.key});@override State<AuthPage> createState()=>_AuthPageState();}
-class _AuthPageState extends State<AuthPage>{final name=TextEditingController(),email=TextEditingController(),pass=TextEditingController(),otp=TextEditingController();bool signup=false,verify=false,busy=false;String? error;@override void dispose(){name.dispose();email.dispose();pass.dispose();otp.dispose();super.dispose();}Future<void> submit()async{setState(()=>busy=true);try{if(verify){await DooraAuth.instance.verifyEmail(email.text,otp.text);final u=await DooraAuth.instance.signIn(email.text,pass.text);if(mounted)Navigator.pop(context,u);}else if(signup){await DooraAuth.instance.signUp(name.text,email.text,pass.text);if(mounted)setState(()=>verify=true);}else{final u=await DooraAuth.instance.signIn(email.text,pass.text);if(mounted)Navigator.pop(context,u);}}catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}finally{if(mounted)setState(()=>busy=false);}}@override Widget build(BuildContext c)=>Scaffold(backgroundColor:white,appBar:AppBar(backgroundColor:white),body:ListView(padding:const EdgeInsets.all(22),children:[const Center(child:Text('doora.',style:TextStyle(color:green,fontSize:30,fontWeight:FontWeight.w900))),const SizedBox(height:14),Center(child:Text(verify?'E-postanı doğrula':signup?'DOORA’ya katıl':'Tekrar hoş geldin',style:const TextStyle(color:ink,fontSize:22,fontWeight:FontWeight.w900))),const SizedBox(height:25),if(signup&&!verify)TextField(controller:name,decoration:const InputDecoration(hintText:'Ad soyad')),const SizedBox(height:10),TextField(controller:email,decoration:const InputDecoration(hintText:'E-posta')),const SizedBox(height:10),if(!verify)TextField(controller:pass,obscureText:true,decoration:const InputDecoration(hintText:'Şifre'))else TextField(controller:otp,keyboardType:TextInputType.number,decoration:const InputDecoration(hintText:'Doğrulama kodu')),if(error!=null)Text(error!,style:const TextStyle(color:Colors.red)),const SizedBox(height:18),FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:green,foregroundColor:white),child:Text(busy?'Bekle…':verify?'Doğrula ve giriş yap':signup?'Hesap oluştur':'Giriş yap')),TextButton(onPressed:()=>setState(()=>signup=!signup),child:Text(signup?'Giriş yap':'Kayıt ol'))]));}
+class _AuthPageState extends State<AuthPage>{
+ final name=TextEditingController(),email=TextEditingController(),pass=TextEditingController(),confirm=TextEditingController(),otp=TextEditingController();
+ bool signup=false,verify=false,busy=false;String? error;
+ @override void dispose(){name.dispose();email.dispose();pass.dispose();confirm.dispose();otp.dispose();super.dispose();}
+ Future<void> submit()async{
+  if(verify&&otp.text.trim().length!=6){setState(()=>error='E-postana gelen 6 haneli kodu gir.');return;}
+  if(!verify&&pass.text.length<8){setState(()=>error='Şifren en az 8 karakter olmalı.');return;}
+  if(signup&&!verify&&pass.text!=confirm.text){setState(()=>error='Şifreler birbiriyle eşleşmiyor.');return;}
+  setState(()=>busy=true);error=null;
+  try{
+   if(verify){
+    await DooraAuth.instance.verifyEmail(email.text,otp.text);
+    final u=await DooraAuth.instance.signIn(email.text,pass.text);
+    if(mounted)Navigator.pop(context,u);
+   }else if(signup){
+    await DooraAuth.instance.signUp(name.text,email.text,pass.text);
+    if(mounted)setState(()=>verify=true);
+   }else{
+    final u=await DooraAuth.instance.signIn(email.text,pass.text);
+    if(mounted)Navigator.pop(context,u);
+   }
+  }catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}
+  finally{if(mounted)setState(()=>busy=false);}
+ }
+ @override Widget build(BuildContext c)=>Scaffold(
+  backgroundColor:white,appBar:AppBar(backgroundColor:white),
+  body:ListView(padding:const EdgeInsets.all(22),children:[
+   const Center(child:Text('doora.',style:TextStyle(color:darkGreen,fontSize:30,fontWeight:FontWeight.w900))),
+   const SizedBox(height:14),
+   Center(child:Text(verify?'E-postanı doğrula':signup?'DOORA’ya katıl':'Tekrar hoş geldin',style:const TextStyle(color:ink,fontSize:22,fontWeight:FontWeight.w900))),
+   const SizedBox(height:7),
+   Text(verify?'E-posta adresine gönderdiğimiz 6 haneli kodu gir.':'Hesabınla giriş yap veya DOORA ailesine katıl.',textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:11)),
+   const SizedBox(height:22),
+   if(signup&&!verify)TextField(controller:name,decoration:const InputDecoration(labelText:'Ad soyad',hintText:'Adın ve soyadın')),
+   if(signup&&!verify)const SizedBox(height:10),
+   TextField(controller:email,keyboardType:TextInputType.emailAddress,autocorrect:false,decoration:const InputDecoration(labelText:'E-posta',hintText:'ornek@mail.com')),
+   const SizedBox(height:10),
+   if(!verify)TextField(controller:pass,obscureText:true,decoration:const InputDecoration(labelText:'Şifre',hintText:'En az 8 karakter')),
+   if(signup&&!verify)const SizedBox(height:10),
+   if(signup&&!verify)TextField(controller:confirm,obscureText:true,decoration:const InputDecoration(labelText:'Şifre tekrar')),
+   if(verify)TextField(controller:otp,keyboardType:TextInputType.number,maxLength:6,decoration:const InputDecoration(labelText:'6 haneli doğrulama kodu',counterText:'')),
+   if(error!=null)Padding(padding:const EdgeInsets.only(top:10),child:Text(error!,style:const TextStyle(color:Colors.red,fontSize:11))),
+   const SizedBox(height:18),
+   FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,padding:const EdgeInsets.symmetric(vertical:14)),child:Text(busy?'Bekle…':verify?'Doğrula ve giriş yap':signup?'Hesap oluştur':'Giriş yap')),
+   if(!verify)TextButton(onPressed:busy?null:()=>setState(()=>signup=!signup),child:Text(signup?'Giriş yap':'Kayıt ol',style:const TextStyle(color:darkGreen,fontWeight:FontWeight.w800)))
+  ])
+ );
+}
 
 class Skeletons extends StatelessWidget{const Skeletons({super.key});@override Widget build(BuildContext c)=>Column(children:List.generate(3,(_)=>Container(height:118,margin:const EdgeInsets.only(bottom:10),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(18),border:Border.all(color:line)),child:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[_Block(150,12),SizedBox(height:10),_Block(200,9),Spacer(),_Block(90,15)]))));}
 class _Block extends StatelessWidget{const _Block(this.w,this.h);final double w,h;@override Widget build(BuildContext c)=>Container(width:w,height:h,decoration:BoxDecoration(color:soft,borderRadius:BorderRadius.circular(7)));}
