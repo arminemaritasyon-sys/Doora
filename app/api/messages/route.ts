@@ -41,15 +41,17 @@ export async function GET(request: NextRequest) {
         ORDER BY created_at ASC
         LIMIT 150
       `;
-      const [peer] = await db`
-        SELECT COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS name,
-          p.avatar_url AS avatar_url
-        FROM neon_auth.user u
-        LEFT JOIN public.user_profiles p ON p.user_id = u.id::text
-        WHERE u.id::text = ${peerId}
-        LIMIT 1
-      `;
-      return NextResponse.json({ messages, peer: peer ?? null });
+      const peerRows = request.nextUrl.searchParams.get("includePeer") === "1"
+        ? await db`
+            SELECT COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS name,
+              p.avatar_url AS avatar_url
+            FROM neon_auth.user u
+            LEFT JOIN public.user_profiles p ON p.user_id = u.id::text
+            WHERE u.id::text = ${peerId}
+            LIMIT 1
+          `
+        : [];
+      return NextResponse.json({ messages, peer: peerRows[0] ?? null });
     }
 
     const conversations = await db`
