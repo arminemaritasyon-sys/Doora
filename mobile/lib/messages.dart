@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'services/api_client.dart';
 
@@ -19,19 +20,22 @@ class _MessagesInboxPageState extends State<MessagesInboxPage> {
   List<Map<String, dynamic>> conversations = [];
   bool loading = true;
   String? error;
+  Timer? poll;
 
   @override
-  void initState() { super.initState(); load(); }
+  void initState() { super.initState(); load(); poll = Timer.periodic(const Duration(seconds: 12), (_) => load(silent: true)); }
+  @override
+  void dispose() { poll?.cancel(); super.dispose(); }
 
-  Future<void> load() async {
-    setState(() { loading = true; error = null; });
+  Future<void> load({bool silent = false}) async {
+    if (!silent && mounted) setState(() { loading = true; error = null; });
     try {
       final rows = await DooraApi.instance.getConversations();
-      if (mounted) setState(() => conversations = rows);
+      if (mounted) setState(() { conversations = rows; error = null; });
     } catch (e) {
-      if (mounted) setState(() => error = DooraApi.instance.errorMessage(e));
+      if (mounted && !silent) setState(() => error = DooraApi.instance.errorMessage(e));
     } finally {
-      if (mounted) setState(() => loading = false);
+      if (mounted && !silent) setState(() => loading = false);
     }
   }
 
@@ -164,23 +168,24 @@ class _ConversationPageState extends State<ConversationPage> {
   bool loading = true;
   bool sending = false;
   String? error;
+  Timer? poll;
 
   @override
-  void initState() { super.initState(); load(); }
+  void initState() { super.initState(); load(); poll = Timer.periodic(const Duration(seconds: 4), (_) => load(silent: true)); }
   @override
-  void dispose() { controller.dispose(); scroll.dispose(); super.dispose(); }
+  void dispose() { poll?.cancel(); controller.dispose(); scroll.dispose(); super.dispose(); }
 
-  Future<void> load() async {
+  Future<void> load({bool silent = false}) async {
     try {
       final data = await DooraApi.instance.getConversation(widget.peerId, taskId: widget.taskId);
-      if (mounted) setState(() { messages = data['messages'] as List<Map<String, dynamic>>; error = null; });
+      if (mounted) setState(() { messages = data['messages'] as List<Map<String, dynamic>>; error = null; loading = false; });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (scroll.hasClients) scroll.jumpTo(scroll.position.maxScrollExtent);
       });
     } catch (e) {
-      if (mounted) setState(() => error = DooraApi.instance.errorMessage(e));
+      if (mounted && !silent) setState(() => error = DooraApi.instance.errorMessage(e));
     } finally {
-      if (mounted) setState(() => loading = false);
+      if (mounted && !silent) setState(() => loading = false);
     }
   }
 
