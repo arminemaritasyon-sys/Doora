@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -129,6 +130,12 @@ class _TaskAvatar extends StatelessWidget {
  @override Widget build(BuildContext context) {
   final fallback=CircleAvatar(radius:radius,backgroundColor:mint,child:Text(name.isEmpty?'D':name.characters.first.toUpperCase(),style:TextStyle(color:darkGreen,fontSize:radius*.65,fontWeight:FontWeight.w800)));
   if(url.isEmpty)return fallback;
+  if(url.startsWith('data:image/')){
+   try{
+    final bytes=base64Decode(url.substring(url.indexOf(',')+1));
+    return ClipOval(child:SizedBox(width:radius*2,height:radius*2,child:Image.memory(bytes,fit:BoxFit.cover,errorBuilder:(_,__,___)=>fallback)));
+   }catch(_){return fallback;}
+  }
   return ClipOval(child:SizedBox(width:radius*2,height:radius*2,child:Image.network(DooraApi.instance.absoluteUrl(url),fit:BoxFit.cover,errorBuilder:(_,__,___)=>fallback,loadingBuilder:(c,w,p)=>p==null?w:fallback)));
  }
 }
