@@ -76,6 +76,8 @@ class _DooraAppState extends State<DooraApp> {
       title: 'DOORA',
       debugShowCheckedModeBanner: false,
       theme: DooraTheme.light,
+      darkTheme: DooraTheme.dark,
+      themeMode: ThemeMode.system,
       home: loading ? const LaunchScreen() : DooraShell(
         user: user,
         onLogin: _openAuth,
@@ -186,10 +188,10 @@ class _BottomDock extends StatelessWidget {
         boxShadow: [BoxShadow(color: const Color(0xFF10271E).withValues(alpha: .11), blurRadius: 30, offset: const Offset(0, 10))],
       ),
       child: Row(children: [
-        _DockItem(icon: ReiconIcons.home, label: 'Keşfet', selected: selected == 0, onTap: () => onSelect(0)),
-        _DockItem(icon: PhosphorIconsRegular.briefcase, label: 'İşlerim', selected: selected == 1, onTap: () => onSelect(1)),
+        _DockItem(icon: ReiconIcons.home, label: 'Keşfet', selected: selected == 0, onTap: () { HapticFeedback.selectionClick(); onSelect(0); }),
+        _DockItem(icon: PhosphorIconsRegular.briefcase, label: 'İşlerim', selected: selected == 1, onTap: () { HapticFeedback.selectionClick(); onSelect(1); }),
         Expanded(child: Center(child: GestureDetector(
-          onTap: onCreate,
+          onTap: () { HapticFeedback.mediumImpact(); onCreate(); },
           child: Container(
             width: 51, height: 51,
             decoration: BoxDecoration(
@@ -200,8 +202,8 @@ class _BottomDock extends StatelessWidget {
             child: const Icon(PhosphorIconsRegular.plus, color: white, size: 25),
           ).animate().scale(duration: 280.ms, curve: Curves.easeOutBack),
         ))),
-        _DockItem(icon: PhosphorIconsRegular.bookmarkSimple, label: 'Kaydedilen', selected: selected == 2, onTap: () => onSelect(2)),
-        _DockItem(icon: ReiconIcons.userCircle, label: 'Hesabım', selected: selected == 3, onTap: () => onSelect(3)),
+        _DockItem(icon: PhosphorIconsRegular.bookmarkSimple, label: 'Kaydedilen', selected: selected == 2, onTap: () { HapticFeedback.selectionClick(); onSelect(2); }),
+        _DockItem(icon: ReiconIcons.userCircle, label: 'Hesabım', selected: selected == 3, onTap: () { HapticFeedback.selectionClick(); onSelect(3); }),
       ]),
     ),
   );
@@ -359,6 +361,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                     final item = categories[index];
                     final selected = category == item;
                     return _CategoryTile(label: item, icon: _categoryIcon(item), selected: selected, onTap: () {
+                      HapticFeedback.selectionClick();
                       setState(() => category = item);
                       load();
                     });
@@ -817,13 +820,15 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
   final description = TextEditingController();
   final budget = TextEditingController();
   final district = TextEditingController();
-  String category = 'Temizlik';
+  String category = 'Ev işleri';
+  String selectedDistrict = 'Muratpaşa';
   bool busy = false;
   String? error;
   @override
   void dispose() { title.dispose(); description.dispose(); budget.dispose(); district.dispose(); super.dispose(); }
 
   Future<void> submit() async {
+    if (district.text.trim().isEmpty) district.text = selectedDistrict;
     final amount = num.tryParse(budget.text.replaceAll('.', '').replaceAll(',', '.'));
     if (title.text.trim().length < 5 || description.text.trim().length < 10 || district.text.trim().length < 2 || amount == null || amount <= 0) {
       setState(() => error = 'Başlık, açıklama, ilçe ve bütçe alanlarını kontrol et.');
@@ -861,7 +866,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
       DropdownButtonFormField<String>(
         value: category,
         decoration: const InputDecoration(),
-        items: const ['Temizlik','Tamir','Nakliye','Alışveriş','Montaj','Diğer'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        items: const ['Alışveriş','Teslimat','Ev işleri','Taşıma','Tamir','Diğer'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
         onChanged: (value) => setState(() => category = value ?? category),
       ),
       const SizedBox(height: 15),
@@ -875,8 +880,31 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
       const SizedBox(height: 15),
       const _FormLabel('İlçe / Konum'),
       const SizedBox(height: 8),
-      TextField(controller: district, decoration: const InputDecoration(hintText: 'Örn. Muratpaşa')),
+      DropdownButtonFormField<String>(
+        value: selectedDistrict,
+        decoration: const InputDecoration(),
+        items: const ['Muratpaşa', 'Konyaaltı', 'Kepez', 'Aksu', 'Döşemealtı'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        onChanged: (value) => setState(() {
+          selectedDistrict = value ?? selectedDistrict;
+          district.text = selectedDistrict;
+        }),
+      ),
       if (error != null) _ErrorBanner(error!),
+      const SizedBox(height: 20),
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('İLAN ÖNİZLEMESİ', style: TextStyle(color: muted, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1.1)),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: Text(title.text.trim().isEmpty ? 'İlan başlığın burada görünecek' : title.text.trim(), maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: ink, fontSize: 15, fontWeight: FontWeight.w800))),
+            Text(budget.text.trim().isEmpty ? '₺ —' : budget.text.trim() + ' ₺', style: const TextStyle(color: Color(0xFF087A50), fontSize: 17, fontWeight: FontWeight.w900)),
+          ]),
+          const SizedBox(height: 7),
+          Text('$category · $selectedDistrict', style: const TextStyle(color: muted, fontSize: 11)),
+        ]),
+      ),
       const SizedBox(height: 22),
       _PrimaryButton(label: 'İlanı yayınla', busy: busy, onTap: submit),
       const SizedBox(height: 10),
