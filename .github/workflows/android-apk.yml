@@ -42,3 +42,5 @@ jobs:
           retention-days: 14
 
 # Rebuild for the redesigned native DOORA client.
+
+# Rebuild after account screen compile fix.
