@@ -210,13 +210,14 @@ class DooraApi {
     required String name,
     required String district,
     required String bio,
+    Map<String, dynamic>? notifications,
   }) async {
     await _dio.patch('/api/profile', data: {
       'name': name.trim(),
       'district': district.trim(),
       'bio': bio.trim(),
       'avatarUrl': '',
-      'notifications': {
+      'notifications': notifications ?? {
         'taskUpdates': true,
         'offerUpdates': true,
         'walletUpdates': true,
@@ -311,6 +312,12 @@ class DooraApi {
       'message': message.trim(),
       if (taskId != null && taskId.isNotEmpty) 'taskId': taskId,
     });
+  }
+
+  Future<int> getUnreadMessageCount() async {
+    final rows = await getConversations();
+    return rows.fold<int>(0, (total, row) =>
+      total + (int.tryParse(row['unread_count']?.toString() ?? '') ?? 0));
   }
 
   Future<List<Map<String, dynamic>>> getNotifications() async {
