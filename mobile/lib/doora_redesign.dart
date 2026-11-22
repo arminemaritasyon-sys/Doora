@@ -50,7 +50,7 @@ class _DiscoverState extends State<Discover>{final search=TextEditingController(
    RangeSlider(values:draft,min:0,max:50000,divisions:100,activeColor:darkGreen,labels:RangeLabels('${draft.start.round()} ₺','${draft.end.round()} ₺'),onChanged:(v)=>setSheet(()=>draft=v)),
    Row(children:[TextButton(onPressed:()=>setSheet(()=>draft=const RangeValues(0,50000)),child:const Text('Sıfırla')),const Spacer(),FilledButton(onPressed:()=>Navigator.pop(sheetContext,draft),style:FilledButton.styleFrom(backgroundColor:darkGreen),child:const Text('Uygula'))])
   ]))));
-  if(result!=null&&mounted){setState(()=>{minBudget=result.start;maxBudget=result.end});load();}
+  if(result!=null&&mounted){setState(() { minBudget=result.start; maxBudget=result.end; });load();}
  }
  Widget categoryTile(String value,IconData icon){final active=category==value;return GestureDetector(onTap:(){setState(()=>category=value);load();},child:SizedBox(width:65,child:Column(children:[AnimatedContainer(duration:const Duration(milliseconds:180),width:52,height:52,decoration:BoxDecoration(color:active?green:const Color(0xFFEAF0EF),borderRadius:BorderRadius.circular(16)),child:Icon(icon,color:active?white:ink,size:22)),const SizedBox(height:6),Text(value,style:TextStyle(color:active?darkGreen:ink,fontSize:9,fontWeight:FontWeight.w700))])));}
 }
