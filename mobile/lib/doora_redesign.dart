@@ -337,9 +337,9 @@ class _MyTasksState extends State<MyTasks> {
   ),
   const SizedBox(height:15),
   Row(children:[
-   Expanded(child:_taskMetric('Paylaştığın ilan',tasks.length.toString(),PhosphorIconsRegular.notePencil)),
+   Expanded(child:_taskMetric('Paylaştığın ilan',tasks.length.toString(),PhosphorIconsRegular.briefcase)),
    const SizedBox(width:8),
-   Expanded(child:_taskMetric('Verdiğin teklif',offers.length.toString(),PhosphorIconsRegular.paperPlaneTilt)),
+   Expanded(child:_taskMetric('Verdiğin teklif',offers.length.toString(),PhosphorIconsRegular.chatCircle)),
   ]),
   const SizedBox(height:17),
   Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFECEFE7),borderRadius:BorderRadius.circular(14)),child:Row(children:[
