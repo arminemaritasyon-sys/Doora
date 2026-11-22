@@ -185,38 +185,34 @@ class _BottomDock extends StatelessWidget {
   final int selected;
   final ValueChanged<int> onSelect;
   final VoidCallback onCreate;
-
   @override
   Widget build(BuildContext context) => SafeArea(
     top: false,
-    minimum: const EdgeInsets.fromLTRB(14, 0, 14, 9),
+    minimum: const EdgeInsets.fromLTRB(14, 0, 14, 10),
     child: Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      height: 76,
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
       decoration: BoxDecoration(
-        color: white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: line),
-        boxShadow: [BoxShadow(color: ink.withValues(alpha: .08), blurRadius: 28, offset: const Offset(0, 8))],
+        color: white.withValues(alpha: .97),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFE4EAE5)),
+        boxShadow: [BoxShadow(color: const Color(0xFF10271E).withValues(alpha: .11), blurRadius: 30, offset: const Offset(0, 10))],
       ),
       child: Row(children: [
         _DockItem(icon: PhosphorIconsRegular.compass, label: 'Keşfet', selected: selected == 0, onTap: () => onSelect(0)),
         _DockItem(icon: PhosphorIconsRegular.briefcase, label: 'İşlerim', selected: selected == 1, onTap: () => onSelect(1)),
-        Expanded(
-          child: Center(
-            child: GestureDetector(
-              onTap: onCreate,
-              child: Container(
-                width: 48, height: 48,
-                decoration: BoxDecoration(
-                  color: forest, borderRadius: BorderRadius.circular(17),
-                  boxShadow: [BoxShadow(color: forest.withValues(alpha: .24), blurRadius: 13, offset: const Offset(0, 5))],
-                ),
-                child: const Icon(PhosphorIconsRegular.plus, color: white, size: 25),
-              ),
+        Expanded(child: Center(child: GestureDetector(
+          onTap: onCreate,
+          child: Container(
+            width: 51, height: 51,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF36745D), Color(0xFF173D32)]),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [BoxShadow(color: forest.withValues(alpha: .25), blurRadius: 14, offset: const Offset(0, 6))],
             ),
-          ),
-        ),
+            child: const Icon(PhosphorIconsRegular.plus, color: white, size: 25),
+          ).animate().scale(duration: 280.ms, curve: Curves.easeOutBack),
+        ))),
         _DockItem(icon: PhosphorIconsRegular.chatCircleDots, label: 'Mesajlar', selected: selected == 2, onTap: () => onSelect(2)),
         _DockItem(icon: PhosphorIconsRegular.userCircle, label: 'Hesabım', selected: selected == 3, onTap: () => onSelect(3)),
       ]),
@@ -231,17 +227,25 @@ class _DockItem extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   @override
-  Widget build(BuildContext context) => Expanded(
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+  Widget build(BuildContext context) => Expanded(child: InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(18),
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(color: selected ? const Color(0xFFEDF4EF) : Colors.transparent, borderRadius: BorderRadius.circular(18)),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(icon, size: 22, color: selected ? forest : const Color(0xFF9AA39E)),
-        const SizedBox(height: 5),
-        Text(label, style: TextStyle(fontSize: 10, fontWeight: selected ? FontWeight.w800 : FontWeight.w600, color: selected ? forest : muted)),
+        AnimatedScale(
+          scale: selected ? 1.08 : 1,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutBack,
+          child: Icon(icon, size: 22, color: selected ? forest : const Color(0xFF98A39C)),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(fontSize: 9.5, letterSpacing: -.1, fontWeight: selected ? FontWeight.w800 : FontWeight.w600, color: selected ? forest : muted)),
       ]),
     ),
-  );
+  ));
 }
 
 class DiscoverPage extends StatefulWidget {
