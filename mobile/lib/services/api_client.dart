@@ -392,16 +392,11 @@ class DooraApi {
       if (normalized.contains('invalid email')) return 'Geçerli bir e-posta adresi gir.';
       if (normalized.contains('password') && normalized.contains('length')) return 'Şifren en az 8 karakter olmalı.';
       if (normalized.contains('too many')) return 'Çok fazla deneme yaptın. Biraz bekleyip tekrar dene.';
-      if (message.isNotEmpty && !RegExp(r'^[A-Z_]+
-
-  Map<String, dynamic> _asMap(dynamic value) =>
-      value is Map ? Map<String, dynamic>.from(value) : <String, dynamic>{};
-}
-).hasMatch(message)) return message;
       if (error.response?.statusCode == 401) return 'Oturumun sona ermiş. Yeniden giriş yap.';
       if (error.response?.statusCode == 403) return 'Bu işlem için yetkin bulunmuyor.';
       if (error.response?.statusCode == 404) return 'Aradığın kayıt bulunamadı.';
       if (error.response?.statusCode == 429) return 'Çok fazla istek gönderdin. Biraz bekleyip tekrar dene.';
+      if (message.isNotEmpty && !normalized.contains('internal_server_error')) return message;
       if (error.type == DioExceptionType.connectionTimeout ||
           error.type == DioExceptionType.receiveTimeout ||
           error.type == DioExceptionType.connectionError) {
