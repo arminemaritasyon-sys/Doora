@@ -212,11 +212,32 @@ class DooraApi {
     final response = await _dio.get('/api/notifications');
     final rows = _asMap(response.data)['notifications'];
     if (rows is! List) return [];
-    return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+    return rows.whereType<Map>().map((e) {
+      final item = Map<String, dynamic>.from(e);
+      // The website API calls the notification body "body"; keep the mobile
+      // presentation contract stable and show the actual server text.
+      item['message'] = item['body']?.toString() ?? item['message']?.toString() ?? '';
+      return item;
+    }).toList();
+  }
+
+  Future<int> getUnreadNotificationCount() async {
+    final response = await _dio.get('/api/notifications');
+    final value = _asMap(response.data)['unreadCount'];
+    return value is num ? value.toInt() : int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  Future<void> markNotificationRead(String id) async {
+    await _dio.patch('/api/notifications', data: {'id': id});
   }
 
   Future<void> markNotificationsRead() async {
     await _dio.patch('/api/notifications', data: {'all': true});
+  }
+
+  String absoluteUrl(String path) {
+    final uri = Uri.parse(path);
+    return uri.hasScheme ? path : _dio.options.baseUrl + (path.startsWith('/') ? path : '/$path');
   }
 
   String errorMessage(Object error) {
