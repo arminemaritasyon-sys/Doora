@@ -189,7 +189,7 @@ class _BottomDock extends StatelessWidget {
       ),
       child: Row(children: [
         _DockItem(icon: ReiconIcons.home, label: 'Keşfet', selected: selected == 0, onTap: () { HapticFeedback.selectionClick(); onSelect(0); }),
-        _DockItem(icon: PhosphorIconsRegular.briefcase, label: 'İşlerim', selected: selected == 1, onTap: () { HapticFeedback.selectionClick(); onSelect(1); }),
+        _DockItem(icon: PhosphorIconsRegular.briefcase, label: 'İşler', selected: selected == 1, onTap: () { HapticFeedback.selectionClick(); onSelect(1); }),
         Expanded(child: Center(child: GestureDetector(
           onTap: () { HapticFeedback.mediumImpact(); onCreate(); },
           child: Container(
@@ -610,7 +610,15 @@ class JobCard extends StatelessWidget {
             Container(width: 46, height: 46, decoration: BoxDecoration(color: const Color(0xFFEEF4EF), borderRadius: BorderRadius.circular(15)), child: Icon(_categoryIcon(task.category), color: forest, size: 22)),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(task.category.toUpperCase(), style: const TextStyle(color: Color(0xFF648171), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: .8)),
+              Row(mainAxisSize: MainAxisSize.min, children: [
+                Flexible(child: Text(task.category.toUpperCase(), overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF648171), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: .8))),
+                const SizedBox(width: 7),
+                _Pill(
+                  text: task.status == 'open' ? 'Yayında' : task.status == 'completed' ? 'Tamamlandı' : task.status == 'assigned' ? 'Atandı' : task.status,
+                  color: task.status == 'completed' ? const Color(0xFFE8F5E9) : const Color(0xFFEAF7F0),
+                  foreground: const Color(0xFF087A50),
+                ),
+              ]),
               const SizedBox(height: 4),
               Text(task.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: ink, fontSize: 14, height: 1.25, fontWeight: FontWeight.w800, letterSpacing: -.25)),
             ])),
