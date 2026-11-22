@@ -496,48 +496,57 @@ class JobCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: white,
-    borderRadius: BorderRadius.circular(20),
+    borderRadius: BorderRadius.circular(22),
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(22),
       child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0xFFE7ECE8)),
+          boxShadow: [BoxShadow(color: const Color(0xFF172A20).withValues(alpha: .025), blurRadius: 15, offset: const Offset(0, 5))],
+        ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Container(width: 43, height: 43, decoration: BoxDecoration(color: mint, borderRadius: BorderRadius.circular(14)), child: Icon(_categoryIcon(task.category), color: forest, size: 21)),
-            const SizedBox(width: 11),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(width: 46, height: 46, decoration: BoxDecoration(color: const Color(0xFFEEF4EF), borderRadius: BorderRadius.circular(15)), child: Icon(_categoryIcon(task.category), color: forest, size: 22)),
+            const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(task.category, style: const TextStyle(color: green, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: .2)),
-              const SizedBox(height: 3),
-              Text(task.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: ink, fontSize: 14, fontWeight: FontWeight.w800)),
+              Text(task.category.toUpperCase(), style: const TextStyle(color: Color(0xFF648171), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: .8)),
+              const SizedBox(height: 4),
+              Text(task.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: ink, fontSize: 14, height: 1.25, fontWeight: FontWeight.w800, letterSpacing: -.25)),
             ])),
-            const SizedBox(width: 7),
-            Text(task.formattedBudget, style: const TextStyle(color: forest, fontSize: 15, fontWeight: FontWeight.w900)),
+            const SizedBox(width: 8),
+            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+              Text(task.formattedBudget, style: const TextStyle(color: forest, fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: -.4)),
+              const SizedBox(height: 3),
+              const Text('BÜTÇE', style: TextStyle(color: Color(0xFF9AA59E), fontSize: 8, fontWeight: FontWeight.w800, letterSpacing: .7)),
+            ]),
           ]),
           if (task.description.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(task.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: muted, fontSize: 12, height: 1.45)),
+            const SizedBox(height: 13),
+            Text(task.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF7B8780), fontSize: 11.5, height: 1.5)),
           ],
           const SizedBox(height: 14),
-          Row(children: [
-            const Icon(PhosphorIconsRegular.mapPin, color: muted, size: 14),
-            const SizedBox(width: 4),
-            Expanded(child: Text(task.location.isEmpty ? 'Konum belirtilmedi' : task.location, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: muted, fontSize: 10))),
-            const Icon(PhosphorIconsRegular.clock, color: muted, size: 14),
-            const SizedBox(width: 4),
-            Flexible(child: Text(task.time, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: muted, fontSize: 10))),
-            const SizedBox(width: 10),
-            const Icon(PhosphorIconsRegular.chatCircle, color: muted, size: 14),
-            const SizedBox(width: 4),
-            Text(task.offers.toString(), style: const TextStyle(color: muted, fontSize: 10)),
+          Wrap(spacing: 13, runSpacing: 7, children: [
+            _TaskMeta(icon: PhosphorIconsRegular.mapPin, text: task.location.isEmpty ? 'Konum belirtilmedi' : task.location),
+            _TaskMeta(icon: PhosphorIconsRegular.clock, text: task.time),
+            _TaskMeta(icon: PhosphorIconsRegular.chatCircleDots, text: '${task.offers} teklif'),
           ]),
           const Padding(padding: EdgeInsets.symmetric(vertical: 13), child: Divider(height: 1, color: line)),
           Row(children: [
-            CircleAvatar(radius: 12, backgroundColor: const Color(0xFFEAF0EB), child: Text(task.owner.isEmpty ? 'D' : task.owner.characters.first.toUpperCase(), style: const TextStyle(color: forest, fontSize: 10, fontWeight: FontWeight.w800))),
-            const SizedBox(width: 7),
-            Expanded(child: Text(task.owner, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF59655F), fontSize: 11, fontWeight: FontWeight.w600))),
-            const Text('İlanı incele', style: TextStyle(color: forest, fontSize: 11, fontWeight: FontWeight.w800)),
+            if (task.ownerAvatar.isNotEmpty)
+              ClipOval(child: CachedNetworkImage(
+                imageUrl: task.ownerAvatar,
+                width: 27, height: 27, fit: BoxFit.cover,
+                placeholder: (_, __) => _OwnerInitial(name: task.owner),
+                errorWidget: (_, __, ___) => _OwnerInitial(name: task.owner),
+              ))
+            else
+              _OwnerInitial(name: task.owner),
+            const SizedBox(width: 8),
+            Expanded(child: Text(task.owner, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF59655F), fontSize: 10.5, fontWeight: FontWeight.w700))),
+            const Text('Detayları gör', style: TextStyle(color: forest, fontSize: 10.5, fontWeight: FontWeight.w800)),
             const SizedBox(width: 4),
             const Icon(PhosphorIconsRegular.arrowUpRight, size: 14, color: forest),
           ]),
@@ -545,6 +554,29 @@ class JobCard extends StatelessWidget {
       ),
     ),
   );
+}
+
+class _OwnerInitial extends StatelessWidget {
+  const _OwnerInitial({required this.name});
+  final String name;
+  @override
+  Widget build(BuildContext context) => CircleAvatar(
+    radius: 13.5,
+    backgroundColor: const Color(0xFFEAF0EB),
+    child: Text(name.isEmpty ? 'D' : name.characters.first.toUpperCase(), style: const TextStyle(color: forest, fontSize: 10, fontWeight: FontWeight.w800)),
+  );
+}
+
+class _TaskMeta extends StatelessWidget {
+  const _TaskMeta({required this.icon, required this.text});
+  final IconData icon;
+  final String text;
+  @override
+  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
+    Icon(icon, size: 13, color: const Color(0xFF87948C)),
+    const SizedBox(width: 4),
+    Text(text, style: const TextStyle(color: Color(0xFF87948C), fontSize: 9.5, fontWeight: FontWeight.w600)),
+  ]);
 }
 
 void _openTask(BuildContext context, DooraTask task, Map<String, dynamic>? user, VoidCallback onLogin, {VoidCallback? onChanged}) {
