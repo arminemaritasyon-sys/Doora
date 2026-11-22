@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -70,6 +73,7 @@ class _DooraAppState extends State<DooraApp> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
+        textTheme: GoogleFonts.manropeTextTheme(ThemeData.light().textTheme),
         scaffoldBackgroundColor: paper,
         colorScheme: ColorScheme.fromSeed(seedColor: forest, brightness: Brightness.light),
         splashFactory: InkSparkle.splashFactory,
