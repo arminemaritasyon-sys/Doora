@@ -1040,6 +1040,159 @@ class _AccountPageState extends State<AccountPage> {
   }
 }
 
+class PortfolioPage extends StatefulWidget {
+  const PortfolioPage({super.key, required this.userId});
+  final String userId;
+  @override
+  State<PortfolioPage> createState() => _PortfolioPageState();
+}
+
+class _PortfolioPageState extends State<PortfolioPage> {
+  final picker = ImagePicker();
+  List<Map<String, dynamic>> items = [];
+  bool loading = true, saving = false;
+  String? error;
+
+  @override
+  void initState() { super.initState(); load(); }
+
+  Future<void> load() async {
+    setState(() { loading = true; error = null; });
+    try {
+      items = await DooraApi.instance.getPortfolio(widget.userId);
+    } catch (e) {
+      error = DooraApi.instance.errorMessage(e);
+    }
+    if (mounted) setState(() => loading = false);
+  }
+
+  Future<void> addItem() async {
+    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 72, maxWidth: 1280, maxHeight: 1280);
+    if (file == null || !mounted) return;
+    final title = TextEditingController();
+    final description = TextEditingController();
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        title: const Text('Portföye ekle', style: TextStyle(color: ink, fontSize: 18, fontWeight: FontWeight.w900)),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: title, maxLength: 100, decoration: const InputDecoration(hintText: 'Çalışmanın adı')),
+          const SizedBox(height: 10),
+          TextField(controller: description, maxLength: 500, maxLines: 3, decoration: const InputDecoration(hintText: 'Kısa açıklama (isteğe bağlı)')),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Vazgeç')),
+          FilledButton(onPressed: title.text.trim().length < 2 ? null : () => Navigator.pop(dialogContext, true), child: const Text('Ekle')),
+        ],
+      ),
+    );
+    if (accepted != true || !mounted) { title.dispose(); description.dispose(); return; }
+    setState(() { saving = true; error = null; });
+    try {
+      final bytes = await file.readAsBytes();
+      final mime = file.mimeType?.toLowerCase().contains('webp') == true
+          ? 'image/webp'
+          : file.mimeType?.toLowerCase().contains('png') == true ? 'image/png' : 'image/jpeg';
+      final imageData = 'data:' + mime + ';base64,' + base64Encode(bytes);
+      if (imageData.length > 1800000) throw Exception('Görsel çok büyük. Daha küçük bir fotoğraf seç.');
+      await DooraApi.instance.addPortfolioItem(title: title.text, description: description.text, imageData: imageData);
+      await load();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Çalışman portföyüne eklendi.')));
+    } catch (e) {
+      if (mounted) setState(() => error = e is Exception ? e.toString().replaceFirst('Exception: ', '') : DooraApi.instance.errorMessage(e));
+    } finally {
+      title.dispose();
+      description.dispose();
+      if (mounted) setState(() => saving = false);
+    }
+  }
+
+  Future<void> removeItem(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Çalışma silinsin mi?'),
+        content: const Text('Bu fotoğraf portföyünden kaldırılacak.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Vazgeç')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Sil')),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    try {
+      await DooraApi.instance.deletePortfolioItem(id);
+      await load();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(DooraApi.instance.errorMessage(e))));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Hizmet portföyüm', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800))),
+    floatingActionButton: FloatingActionButton.extended(
+      onPressed: saving ? null : addItem,
+      backgroundColor: forest,
+      foregroundColor: white,
+      icon: saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: white)) : const Icon(PhosphorIconsRegular.plus),
+      label: Text(saving ? 'Ekleniyor' : 'Çalışma ekle'),
+    ),
+    body: loading
+      ? const Center(child: CircularProgressIndicator(color: forest))
+      : error != null && items.isEmpty
+        ? _EmptyState(icon: PhosphorIconsRegular.wifiSlash, title: 'Portföy yüklenemedi', description: error!, action: 'Tekrar dene', onTap: load)
+        : items.isEmpty
+          ? ListView(padding: const EdgeInsets.all(22), children: [
+              const SizedBox(height: 65),
+              const _EmptyState(icon: PhosphorIconsRegular.images, title: 'Portföyünü oluştur', description: 'Tamamladığın işleri fotoğraflarla sergile. Yeni müşteriler neler yapabildiğini görsün.'),
+              const SizedBox(height: 15),
+              const Text('İpucu: Öncesi ve sonrası fotoğrafları, yaptığın işi anlatan kısa açıklamalarla ekleyebilirsin.', textAlign: TextAlign.center, style: TextStyle(color: muted, fontSize: 11, height: 1.5)),
+            ])
+          : RefreshIndicator(
+              color: forest,
+              onRefresh: load,
+              child: GridView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                itemCount: items.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: .78),
+                itemBuilder: (_, index) {
+                  final item = items[index];
+                  final raw = item['imageData']?.toString() ?? '';
+                  final comma = raw.indexOf(',');
+                  final encoded = comma >= 0 ? raw.substring(comma + 1) : raw;
+                  return Material(
+                    color: white,
+                    borderRadius: BorderRadius.circular(19),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onLongPress: () => removeItem(item['id']?.toString() ?? ''),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Expanded(child: Stack(fit: StackFit.expand, children: [
+                          if (encoded.isNotEmpty)
+                            Image.memory(base64Decode(encoded), fit: BoxFit.cover, errorBuilder: (_, __, ___) => const ColoredBox(color: mint, child: Icon(PhosphorIconsRegular.image, color: forest)))
+                          else
+                            const ColoredBox(color: mint, child: Icon(PhosphorIconsRegular.image, color: forest)),
+                          Positioned(right: 8, top: 8, child: Material(color: white.withValues(alpha: .92), shape: const CircleBorder(), child: InkWell(onTap: () => removeItem(item['id']?.toString() ?? ''), customBorder: const CircleBorder(), child: const Padding(padding: EdgeInsets.all(7), child: Icon(PhosphorIconsRegular.trash, size: 15, color: Color(0xFF9A4A43)))))),
+                        ])),
+                        Padding(padding: const EdgeInsets.fromLTRB(11, 10, 11, 11), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(item['title']?.toString() ?? 'Çalışma', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w800)),
+                          if ((item['description']?.toString() ?? '').isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(item['description'].toString(), maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: muted, fontSize: 10, height: 1.35)),
+                          ],
+                        ])),
+                      ]),
+                    ),
+                  );
+                },
+              ),
+            ),
+  );
+}
+
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key, required this.profile, required this.onSaved});
   final Map<String, dynamic> profile;
