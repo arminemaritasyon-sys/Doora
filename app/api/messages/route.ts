@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
         WHERE ((sender_id = ${user.id} AND recipient_id = ${peerId})
           OR (sender_id = ${peerId} AND recipient_id = ${user.id}))
           AND task_id IS NOT DISTINCT FROM ${taskId}::uuid
+          AND NOT (${user.id} = ANY(hidden_by))
         ORDER BY created_at ASC
         LIMIT 150
       `;
@@ -50,7 +51,8 @@ export async function GET(request: NextRequest) {
           sender_id, recipient_id, task_id, body, created_at,
           CASE WHEN recipient_id = ${user.id} AND read_at IS NULL THEN 1 ELSE 0 END AS unread
         FROM public.direct_messages
-        WHERE sender_id = ${user.id} OR recipient_id = ${user.id}
+        WHERE (sender_id = ${user.id} OR recipient_id = ${user.id})
+          AND NOT (${user.id} = ANY(hidden_by))
       ), ranked AS (
         SELECT *, row_number() OVER (PARTITION BY peer_id, task_id ORDER BY created_at DESC) AS rn,
           sum(unread) OVER (PARTITION BY peer_id, task_id) AS unread_count
@@ -147,5 +149,35 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("[messages] POST failed", error);
     return NextResponse.json({ error: "Mesaj gönderilemedi. Tekrar dene." }, { status: 500 });
+  }
+}
+
+
+const deleteSchema = z.object({
+  peerId: z.string().min(1).max(200),
+  taskId: z.string().uuid().optional().nullable(),
+});
+
+export async function DELETE(request: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });
+  const parsed = deleteSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Sohbet bilgileri geçersiz." }, { status: 400 });
+  const { peerId, taskId } = parsed.data;
+  if (peerId === user.id) return NextResponse.json({ error: "Bu sohbet silinemedi." }, { status: 400 });
+  try {
+    const rows = await db`
+      UPDATE public.direct_messages
+      SET hidden_by = array_append(hidden_by, ${user.id})
+      WHERE ((sender_id = ${user.id} AND recipient_id = ${peerId})
+        OR (sender_id = ${peerId} AND recipient_id = ${user.id}))
+        AND task_id IS NOT DISTINCT FROM ${taskId || null}::uuid
+        AND NOT (${user.id} = ANY(hidden_by))
+      RETURNING id
+    `;
+    return NextResponse.json({ success: true, hiddenCount: rows.length });
+  } catch (error) {
+    console.error("[messages] DELETE failed", error);
+    return NextResponse.json({ error: "Sohbet silinemedi. Tekrar dene." }, { status: 500 });
   }
 }
