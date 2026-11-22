@@ -32,6 +32,7 @@ class ProviderProfilePage extends StatefulWidget {
 class _ProviderProfilePageState extends State<ProviderProfilePage> {
   Map<String, dynamic> profile = {};
   List<Map<String, dynamic>> portfolio = [];
+  Map<String, dynamic> reviewData = {};
   bool loading = true;
   bool uploading = false;
   String? error;
@@ -51,11 +52,13 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
       final values = await Future.wait([
         DooraApi.instance.getPublicProfile(widget.userId),
         DooraApi.instance.getPortfolio(widget.userId),
+        DooraApi.instance.getProviderReviews(widget.userId),
       ]);
       if (!mounted) return;
       setState(() {
         profile = values[0] as Map<String, dynamic>;
         portfolio = (values[1] as List<Map<String, dynamic>>);
+        reviewData = values[2] as Map<String, dynamic>;
       });
     } catch (e) {
       if (mounted) setState(() => error = DooraApi.instance.errorMessage(e));
@@ -209,6 +212,14 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     final bio = profile['bio']?.toString() ?? '';
     final district = profile['district']?.toString() ?? '';
     final verified = profile['isVerified'] == true;
+    final summary = reviewData['summary'] is Map
+        ? Map<String, dynamic>.from(reviewData['summary'] as Map)
+        : <String, dynamic>{};
+    final reviews = reviewData['reviews'] is List
+        ? List<Map<String, dynamic>>.from((reviewData['reviews'] as List).whereType<Map>().map((e) => Map<String, dynamic>.from(e)))
+        : <Map<String, dynamic>>[];
+    final average = num.tryParse(summary['average']?.toString() ?? '') ?? 0;
+    final reviewCount = int.tryParse(summary['count']?.toString() ?? '') ?? 0;
     final avatar = profile['avatarUrl']?.toString() ?? '';
 
     return Scaffold(
@@ -287,6 +298,64 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                           ),
                         ]),
                       ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: _line),
+                        ),
+                        child: Row(children: [
+                          const Icon(Icons.star_rounded, color: Color(0xFFE0A83E), size: 25),
+                          const SizedBox(width: 8),
+                          Text(average.toStringAsFixed(1), style: const TextStyle(
+                            color: _ink, fontSize: 20, fontWeight: FontWeight.w900,
+                          )),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(
+                            reviewCount == 0 ? 'Henüz değerlendirme yok' : '$reviewCount müşteri değerlendirmesi',
+                            style: const TextStyle(color: _muted, fontSize: 10),
+                          )),
+                        ]),
+                      ),
+                      if (reviews.isNotEmpty) ...[
+                        const SizedBox(height: 18),
+                        const Text('Müşteri yorumları', style: TextStyle(
+                          color: _ink, fontSize: 15, fontWeight: FontWeight.w900,
+                        )),
+                        const SizedBox(height: 9),
+                        ...reviews.take(5).map((review) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(13),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(15),
+                            border: Border.all(color: _line),
+                          ),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Row(children: [
+                              Expanded(child: Text(review['reviewer_name']?.toString() ?? 'DOORA üyesi',
+                                style: const TextStyle(color: _ink, fontSize: 10, fontWeight: FontWeight.w800))),
+                              Text('★ ${review['rating'] ?? 0}', style: const TextStyle(
+                                color: Color(0xFFB17A20), fontSize: 10, fontWeight: FontWeight.w900,
+                              )),
+                            ]),
+                            if ((review['comment']?.toString() ?? '').isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(review['comment'].toString(), style: const TextStyle(
+                                color: _muted, fontSize: 10, height: 1.45,
+                              )),
+                            ],
+                            if ((review['task_title']?.toString() ?? '').isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(review['task_title'].toString(), style: const TextStyle(
+                                color: _forest, fontSize: 8, fontWeight: FontWeight.w700,
+                              )),
+                            ],
+                          ]),
+                        )),
+                      ],
                       const SizedBox(height: 20),
                       Row(children: [
                         const Expanded(child: Text('Hizmet portföyü', style: TextStyle(
