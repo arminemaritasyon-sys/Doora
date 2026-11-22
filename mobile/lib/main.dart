@@ -386,7 +386,7 @@ class _HeroPanel extends StatelessWidget {
     ),
     child: Stack(children: [
       Positioned(right: -28, top: -43, child: Container(width: 155, height: 155, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: white.withValues(alpha: .09), width: 24)))),
-      Positioned(right: 19, bottom: 4, child: Icon(PhosphorIconsDuotone.sparkle, size: 70, color: white.withValues(alpha: .12))),
+      Positioned(right: 19, bottom: 4, child: PhosphorIcon(PhosphorIconsDuotone.sparkle, size: 70, color: white.withValues(alpha: .12))),
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
