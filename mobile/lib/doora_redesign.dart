@@ -204,7 +204,7 @@ class _MyTasksState extends State<MyTasks> {
  Future<void> load() async {
   if(widget.user==null){setState(() { tasks=[]; offers=[]; });return;}
   setState(()=>busy=true);
-  try {final rows=await DooraApi.instance.getTasks();List<Map<String,dynamic>> sent=[];try{sent=await DooraApi.instance.getMyOffers();}catch(_){}final id=widget.user?['id']?.toString()??'';if(mounted)setState(() { tasks=rows.map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList(); offers=sent; });}
+  try {final rows=await DooraApi.instance.getMyTasks();List<Map<String,dynamic>> sent=[];try{sent=await DooraApi.instance.getMyOffers();}catch(_){}final id=widget.user?['id']?.toString()??'';if(mounted)setState(() { tasks=rows.map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList(); offers=sent; });}
   catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}
   finally{if(mounted)setState(()=>busy=false);}
  }
@@ -213,6 +213,14 @@ class _MyTasksState extends State<MyTasks> {
   if(offers.isEmpty)return const EmptyState(title:'Henüz teklif vermedin',message:'İlgini çeken bir ilanda “Ben yaparım” diyerek teklifini iletebilirsin.');
   return Column(children:offers.map((o)=>offerHistoryCard(o)).toList());
  }
+ void openReview(String taskId){
+  showModalBottomSheet(context:context,isScrollControlled:true,backgroundColor:Colors.transparent,builder:(_)=>ReviewComposer(taskId:taskId,onDone:load));
+ }
+ Widget myTaskCard(DooraTask task)=>Column(children:[
+  TaskCard(task:task,onTap:()=>openTask(context,task,widget.user,widget.onLogin,load)),
+  if(task.status=='completed')Padding(padding:const EdgeInsets.only(top:6,bottom:5),child:Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:()=>openReview(task.id),icon:const Icon(Icons.star_outline_rounded,size:16),label:const Text('İşi değerlendir'),style:TextButton.styleFrom(foregroundColor:darkGreen)))),
+ ]);
+
  Widget offerHistoryCard(Map<String,dynamic> offer){
   final status=offer['status']?.toString()??'pending';
   final label=status=='accepted'?'Kabul edildi':status=='rejected'?'Reddedildi':status=='withdrawn'?'Geri çekildi':'Yanıt bekliyor';
@@ -223,6 +231,7 @@ class _MyTasksState extends State<MyTasks> {
    Row(children:[Expanded(child:Text(offer['task_title']?.toString()??'İlan',maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:12,fontWeight:FontWeight.w900))),Container(padding:const EdgeInsets.symmetric(horizontal:8,vertical:5),decoration:BoxDecoration(color:color.withValues(alpha:.09),borderRadius:BorderRadius.circular(20)),child:Text(label,style:TextStyle(color:color,fontSize:8,fontWeight:FontWeight.w800)))]),
    const SizedBox(height:8),Row(children:[const Icon(Icons.person_outline,color:muted,size:14),const SizedBox(width:4),Expanded(child:Text(offer['owner_name']?.toString()??'İlan sahibi',style:const TextStyle(color:muted,fontSize:9))),Text('$formatted ₺',style:const TextStyle(color:darkGreen,fontSize:14,fontWeight:FontWeight.w900))]),
    if((offer['message']?.toString()??'').isNotEmpty)Padding(padding:const EdgeInsets.only(top:8),child:Text(offer['message'].toString(),style:const TextStyle(color:muted,fontSize:9,height:1.4))),
+   if(offer['task_status']=='completed'&&status=='accepted')Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:()=>openReview(offer['task_id']?.toString()??''),icon:const Icon(Icons.star_outline_rounded,size:15),label:const Text('İşi değerlendir'),style:TextButton.styleFrom(foregroundColor:darkGreen))),
   ]));
  }
  @override Widget build(BuildContext c)=>SafeArea(child:RefreshIndicator(color:green,onRefresh:load,child:ListView(padding:const EdgeInsets.fromLTRB(18,20,18,110),children:[
@@ -234,7 +243,7 @@ class _MyTasksState extends State<MyTasks> {
   else if(segment==1)offerSection()
   else if(error!=null)EmptyState(title:'İşlerin yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)
   else if(tasks.isEmpty)EmptyState(title:'Henüz ilan paylaşmadın',message:'İlk ilanını oluştur ve yakınındaki kişilerden teklif al.',action:'İlan oluştur',onTap:widget.onCreate)
-  else ...tasks.map((t)=>Padding(padding:const EdgeInsets.only(bottom:10),child:TaskCard(task:t,onTap:()=>openTask(c,t,widget.user,widget.onLogin,load)))),
+  else ...tasks.map((t)=>Padding(padding:const EdgeInsets.only(bottom:10),child:myTaskCard(t))),
  ])));
 }
 
