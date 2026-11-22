@@ -24,6 +24,20 @@ jobs:
       - name: Generate Android platform project
         working-directory: mobile
         run: flutter create --platforms=android --org com.doora --project-name doora_mobile .
+      - name: Ensure release APK has internet permission
+        working-directory: mobile
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          source = manifest.read_text()
+          permission = '    <uses-permission android:name="android.permission.INTERNET" />\n'
+          if 'android.permission.INTERNET' not in source:
+              source = re.sub(r'(<manifest[^>]*>\\s*)', r'\\1' + permission, source, count=1)
+              manifest.write_text(source)
+          print('Release manifest includes INTERNET permission:', 'android.permission.INTERNET' in manifest.read_text())
+          PY
       - name: Install dependencies
         working-directory: mobile
         run: flutter pub get
