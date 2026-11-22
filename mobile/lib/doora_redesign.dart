@@ -147,15 +147,39 @@ class _SavedState extends State<Saved> {
   catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}
   finally{if(mounted)setState(()=>busy=false);}
  }
- Future<void> remove(DooraTask t) async {setState(()=>tasks.removeWhere((x)=>x.id==t.id));try{await DooraApi.instance.toggleSavedTask(t.id);}catch(e){if(mounted){toast(context,DooraApi.instance.errorMessage(e));load();}}}
- @override Widget build(BuildContext c)=>SafeArea(child:RefreshIndicator(color:green,onRefresh:load,child:ListView(padding:const EdgeInsets.fromLTRB(18,20,18,110),children:[
-  const Text('Kaydedilenler',style:TextStyle(color:ink,fontSize:23,fontWeight:FontWeight.w900)),const SizedBox(height:5),const Text('Sonra bakmak istediklerin burada.',style:TextStyle(color:muted,fontSize:11)),const SizedBox(height:17),
-  if(widget.user==null)EmptyState(title:'İlanları kaydet',message:'Kaydettiklerini görmek için giriş yap.',action:'Giriş yap',onTap:widget.onLogin)
-  else if(busy)const Skeletons()
-  else if(error!=null)EmptyState(title:'Yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)
-  else if(tasks.isEmpty)const EmptyState(title:'Henüz kayıt yok',message:'Beğendiğin ilanların kalp simgesine dokun.')
-  else ...tasks.map((t)=>Dismissible(key:ValueKey(t.id),direction:DismissDirection.endToStart,background:Container(alignment:Alignment.centerRight,padding:const EdgeInsets.only(right:20),decoration:BoxDecoration(color:const Color(0xFFFFE9E7),borderRadius:BorderRadius.circular(18)),child:const Icon(Icons.delete_outline,color:Colors.red)),onDismissed:(_)=>remove(t),child:Padding(padding:const EdgeInsets.only(bottom:10),child:TaskCard(task:t,saved:true,onSave:()=>remove(t),onTap:()=>openTask(c,t,widget.user,widget.onLogin,load)))),
- ])));
+ Future<void> remove(DooraTask t) async {
+  setState(()=>tasks.removeWhere((x)=>x.id==t.id));
+  try{await DooraApi.instance.toggleSavedTask(t.id);}
+  catch(e){if(mounted){toast(context,DooraApi.instance.errorMessage(e));load();}}
+ }
+ @override Widget build(BuildContext c) {
+  final children=<Widget>[
+   const Text('Kaydedilenler',style:TextStyle(color:ink,fontSize:23,fontWeight:FontWeight.w900)),
+   const SizedBox(height:5),
+   const Text('Sonra bakmak istediklerin burada.',style:TextStyle(color:muted,fontSize:11)),
+   const SizedBox(height:17),
+  ];
+  if(widget.user==null){
+   children.add(EmptyState(title:'İlanları kaydet',message:'Kaydettiklerini görmek için giriş yap.',action:'Giriş yap',onTap:widget.onLogin));
+  } else if(busy){
+   children.add(const Skeletons());
+  } else if(error!=null){
+   children.add(EmptyState(title:'Yüklenemedi',message:error!,action:'Tekrar dene',onTap:load));
+  } else if(tasks.isEmpty){
+   children.add(const EmptyState(title:'Henüz kayıt yok',message:'Beğendiğin ilanların kalp simgesine dokun.'));
+  } else {
+   for(final t in tasks){
+    children.add(Padding(padding:const EdgeInsets.only(bottom:10),child:Dismissible(
+     key:ValueKey(t.id),
+     direction:DismissDirection.endToStart,
+     background:Container(alignment:Alignment.centerRight,padding:const EdgeInsets.only(right:20),decoration:BoxDecoration(color:const Color(0xFFFFE9E7),borderRadius:BorderRadius.circular(18)),child:const Icon(Icons.delete_outline,color:Colors.red)),
+     onDismissed:(_)=>remove(t),
+     child:TaskCard(task:t,saved:true,onSave:()=>remove(t),onTap:()=>openTask(c,t,widget.user,widget.onLogin,load)),
+    )));
+   }
+  }
+  return SafeArea(child:RefreshIndicator(color:green,onRefresh:load,child:ListView(padding:const EdgeInsets.fromLTRB(18,20,18,110),children:children)));
+ }
 }
 
 class Profile extends StatelessWidget{const Profile({super.key,required this.user,required this.onLogin,required this.onLogout});final Map<String,dynamic>? user;final VoidCallback onLogin,onLogout;@override Widget build(BuildContext c){final name=user?['name']?.toString()??'DOORA üyesi';return SafeArea(child:ListView(padding:const EdgeInsets.fromLTRB(18,20,18,110),children:[const Text('Hesabım',style:TextStyle(color:ink,fontSize:23,fontWeight:FontWeight.w900)),const SizedBox(height:5),const Text('Profilini ve tercihlerini yönet.',style:TextStyle(color:muted,fontSize:11)),const SizedBox(height:18),Container(padding:const EdgeInsets.all(15),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(18),border:Border.all(color:line)),child:Row(children:[CircleAvatar(radius:25,backgroundColor:mint,child:Text(name.isEmpty?'D':name.characters.first.toUpperCase(),style:const TextStyle(color:darkGreen,fontWeight:FontWeight.w900))),const SizedBox(width:11),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(user==null?'DOORA’ya hoş geldin':name,style:const TextStyle(color:ink,fontWeight:FontWeight.w800,fontSize:13)),Text(user?['email']?.toString()??'İşlerini kolayca yönet.',style:const TextStyle(color:muted,fontSize:10))]))])),const SizedBox(height:14),if(user==null)FilledButton(onPressed:onLogin,child:const Text('Giriş yap / Kayıt ol'))else ...[_ProfileItem(icon:Icons.notifications_none,title:'Bildirimler',subtitle:'İş ve teklif bildirimleri',tap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const Notifications()))),_ProfileItem(icon:Icons.lightbulb_outline,title:'Nasıl çalışır?',subtitle:'DOORA’yı 3 adımda keşfet',tap:()=>showModalBottomSheet(context:c,showDragHandle:true,backgroundColor:white,builder:(_)=>const HowSheet())),_ProfileItem(icon:Icons.shield_outlined,title:'Güvenli kullanım',subtitle:'Güvenli işlem önerileri',tap:()=>toast(c,'Doğrulama kodlarını kimseyle paylaşma.')),const SizedBox(height:8),OutlinedButton.icon(onPressed:onLogout,icon:const Icon(Icons.logout),label:const Text('Çıkış yap'))]]));}}
