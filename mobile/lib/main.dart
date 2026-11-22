@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:reicons/reicons.dart';
+import 'package:flutter_lucide_animated/flutter_lucide_animated.dart';
 import 'theme/doora_theme.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -182,7 +184,7 @@ class _BottomDock extends StatelessWidget {
         boxShadow: [BoxShadow(color: const Color(0xFF10271E).withValues(alpha: .11), blurRadius: 30, offset: const Offset(0, 10))],
       ),
       child: Row(children: [
-        _DockItem(icon: PhosphorIconsRegular.compass, label: 'Keşfet', selected: selected == 0, onTap: () => onSelect(0)),
+        _DockItem(icon: ReiconIcons.home, label: 'Keşfet', selected: selected == 0, onTap: () => onSelect(0)),
         _DockItem(icon: PhosphorIconsRegular.briefcase, label: 'İşlerim', selected: selected == 1, onTap: () => onSelect(1)),
         Expanded(child: Center(child: GestureDetector(
           onTap: onCreate,
@@ -197,7 +199,7 @@ class _BottomDock extends StatelessWidget {
           ).animate().scale(duration: 280.ms, curve: Curves.easeOutBack),
         ))),
         _DockItem(icon: PhosphorIconsRegular.chatCircleDots, label: 'Mesajlar', selected: selected == 2, onTap: () => onSelect(2)),
-        _DockItem(icon: PhosphorIconsRegular.userCircle, label: 'Hesabım', selected: selected == 3, onTap: () => onSelect(3)),
+        _DockItem(icon: ReiconIcons.userCircle, label: 'Hesabım', selected: selected == 3, onTap: () => onSelect(3)),
       ]),
     ),
   );
@@ -384,7 +386,7 @@ class _HeroPanel extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(color: white.withValues(alpha: .11), borderRadius: BorderRadius.circular(30), border: Border.all(color: white.withValues(alpha: .12))),
           child: const Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(PhosphorIconsFill.sparkle, size: 12, color: Color(0xFFD9E8B5)),
+            LucideAnimatedIcon(icon: sparkles, size: 14, color: Color(0xFFD9E8B5), duration: Duration(milliseconds: 650)),
             SizedBox(width: 6),
             Text('İŞİNİ KOLAYLAŞTIR', style: TextStyle(color: Color(0xFFE6F0E9), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.15)),
           ]),
