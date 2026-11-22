@@ -16,8 +16,8 @@ class DooraApi {
         if (raw != null && raw.isNotEmpty) {
           final cookies = Map<String, dynamic>.from(jsonDecode(raw));
           if (cookies.isNotEmpty) {
-            options.headers['Cookie'] = cookies.entries
-                .map((e) => e.key + '=' + e.value.toString()).join('; ');
+            options.headers['Cookie'] =
+                cookies.entries.map((e) => e.key + '=' + e.value.toString()).join('; ');
           }
         }
         handler.next(options);
@@ -95,8 +95,11 @@ class DooraApi {
   }
 
   Future<void> signOut() async {
-    try { await _dio.post('/api/auth/sign-out'); }
-    finally { await _storage.delete(key: _cookieKey); }
+    try {
+      await _dio.post('/api/auth/sign-out');
+    } finally {
+      await _storage.delete(key: _cookieKey);
+    }
   }
 
   Future<List<Map<String, dynamic>>> getTasks({String? query, String? category}) async {
@@ -107,6 +110,71 @@ class DooraApi {
     final rows = _asMap(response.data)['tasks'];
     if (rows is! List) return [];
     return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
+  Future<Map<String, dynamic>> createTask({
+    required String title,
+    required String description,
+    required String category,
+    required num budget,
+    required String district,
+  }) async {
+    final response = await _dio.post('/api/tasks', data: {
+      'title': title.trim(),
+      'description': description.trim(),
+      'category': category,
+      'budget': budget,
+      'district': district.trim(),
+    });
+    return _asMap(_asMap(response.data)['task']);
+  }
+
+  Future<Map<String, dynamic>> createOffer({
+    required String taskId,
+    required num amount,
+    required String message,
+  }) async {
+    final response = await _dio.post('/api/offers', data: {
+      'taskId': taskId,
+      'amount': amount,
+      'message': message.trim(),
+    });
+    return _asMap(_asMap(response.data)['offer']);
+  }
+
+  Future<Map<String, dynamic>> getProfile() async {
+    final response = await _dio.get('/api/profile');
+    return _asMap(_asMap(response.data)['profile']);
+  }
+
+  Future<void> updateProfile({
+    required String name,
+    required String district,
+    required String bio,
+  }) async {
+    await _dio.patch('/api/profile', data: {
+      'name': name.trim(),
+      'district': district.trim(),
+      'bio': bio.trim(),
+      'avatarUrl': '',
+      'notifications': {
+        'taskUpdates': true,
+        'offerUpdates': true,
+        'walletUpdates': true,
+        'productUpdates': false,
+      },
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getNotifications() async {
+    final response = await _dio.get('/api/notifications');
+    final rows = _asMap(response.data)['notifications'];
+    if (rows is! List) return [];
+    return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
+  Future<void> markNotificationsRead() async {
+    await _dio.patch('/api/notifications', data: {'all': true});
   }
 
   String errorMessage(Object error) {
