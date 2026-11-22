@@ -20,12 +20,25 @@ class _DooraAppState extends State<DooraApp>{
  Map<String,dynamic>? user;bool loading=true;
  @override void initState(){super.initState();DooraAuth.instance.restore().then((u){if(mounted)setState((){user=u;loading=false;});});}
  Future<void> login()async{final u=await Navigator.push<Map<String,dynamic>>(context,MaterialPageRoute(builder:(_)=>const AuthPage()));if(u!=null&&mounted)setState(()=>user=u);}
- Future<void> logout()async{await DooraAuth.instance.signOut();if(mounted)setState(()=>user=null);}
+ Future<void> logout()async{
+  final confirmed=await showDialog<bool>(context:context,builder:(dialogContext)=>AlertDialog(
+    backgroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(20)),
+    title:const Text('Çıkış yapmak istiyor musun?',style:TextStyle(color:ink,fontWeight:FontWeight.w900,fontSize:17)),
+    content:const Text('Hesabından güvenli şekilde çıkış yapılacak.',style:TextStyle(color:muted,fontSize:12)),
+    actions:[
+      TextButton(onPressed:()=>Navigator.pop(dialogContext,false),child:const Text('Vazgeç',style:TextStyle(color:muted))),
+      FilledButton(onPressed:()=>Navigator.pop(dialogContext,true),style:FilledButton.styleFrom(backgroundColor:darkGreen),child:const Text('Çıkış yap')),
+    ],
+  ));
+  if(confirmed!=true)return;
+  try{await DooraAuth.instance.signOut();if(mounted)setState(()=>user=null);}
+  catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(DooraApi.instance.errorMessage(e))));}
+}
  @override Widget build(BuildContext c)=>MaterialApp(title:'DOORA',debugShowCheckedModeBanner:false,theme:ThemeData(useMaterial3:true,scaffoldBackgroundColor:bg,colorScheme:ColorScheme.fromSeed(seedColor:green),textTheme:GoogleFonts.plusJakartaSansTextTheme(),appBarTheme:const AppBarTheme(backgroundColor:white,foregroundColor:ink,elevation:0)),home:loading?const Scaffold(body:Center(child:CircularProgressIndicator(color:green))):Shell(user:user,onLogin:login,onLogout:logout,onUser:(u)=>setState(()=>user=u)));
 }
 class Shell extends StatefulWidget{const Shell({super.key,required this.user,required this.onLogin,required this.onLogout,required this.onUser});final Map<String,dynamic>? user;final VoidCallback onLogin,onLogout;final ValueChanged<Map<String,dynamic>?> onUser;@override State<Shell> createState()=>_ShellState();}
-class _ShellState extends State<Shell>{int tab=0,refresh=0;Future<void> create()async{if(widget.user==null){final u=await Navigator.push<Map<String,dynamic>>(context,MaterialPageRoute(builder:(_)=>const AuthPage()));if(u==null||!mounted)return;widget.onUser(u);}if(!mounted)return;Navigator.push(context,MaterialPageRoute(builder:(_)=>CreatePage(onDone:(){setState((){refresh++;tab=1;});})));} @override Widget build(BuildContext c){final pages=[Discover(user:widget.user,onLogin:widget.onLogin,onCreate:create,refresh:refresh),MyTasks(user:widget.user,onLogin:widget.onLogin,onCreate:create,refresh:refresh),Saved(user:widget.user,onLogin:widget.onLogin),Profile(user:widget.user,onLogin:widget.onLogin,onLogout:widget.onLogout)];return Scaffold(extendBody:true,body:IndexedStack(index:tab,children:pages),bottomNavigationBar:SafeArea(top:false,minimum:const EdgeInsets.fromLTRB(14,0,14,8),child:Container(height:69,padding:const EdgeInsets.all(5),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(23),border:Border.all(color:line),boxShadow:[BoxShadow(color:ink.withValues(alpha:.09),blurRadius:25,offset:const Offset(0,7))]),child:Row(children:[nav(PhosphorIconsRegular.compass,'Keşfet',0),nav(PhosphorIconsRegular.briefcase,'İşler',1),Expanded(child:Center(child:InkWell(onTap:create,borderRadius:BorderRadius.circular(16),child:Container(width:48,height:48,decoration:BoxDecoration(color:const Color(0xFFE4EBD9),borderRadius:BorderRadius.circular(16),border:Border.all(color:const Color(0xFFD5DFC9)),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.10),blurRadius:14,offset:const Offset(0,5))]),child:const Icon(Icons.add,color:Color(0xFF171B17),size:27))))),nav(PhosphorIconsRegular.heart,'Kaydedilen',2),nav(PhosphorIconsRegular.user,'Hesabım',3)]))));}
- Widget nav(IconData icon,String label,int index)=>Expanded(child:InkWell(onTap:(){HapticFeedback.selectionClick();setState(()=>tab=index);},child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(tab==index?(index==0?PhosphorIconsFill.compass:index==1?PhosphorIconsFill.briefcase:index==2?PhosphorIconsFill.heart:PhosphorIconsFill.user):icon,color:const Color(0xFF171B17).withValues(alpha:tab==index?1:.72),size:22),const SizedBox(height:4),Text(label,style:TextStyle(color:const Color(0xFF171B17).withValues(alpha:tab==index?1:.72),fontSize:9,fontWeight:tab==index?FontWeight.w800:FontWeight.w600))])));
+class _ShellState extends State<Shell>{int tab=0,refresh=0;Future<void> create()async{if(widget.user==null){await widget.onLogin();return;}if(!mounted)return;Navigator.push(context,MaterialPageRoute(builder:(_)=>CreatePage(onDone:(){setState((){refresh++;tab=1;});})));} @override Widget build(BuildContext c){final pages=[Discover(user:widget.user,onLogin:widget.onLogin,onCreate:create,refresh:refresh),MyTasks(user:widget.user,onLogin:widget.onLogin,onCreate:create,refresh:refresh),Saved(user:widget.user,onLogin:widget.onLogin),Profile(user:widget.user,onLogin:widget.onLogin,onLogout:widget.onLogout)];return Scaffold(extendBody:true,body:IndexedStack(index:tab,children:pages),bottomNavigationBar:SafeArea(top:false,minimum:const EdgeInsets.fromLTRB(14,0,14,8),child:Container(height:69,padding:const EdgeInsets.all(5),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(23),border:Border.all(color:line),boxShadow:[BoxShadow(color:ink.withValues(alpha:.09),blurRadius:25,offset:const Offset(0,7))]),child:Row(children:[nav(PhosphorIconsRegular.compass,'Keşfet',0),nav(PhosphorIconsRegular.briefcase,'İşler',1),Expanded(child:Center(child:InkWell(onTap:create,borderRadius:BorderRadius.circular(16),child:Container(width:48,height:48,decoration:BoxDecoration(color:const Color(0xFFE4EBD9),borderRadius:BorderRadius.circular(16),border:Border.all(color:const Color(0xFFD5DFC9)),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.10),blurRadius:14,offset:const Offset(0,5))]),child:const Icon(Icons.add,color:Color(0xFF171B17),size:27))))),nav(PhosphorIconsRegular.heart,'Kaydedilen',2),nav(PhosphorIconsRegular.user,'Hesabım',3)]))));}
+ Widget nav(IconData icon,String label,int index)=>Expanded(child:InkWell(onTap:(){HapticFeedback.selectionClick();if(index!=0&&widget.user==null){widget.onLogin();return;}setState(()=>tab=index);},child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(tab==index?(index==0?PhosphorIconsFill.compass:index==1?PhosphorIconsFill.briefcase:index==2?PhosphorIconsFill.heart:PhosphorIconsFill.user):icon,color:const Color(0xFF171B17).withValues(alpha:tab==index?1:.72),size:22),const SizedBox(height:4),Text(label,style:TextStyle(color:const Color(0xFF171B17).withValues(alpha:tab==index?1:.72),fontSize:9,fontWeight:tab==index?FontWeight.w800:FontWeight.w600))])));
 }
 
 class Discover extends StatefulWidget{const Discover({super.key,required this.user,required this.onLogin,required this.onCreate,required this.refresh});final Map<String,dynamic>? user;final VoidCallback onLogin,onCreate;final int refresh;@override State<Discover> createState()=>_DiscoverState();}
@@ -615,12 +628,14 @@ class _NotificationsState extends State<Notifications> {
 class AuthPage extends StatefulWidget{const AuthPage({super.key});@override State<AuthPage> createState()=>_AuthPageState();}
 class _AuthPageState extends State<AuthPage>{
  final name=TextEditingController(),email=TextEditingController(),pass=TextEditingController(),confirm=TextEditingController(),otp=TextEditingController();
- bool signup=false,verify=false,busy=false;String? error;
+ bool signup=false,verify=false,busy=false,showPassword=false;String? error;
  @override void dispose(){name.dispose();email.dispose();pass.dispose();confirm.dispose();otp.dispose();super.dispose();}
  Future<void> submit()async{
   if(verify&&otp.text.trim().length!=6){setState(()=>error='E-postana gelen 6 haneli kodu gir.');return;}
   if(!verify&&pass.text.length<8){setState(()=>error='Şifren en az 8 karakter olmalı.');return;}
   if(signup&&!verify&&pass.text!=confirm.text){setState(()=>error='Şifreler birbiriyle eşleşmiyor.');return;}
+  if(signup&&!verify&&name.text.trim().length<2){setState(()=>error='Ad soyad bilgini gir.');return;}
+  if(!email.text.contains('@')){setState(()=>error='Geçerli bir e-posta adresi gir.');return;}
   setState(()=>busy=true);error=null;
   try{
    if(verify){
@@ -637,29 +652,52 @@ class _AuthPageState extends State<AuthPage>{
   }catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}
   finally{if(mounted)setState(()=>busy=false);}
  }
- @override Widget build(BuildContext c)=>Scaffold(
-  backgroundColor:white,appBar:AppBar(backgroundColor:white),
-  body:ListView(padding:const EdgeInsets.all(22),children:[
-   const Center(child:Text('doora.',style:TextStyle(color:darkGreen,fontSize:30,fontWeight:FontWeight.w900))),
-   const SizedBox(height:14),
-   Center(child:Text(verify?'E-postanı doğrula':signup?'DOORA’ya katıl':'Tekrar hoş geldin',style:const TextStyle(color:ink,fontSize:22,fontWeight:FontWeight.w900))),
-   const SizedBox(height:7),
-   Text(verify?'E-posta adresine gönderdiğimiz 6 haneli kodu gir.':'Hesabınla giriş yap veya DOORA ailesine katıl.',textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:11)),
-   const SizedBox(height:22),
-   if(signup&&!verify)TextField(controller:name,decoration:const InputDecoration(labelText:'Ad soyad',hintText:'Adın ve soyadın')),
-   if(signup&&!verify)const SizedBox(height:10),
-   TextField(controller:email,keyboardType:TextInputType.emailAddress,autocorrect:false,decoration:const InputDecoration(labelText:'E-posta',hintText:'ornek@mail.com')),
-   const SizedBox(height:10),
-   if(!verify)TextField(controller:pass,obscureText:true,decoration:const InputDecoration(labelText:'Şifre',hintText:'En az 8 karakter')),
-   if(signup&&!verify)const SizedBox(height:10),
-   if(signup&&!verify)TextField(controller:confirm,obscureText:true,decoration:const InputDecoration(labelText:'Şifre tekrar')),
-   if(verify)TextField(controller:otp,keyboardType:TextInputType.number,maxLength:6,decoration:const InputDecoration(labelText:'6 haneli doğrulama kodu',counterText:'')),
-   if(error!=null)Padding(padding:const EdgeInsets.only(top:10),child:Text(error!,style:const TextStyle(color:Colors.red,fontSize:11))),
-   const SizedBox(height:18),
-   FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,padding:const EdgeInsets.symmetric(vertical:14)),child:Text(busy?'Bekle…':verify?'Doğrula ve giriş yap':signup?'Hesap oluştur':'Giriş yap')),
-   if(!verify)TextButton(onPressed:busy?null:()=>setState(()=>signup=!signup),child:Text(signup?'Giriş yap':'Kayıt ol',style:const TextStyle(color:darkGreen,fontWeight:FontWeight.w800)))
-  ])
+ InputDecoration field(String label,String hint,{Widget? suffix})=>InputDecoration(
+  labelText:label,hintText:hint,suffixIcon:suffix,filled:true,fillColor:const Color(0xFFF6F8F3),
+  contentPadding:const EdgeInsets.symmetric(horizontal:15,vertical:15),
+  border:OutlineInputBorder(borderRadius:BorderRadius.circular(14),borderSide:BorderSide.none),
+  enabledBorder:OutlineInputBorder(borderRadius:BorderRadius.circular(14),borderSide:const BorderSide(color:line)),
+  focusedBorder:OutlineInputBorder(borderRadius:BorderRadius.circular(14),borderSide:const BorderSide(color:darkGreen,width:1.3)),
+  labelStyle:const TextStyle(color:muted,fontSize:11),hintStyle:const TextStyle(color:muted,fontSize:11),
  );
+ @override Widget build(BuildContext c)=>Scaffold(
+  backgroundColor:white,
+  appBar:AppBar(backgroundColor:white,leading:IconButton(onPressed:()=>Navigator.maybePop(c),icon:const Icon(Icons.arrow_back_ios_new_rounded,size:18,color:ink))),
+  body:SafeArea(child:ListView(padding:const EdgeInsets.fromLTRB(22,4,22,28),children:[
+   Container(padding:const EdgeInsets.fromLTRB(20,22,20,20),decoration:BoxDecoration(
+    gradient:const LinearGradient(colors:[Color(0xFF263B2B),Color(0xFF405B43),Color(0xFF71865F)],begin:Alignment.topLeft,end:Alignment.bottomRight),
+    borderRadius:BorderRadius.circular(24)),
+    child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+     Row(children:[Container(width:38,height:38,decoration:BoxDecoration(color:white.withValues(alpha:.15),borderRadius:BorderRadius.circular(12)),child:const Center(child:Text('d',style:TextStyle(color:white,fontSize:25,fontWeight:FontWeight.w900)))),const SizedBox(width:10),const Text('DOORA',style:TextStyle(color:white,fontSize:13,fontWeight:FontWeight.w900,letterSpacing:2))]),
+     const SizedBox(height:22),
+     Text(verify?'E-posta doğrulaması':signup?'Yeni bir başlangıç.':'İşini kolaylaştır.',style:const TextStyle(color:white,fontSize:23,fontWeight:FontWeight.w900,height:1.15)),
+     const SizedBox(height:6),
+     Text(verify?'Sana gönderdiğimiz doğrulama kodunu gir.':'DOORA ile ihtiyacını paylaş, doğru insanlarla buluş.',style:const TextStyle(color:Colors.white70,fontSize:11,height:1.5)),
+    ]),
+   ),
+   const SizedBox(height:22),
+   if(!verify)const SizedBox(height:2),
+   if(!verify)Row(children:[
+    Expanded(child: _modeButton('Giriş yap',false)),
+    const SizedBox(width:8),
+    Expanded(child: _modeButton('Kayıt ol',true)),
+   ]),
+   const SizedBox(height:16),
+   if(signup&&!verify)TextField(controller:name,textCapitalization:TextCapitalization.words,decoration:field('Ad soyad','Adını ve soyadını yaz')),
+   if(signup&&!verify)const SizedBox(height:11),
+   TextField(controller:email,keyboardType:TextInputType.emailAddress,autocorrect:false,decoration:field('E-posta adresi','ornek@mail.com')),
+   const SizedBox(height:11),
+   if(!verify)TextField(controller:pass,obscureText:!showPassword,decoration:field('Şifre','En az 8 karakter',suffix:IconButton(onPressed:()=>setState(()=>showPassword=!showPassword),icon:Icon(showPassword?Icons.visibility_off_outlined:Icons.visibility_outlined,color:muted,size:19)))),
+   if(signup&&!verify)const SizedBox(height:11),
+   if(signup&&!verify)TextField(controller:confirm,obscureText:true,decoration:field('Şifre tekrar','Şifreni yeniden yaz')),
+   if(verify)TextField(controller:otp,keyboardType:TextInputType.number,maxLength:6,decoration:field('Doğrulama kodu','6 haneli kod'),),
+   if(error!=null)Padding(padding:const EdgeInsets.only(top:12),child:Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:const Color(0xFFFFF0EF),borderRadius:BorderRadius.circular(12)),child:Text(error!,style:const TextStyle(color:Color(0xFFB33F3A),fontSize:11)))),
+   const SizedBox(height:18),
+   SizedBox(width:double.infinity,height:51,child:FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14))),child:busy?const SizedBox(width:19,height:19,child:CircularProgressIndicator(strokeWidth:2,color:white)):Text(verify?'Doğrula ve giriş yap':signup?'Hesap oluştur':'Giriş yap',style:const TextStyle(fontSize:12,fontWeight:FontWeight.w900)))),
+   if(!verify)Padding(padding:const EdgeInsets.only(top:14),child:Text(signup?'Hesabın zaten var mı? Giriş yap':'Henüz DOORA hesabın yok mu? Kayıt ol',textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:10))),
+  ])),
+ );
+ Widget _modeButton(String label,bool value)=>GestureDetector(onTap:busy?null:()=>setState(()=>signup=value),child:AnimatedContainer(duration:const Duration(milliseconds:160),padding:const EdgeInsets.symmetric(vertical:12),decoration:BoxDecoration(color:signup==value?white:Colors.transparent,borderRadius:BorderRadius.circular(11),boxShadow:signup==value?[BoxShadow(color:ink.withValues(alpha:.06),blurRadius:8,offset:const Offset(0,2))]:[]),child:Text(label,textAlign:TextAlign.center,style:TextStyle(color:signup==value?darkGreen:muted,fontSize:11,fontWeight:FontWeight.w900))));
 }
 
 class Skeletons extends StatelessWidget{const Skeletons({super.key});@override Widget build(BuildContext c)=>Column(children:List.generate(3,(_)=>Container(height:118,margin:const EdgeInsets.only(bottom:10),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(18),border:Border.all(color:line)),child:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[_Block(150,12),SizedBox(height:10),_Block(200,9),Spacer(),_Block(90,15)]))));}
