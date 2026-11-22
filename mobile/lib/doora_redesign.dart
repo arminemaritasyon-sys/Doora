@@ -191,9 +191,9 @@ class _MyTasksState extends State<MyTasks> {
  @override void initState(){super.initState();load();}
  @override void didUpdateWidget(covariant MyTasks old){super.didUpdateWidget(old);if(old.refresh!=widget.refresh||old.user!=widget.user)load();}
  Future<void> load() async {
-  if(widget.user==null){setState(()=>{tasks=[],offers=[]});return;}
+  if(widget.user==null){setState(() { tasks=[]; offers=[]; });return;}
   setState(()=>busy=true);
-  try {final rows=await DooraApi.instance.getTasks();List<Map<String,dynamic>> sent=[];try{sent=await DooraApi.instance.getMyOffers();}catch(_){}final id=widget.user?['id']?.toString()??'';if(mounted)setState(()=>{tasks=rows.map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList(),offers=sent});}
+  try {final rows=await DooraApi.instance.getTasks();List<Map<String,dynamic>> sent=[];try{sent=await DooraApi.instance.getMyOffers();}catch(_){}final id=widget.user?['id']?.toString()??'';if(mounted)setState(() { tasks=rows.map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList(); offers=sent; });}
   catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}
   finally{if(mounted)setState(()=>busy=false);}
  }
@@ -203,7 +203,7 @@ class _MyTasksState extends State<MyTasks> {
   final label=status=='accepted'?'Kabul edildi':status=='rejected'?'Reddedildi':status=='withdrawn'?'Geri çekildi':'Yanıt bekliyor';
   final color=status=='accepted'?darkGreen:status=='rejected'?const Color(0xFFB45A55):const Color(0xFF9B742D);
   final amount=num.tryParse(offer['amount']?.toString()??'0')??0;
-  final formatted=amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'\\B(?=(\\d{3})+(?!\\d))'),(m)=>'.');
+  final formatted=amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'),(m)=>'.');
   return Container(margin:const EdgeInsets.only(bottom:9),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(17),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
    Row(children:[Expanded(child:Text(offer['task_title']?.toString()??'İlan',maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:12,fontWeight:FontWeight.w900))),Container(padding:const EdgeInsets.symmetric(horizontal:8,vertical:5),decoration:BoxDecoration(color:color.withValues(alpha:.09),borderRadius:BorderRadius.circular(20)),child:Text(label,style:TextStyle(color:color,fontSize:8,fontWeight:FontWeight.w800)))]),
    const SizedBox(height:8),Row(children:[const Icon(Icons.person_outline,color:muted,size:14),const SizedBox(width:4),Expanded(child:Text(offer['owner_name']?.toString()??'İlan sahibi',style:const TextStyle(color:muted,fontSize:9))),Text('$formatted ₺',style:const TextStyle(color:darkGreen,fontSize:14,fontWeight:FontWeight.w900))]),
