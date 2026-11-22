@@ -77,7 +77,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     if (image == null || !mounted) return;
 
     final bytes = await File(image.path).readAsBytes();
-    if (bytes.length > 1_300_000) {
+    if (bytes.length > 1300000) {
       _toast('Görsel çok büyük. Daha küçük bir fotoğraf seç.');
       return;
     }
@@ -125,7 +125,8 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         ),
       ),
     );
-    if (confirmed != true || !mounted) return;
+    if (!mounted) return;
+    if (confirmed != true) return;
     if (title.text.trim().length < 2) {
       title.dispose();
       description.dispose();
