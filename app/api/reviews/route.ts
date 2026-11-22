@@ -4,6 +4,36 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/server";
 
 const schema = z.object({ taskId: z.string().uuid(), rating: z.number().int().min(1).max(5), comment: z.string().trim().max(1000).default("") });
+export async function GET(request: NextRequest) {
+  const userId = request.nextUrl.searchParams.get("userId");
+  if (!userId || userId.length > 200) {
+    return NextResponse.json({ error: "Profil bulunamadı." }, { status: 400 });
+  }
+  try {
+    const [summary] = await db`
+      SELECT count(*)::int AS count, COALESCE(round(avg(rating)::numeric, 1), 0) AS average
+      FROM public.task_reviews
+      WHERE reviewee_id = ${userId}
+    `;
+    const reviews = await db`
+      SELECT r.id, r.rating, r.comment, r.created_at,
+        COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS reviewer_name,
+        t.title AS task_title
+      FROM public.task_reviews r
+      LEFT JOIN public.user_profiles p ON p.user_id = r.reviewer_id
+      LEFT JOIN neon_auth.user u ON u.id::text = r.reviewer_id
+      LEFT JOIN public.tasks t ON t.id = r.task_id
+      WHERE r.reviewee_id = ${userId}
+      ORDER BY r.created_at DESC
+      LIMIT 30
+    `;
+    return NextResponse.json({ summary: summary ?? { count: 0, average: 0 }, reviews });
+  } catch (error) {
+    console.error("[reviews] list failed", error);
+    return NextResponse.json({ error: "Değerlendirmeler şu anda alınamıyor." }, { status: 503 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });
