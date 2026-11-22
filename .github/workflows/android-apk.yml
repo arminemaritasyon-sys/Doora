@@ -48,3 +48,5 @@ jobs:
 # Build the refreshed native marketplace experience.
 
 # Rebuild after correcting icon widget compatibility.
+
+# Validate latest native UI and saved/nearby task changes.
