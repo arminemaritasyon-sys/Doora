@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/server";
 import { getDooraAdminAccess } from "@/lib/admin";
+import { VerificationToggle } from "./verification-toggle";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -65,8 +66,8 @@ export default async function AdminDashboard() {
       COALESCE(NULLIF(p.display_name,''),'DOORA üyesi') AS owner_name
       FROM public.tasks t LEFT JOIN public.user_profiles p ON p.user_id=t.owner_id
       ORDER BY t.created_at DESC LIMIT 7`.catch((error) => { console.error("[admin] recent tasks failed", error); return []; }),
-    db`SELECT user_id,COALESCE(NULLIF(display_name,''),'DOORA üyesi') AS display_name,district,created_at
-      FROM public.user_profiles ORDER BY created_at DESC LIMIT 6`.catch((error) => { console.error("[admin] recent users failed", error); return []; })
+    db`SELECT user_id,COALESCE(NULLIF(display_name,''),'DOORA üyesi') AS display_name,district,COALESCE(is_verified,false) AS is_verified,created_at
+      FROM public.user_profiles ORDER BY created_at DESC LIMIT 10`.catch((error) => { console.error("[admin] recent users failed", error); return []; })
   ]);
 
   const metrics = [
@@ -114,7 +115,7 @@ export default async function AdminDashboard() {
         </section>
 
         <section className="doora-admin-panel" id="uyeler"><div className="doora-admin-section-head"><div><span>TOPLULUK</span><h2>Yeni üyeler</h2></div><span className="doora-admin-count">{recentUsers.length} kayıt</span></div>
-          <div className="doora-admin-member-list">{recentUsers.length ? recentUsers.map((member:any)=><div className="doora-admin-member" key={member.user_id}><span className="doora-admin-member-avatar">{String(member.display_name||"D").slice(0,1).toLocaleUpperCase("tr")}</span><div><b>{member.display_name}</b><small>{member.district || "Konum eklenmemiş"}</small></div><time>{date(member.created_at)}</time></div>) : <div className="doora-admin-empty">Henüz üye kaydı bulunmuyor.</div>}</div>
+          <div className="doora-admin-member-list">{recentUsers.length ? recentUsers.map((member:any)=><div className="doora-admin-member" key={member.user_id}><span className="doora-admin-member-avatar">{String(member.display_name||"D").slice(0,1).toLocaleUpperCase("tr")}</span><div><b>{member.display_name}</b><small>{member.district || "Konum eklenmemiş"}</small></div><time>{date(member.created_at)}</time><VerificationToggle userId={member.user_id} initialVerified={member.is_verified===true}/></div>) : <div className="doora-admin-empty">Henüz üye kaydı bulunmuyor.</div>}</div>
         </section>
       </div>
       <footer className="doora-admin-footer"><span>DOORA Yönetim Paneli</span><span><BadgeCheck size={14}/> Yetkili oturum</span></footer>
