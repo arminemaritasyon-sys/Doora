@@ -187,23 +187,35 @@ class MyTasks extends StatefulWidget {
  @override State<MyTasks> createState()=>_MyTasksState();
 }
 class _MyTasksState extends State<MyTasks> {
- List<DooraTask> tasks=[]; bool busy=false; String? error; int segment=0;
+ List<DooraTask> tasks=[]; List<Map<String,dynamic>> offers=[]; bool busy=false; String? error; int segment=0;
  @override void initState(){super.initState();load();}
  @override void didUpdateWidget(covariant MyTasks old){super.didUpdateWidget(old);if(old.refresh!=widget.refresh||old.user!=widget.user)load();}
  Future<void> load() async {
-  if(widget.user==null){setState(()=>tasks=[]);return;}
+  if(widget.user==null){setState(()=>{tasks=[],offers=[]});return;}
   setState(()=>busy=true);
-  try {final rows=await DooraApi.instance.getTasks();final id=widget.user?['id']?.toString()??'';if(mounted)setState(()=>tasks=rows.map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList());}
+  try {final rows=await DooraApi.instance.getTasks();List<Map<String,dynamic>> sent=[];try{sent=await DooraApi.instance.getMyOffers();}catch(_){}final id=widget.user?['id']?.toString()??'';if(mounted)setState(()=>{tasks=rows.map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList(),offers=sent});}
   catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}
   finally{if(mounted)setState(()=>busy=false);}
  }
  Widget segmentButton(String label,int index)=>Expanded(child:GestureDetector(onTap:()=>setState(()=>segment=index),child:Container(padding:const EdgeInsets.symmetric(vertical:11),decoration:BoxDecoration(color:segment==index?white:Colors.transparent,borderRadius:BorderRadius.circular(10)),child:Text(label,textAlign:TextAlign.center,style:TextStyle(color:segment==index?ink:muted,fontSize:10,fontWeight:FontWeight.w800)))));
+ Widget offerHistoryCard(Map<String,dynamic> offer){
+  final status=offer['status']?.toString()??'pending';
+  final label=status=='accepted'?'Kabul edildi':status=='rejected'?'Reddedildi':status=='withdrawn'?'Geri çekildi':'Yanıt bekliyor';
+  final color=status=='accepted'?darkGreen:status=='rejected'?const Color(0xFFB45A55):const Color(0xFF9B742D);
+  final amount=num.tryParse(offer['amount']?.toString()??'0')??0;
+  final formatted=amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'\\B(?=(\\d{3})+(?!\\d))'),(m)=>'.');
+  return Container(margin:const EdgeInsets.only(bottom:9),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(17),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+   Row(children:[Expanded(child:Text(offer['task_title']?.toString()??'İlan',maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:12,fontWeight:FontWeight.w900))),Container(padding:const EdgeInsets.symmetric(horizontal:8,vertical:5),decoration:BoxDecoration(color:color.withValues(alpha:.09),borderRadius:BorderRadius.circular(20)),child:Text(label,style:TextStyle(color:color,fontSize:8,fontWeight:FontWeight.w800)))]),
+   const SizedBox(height:8),Row(children:[const Icon(Icons.person_outline,color:muted,size:14),const SizedBox(width:4),Expanded(child:Text(offer['owner_name']?.toString()??'İlan sahibi',style:const TextStyle(color:muted,fontSize:9))),Text('$formatted ₺',style:const TextStyle(color:darkGreen,fontSize:14,fontWeight:FontWeight.w900))]),
+   if((offer['message']?.toString()??'').isNotEmpty)Padding(padding:const EdgeInsets.only(top:8),child:Text(offer['message'].toString(),style:const TextStyle(color:muted,fontSize:9,height:1.4))),
+  ]));
+ }
  @override Widget build(BuildContext c)=>SafeArea(child:RefreshIndicator(color:green,onRefresh:load,child:ListView(padding:const EdgeInsets.fromLTRB(18,20,18,110),children:[
   const Text('İşlerim',style:TextStyle(color:ink,fontSize:23,fontWeight:FontWeight.w900)),const SizedBox(height:5),const Text('İlanlarını ve teklif süreçlerini takip et.',style:TextStyle(color:muted,fontSize:11)),const SizedBox(height:17),
   Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFF1F4EE),borderRadius:BorderRadius.circular(13)),child:Row(children:[segmentButton('Paylaştıklarım',0),segmentButton('Teklif Verdiklerim',1)])),
   const SizedBox(height:16),
   if(widget.user==null)EmptyState(title:'Hesabına giriş yap',message:'İşlerini takip etmek için giriş yap.',action:'Giriş yap',onTap:widget.onLogin)
-  else if(segment==1)const EmptyState(title:'Tekliflerin burada görünecek',message:'Teklif geçmişi için sunucuda teklif listeleme servisi henüz bulunmuyor.')
+  else if(segment==1)offers.isEmpty?const EmptyState(title:'Henüz teklif vermedin',message:'İlgini çeken bir ilanda “Ben yaparım” diyerek teklifini iletebilirsin.'):...offers.map((o)=>offerHistoryCard(o))
   else if(busy)const Skeletons()
   else if(error!=null)EmptyState(title:'İşlerin yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)
   else if(tasks.isEmpty)EmptyState(title:'Henüz ilan paylaşmadın',message:'İlk ilanını oluştur ve yakınındaki kişilerden teklif al.',action:'İlan oluştur',onTap:widget.onCreate)
