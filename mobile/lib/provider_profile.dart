@@ -418,3 +418,97 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     );
   }
 }
+
+
+class ReviewComposer extends StatefulWidget {
+  const ReviewComposer({super.key, required this.taskId, this.onDone});
+  final String taskId;
+  final VoidCallback? onDone;
+  @override
+  State<ReviewComposer> createState() => _ReviewComposerState();
+}
+
+class _ReviewComposerState extends State<ReviewComposer> {
+  int rating = 5;
+  final comment = TextEditingController();
+  bool busy = false;
+  String? error;
+
+  @override
+  void dispose() { comment.dispose(); super.dispose(); }
+
+  Future<void> submit() async {
+    setState(() { busy = true; error = null; });
+    try {
+      await DooraApi.instance.submitReview(
+        taskId: widget.taskId,
+        rating: rating,
+        comment: comment.text,
+      );
+      widget.onDone?.call();
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Değerlendirmen yayınlandı.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: _forest,
+        ));
+      }
+    } catch (e) {
+      if (mounted) setState(() => error = DooraApi.instance.errorMessage(e));
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+    child: Container(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      child: SafeArea(top: false, child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('İşi değerlendir', style: TextStyle(
+            color: _ink, fontSize: 18, fontWeight: FontWeight.w900,
+          )),
+          const SizedBox(height: 5),
+          const Text('Deneyimini paylaşarak DOORA topluluğuna katkı sağla.',
+            style: TextStyle(color: _muted, fontSize: 10)),
+          const SizedBox(height: 16),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(5, (index) =>
+            IconButton(
+              onPressed: busy ? null : () => setState(() => rating = index + 1),
+              icon: Icon(index < rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                color: const Color(0xFFE0A83E), size: 34),
+            ),
+          )),
+          Center(child: Text('$rating / 5', style: const TextStyle(
+            color: _ink, fontSize: 12, fontWeight: FontWeight.w800,
+          ))),
+          const SizedBox(height: 12),
+          TextField(controller: comment, maxLength: 1000, maxLines: 3,
+            decoration: const InputDecoration(
+              labelText: 'Yorumun (isteğe bağlı)',
+              hintText: 'İş deneyimini kısaca anlat…',
+            )),
+          if (error != null) Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(error!, style: const TextStyle(color: Colors.red, fontSize: 10)),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(width: double.infinity, child: FilledButton(
+            onPressed: busy ? null : submit,
+            style: FilledButton.styleFrom(backgroundColor: _forest, padding: const EdgeInsets.symmetric(vertical: 14)),
+            child: Text(busy ? 'Gönderiliyor…' : 'Değerlendirmeyi gönder'),
+          )),
+        ],
+      )),
+    ),
+  );
+}
