@@ -294,22 +294,25 @@ class _ConversationPageState extends State<ConversationPage> {
     if (requestInFlight) return;
     requestInFlight = true;
     try {
-      final data = await DooraApi.instance.getConversation(widget.peerId, taskId: widget.taskId);
+      final wasLoading = loading;
+      final data = await DooraApi.instance.getConversation(
+        widget.peerId, taskId: widget.taskId, includePeer: wasLoading);
       final incoming = data['messages'] as List<Map<String, dynamic>>;
       final peer = data['peer'] as Map<String, dynamic>;
       final changed = incoming.length != messages.length ||
           (incoming.isNotEmpty && messages.isNotEmpty && incoming.last['id'] != messages.last['id']);
+      final avatar = peer['avatar_url']?.toString() ?? '';
+      final avatarChanged = avatar.isNotEmpty && avatar != peerAvatar;
       final wasNearBottom = !scroll.hasClients || scroll.position.maxScrollExtent - scroll.position.pixels < 100;
-      if (mounted) setState(() {
+      if (mounted && (changed || wasLoading || error != null || avatarChanged)) setState(() {
         messages = incoming;
-        final avatar = peer['avatar_url']?.toString() ?? '';
-        if (avatar.isNotEmpty) peerAvatar = avatar;
+        if (avatarChanged) peerAvatar = avatar;
         error = null;
         loading = false;
       });
-      if (changed || loading) {
+      if (changed || wasLoading) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (scroll.hasClients && (wasNearBottom || loading)) {
+          if (scroll.hasClients && (wasNearBottom || wasLoading)) {
             scroll.animateTo(scroll.position.maxScrollExtent,
               duration: const Duration(milliseconds: 180), curve: Curves.easeOut);
           }
