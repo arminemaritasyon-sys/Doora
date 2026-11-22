@@ -275,7 +275,7 @@ class DooraApi {
     if (action == 'test_topup') {
       payload['idempotencyKey'] = _uuidV4();
     } else if (action == 'withdraw') {
-      payload['iban'] = iban.replaceAll(RegExp(r'\\s'), '').toUpperCase();
+      payload['iban'] = iban.replaceAll(RegExp(r'\s'), '').toUpperCase();
     } else {
       throw ArgumentError.value(action, 'action', 'Desteklenmeyen cüzdan işlemi');
     }
