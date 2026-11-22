@@ -724,11 +724,30 @@ class TaskDetailSheet extends StatelessWidget {
           const SizedBox(height: 12),
           Text(task.description, style: const TextStyle(color: muted, fontSize: 14, height: 1.6)),
           const SizedBox(height: 20),
-          _InfoLine(icon: PhosphorIconsRegular.mapPin, label: task.location.isEmpty ? 'Konum belirtilmedi' : task.location),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: const Color(0xFFF0F8F3), borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFD8EEE1))),
+            child: Row(children: [
+              Container(width: 42, height: 42, decoration: BoxDecoration(color: white, borderRadius: BorderRadius.circular(13)), child: const Icon(PhosphorIconsRegular.mapPin, color: Color(0xFF087A50))),
+              const SizedBox(width: 11),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('İşin konumu', style: TextStyle(color: muted, fontSize: 10, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 3),
+                Text(task.location.isEmpty ? 'Konum belirtilmedi' : task.location, style: const TextStyle(color: ink, fontSize: 13, fontWeight: FontWeight.w800)),
+              ])),
+              const Icon(PhosphorIconsRegular.navigationArrow, color: Color(0xFF087A50), size: 18),
+            ]),
+          ),
           const SizedBox(height: 10),
           _InfoLine(icon: PhosphorIconsRegular.clock, label: task.time),
           const SizedBox(height: 10),
           _InfoLine(icon: PhosphorIconsRegular.user, label: task.owner),
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            _Pill(text: 'DOORA üyesi', color: const Color(0xFFF1F5F2), foreground: const Color(0xFF53615A)),
+            _Pill(text: '${task.offers} teklif', color: const Color(0xFFEAF7F0), foreground: const Color(0xFF087A50)),
+          ]),
           const SizedBox(height: 23),
           SizedBox(
             width: double.infinity,
@@ -797,6 +816,22 @@ class _OfferPageState extends State<OfferPage> {
       const _FormLabel('Teklif tutarın'),
       const SizedBox(height: 8),
       TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(hintText: 'Örn. 1.500', suffixText: '₺')),
+      const SizedBox(height: 10),
+      Wrap(spacing: 8, runSpacing: 8, children: [
+        for (final factor in [0.9, 1.0, 1.1])
+          ActionChip(
+            label: Text(factor == 1 ? 'İlan bütçesi' : factor < 1 ? '%10 düşük' : '%10 yüksek'),
+            onPressed: () {
+              final value = (widget.task.budget * factor).round();
+              amount.text = value.toString();
+              HapticFeedback.selectionClick();
+              setState(() {});
+            },
+            backgroundColor: const Color(0xFFF0F8F3),
+            side: const BorderSide(color: Color(0xFFD8EEE1)),
+            labelStyle: const TextStyle(color: Color(0xFF087A50), fontSize: 11, fontWeight: FontWeight.w700),
+          ),
+      ]),
       const SizedBox(height: 19),
       const _FormLabel('İlan sahibine mesajın'),
       const SizedBox(height: 8),
@@ -859,7 +894,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
       const SizedBox(height: 25),
       const _FormLabel('İlan başlığı'),
       const SizedBox(height: 8),
-      TextField(controller: title, maxLength: 100, decoration: const InputDecoration(hintText: 'Örn. Evimin temizlenmesini istiyorum')),
+      TextField(controller: title, maxLength: 100, onChanged: (_) => setState(() {}), decoration: const InputDecoration(hintText: 'Örn. Evimin temizlenmesini istiyorum')),
       const SizedBox(height: 15),
       const _FormLabel('Kategori'),
       const SizedBox(height: 8),
@@ -876,7 +911,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
       const SizedBox(height: 15),
       const _FormLabel('Bütçe'),
       const SizedBox(height: 8),
-      TextField(controller: budget, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(hintText: 'Örn. 1.500', suffixText: '₺')),
+      TextField(controller: budget, onChanged: (_) => setState(() {}), keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(hintText: 'Örn. 1.500', suffixText: '₺')),
       const SizedBox(height: 15),
       const _FormLabel('İlçe / Konum'),
       const SizedBox(height: 8),
