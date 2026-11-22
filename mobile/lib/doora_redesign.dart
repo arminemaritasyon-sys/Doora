@@ -309,21 +309,138 @@ class _WalletActionSheetState extends State<WalletActionSheet>{final amount=Text
 class _ProfileItem extends StatelessWidget{const _ProfileItem({required this.icon,required this.title,required this.subtitle,required this.tap});final IconData icon;final String title,subtitle;final VoidCallback tap;@override Widget build(BuildContext c)=>Padding(padding:const EdgeInsets.only(bottom:8),child:ListTile(dense:true,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14),side:const BorderSide(color:line)),tileColor:white,leading:Icon(icon,color:darkGreen),title:Text(title,style:const TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w800)),subtitle:Text(subtitle,style:const TextStyle(color:muted,fontSize:9)),trailing:const Icon(Icons.chevron_right,color:muted),onTap:tap));}
 class HowSheet extends StatelessWidget{const HowSheet({super.key});@override Widget build(BuildContext c)=>SafeArea(child:Padding(padding:const EdgeInsets.all(20),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('DOORA nasıl çalışır?',style:TextStyle(color:ink,fontSize:18,fontWeight:FontWeight.w900)),for(final s in ['İhtiyacını paylaş','Teklifleri değerlendir','İşi tamamla'])ListTile(leading:const CircleAvatar(backgroundColor:mint,child:Icon(Icons.check,color:darkGreen)),title:Text(s,style:const TextStyle(color:ink,fontWeight:FontWeight.w700,fontSize:12)))])));}
 
-class Notifications extends StatefulWidget{const Notifications({super.key});@override State<Notifications> createState()=>_NotificationsState();}
-class _NotificationsState extends State<Notifications>{
- List<Map<String,dynamic>> items=[];bool busy=true,markingAll=false;String? error;
+class Notifications extends StatefulWidget {
+ const Notifications({super.key});
+ @override State<Notifications> createState()=>_NotificationsState();
+}
+class _NotificationsState extends State<Notifications> {
+ List<Map<String,dynamic>> items=[];
+ bool busy=true,markingAll=false;
+ String? error;
  @override void initState(){super.initState();load();}
- Future<void> load()async{setState(()=>busy=true);error=null;try{items=await DooraApi.instance.getNotifications();}catch(e){error=DooraApi.instance.errorMessage(e);}if(mounted)setState(()=>busy=false);}
- Future<void> markRead(Map<String,dynamic> item)async{final id=item['id']?.toString()??'';if(id.isEmpty||item['read_at']!=null)return;setState(()=>item['read_at']=DateTime.now().toIso8601String());try{await DooraApi.instance.markNotificationRead(id);}catch(e){if(mounted)toast(context,DooraApi.instance.errorMessage(e));}}
- Future<void> markAll()async{setState(()=>markingAll=true);try{await DooraApi.instance.markNotificationsRead();if(mounted)setState(()=>items=items.map((n)=>{...n,'read_at':n['read_at']??DateTime.now().toIso8601String()}).toList());}catch(e){if(mounted)toast(context,DooraApi.instance.errorMessage(e));}finally{if(mounted)setState(()=>markingAll=false);}}
- String dateLabel(dynamic raw){final d=DateTime.tryParse(raw?.toString()??'')?.toLocal();if(d==null)return 'Yeni';final now=DateTime.now();if(now.difference(d).inHours<24&&now.day==d.day)return 'Bugün · ${d.hour.toString().padLeft(2,'0')}:${d.minute.toString().padLeft(2,'0')}';return '${d.day.toString().padLeft(2,'0')}.${d.month.toString().padLeft(2,'0')}.${d.year}';}
- IconData iconFor(String type){if(type.contains('offer'))return PhosphorIconsRegular.handshake;if(type.contains('wallet')||type.contains('withdraw'))return PhosphorIconsRegular.wallet;if(type.contains('task')||type.contains('work'))return PhosphorIconsRegular.briefcase;if(type.contains('review'))return PhosphorIconsRegular.star;return PhosphorIconsRegular.bell;}
- @override Widget build(BuildContext c){final unread=items.where((n)=>n['read_at']==null).length;return Scaffold(backgroundColor:bg,appBar:AppBar(backgroundColor:bg,scrolledUnderElevation:0,title:const Text('Bildirimler',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w900)),leading:IconButton(onPressed:()=>Navigator.pop(c),icon:const Icon(Icons.arrow_back_ios_new,size:17,color:ink)),actions:[IconButton(onPressed:busy?null:load,icon:const Icon(Icons.refresh_rounded,color:ink))]),body:SafeArea(child:busy?const Center(child:CircularProgressIndicator(color:darkGreen)):error!=null?Padding(padding:const EdgeInsets.all(18),child:EmptyState(title:'Bildirimler yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)):ListView(padding:const EdgeInsets.fromLTRB(18,8,18,28),children:[
- Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF263B2B),Color(0xFF506B4C)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(21)),child:Row(children:[Container(width:44,height:44,decoration:BoxDecoration(color:white.withValues(alpha:.14),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsFill.bell,color:white,size:22)),const SizedBox(width:13),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Her şeyden haberin olsun.',style:TextStyle(color:white,fontSize:15,fontWeight:FontWeight.w900)),const SizedBox(height:4),Text(unread==0?'Şu an okunmamış bildirimin yok.':'$unread okunmamış bildirimin var.',style:const TextStyle(color:Colors.white70,fontSize:10))])),if(unread>0)Text('$unread',style:const TextStyle(color:white,fontSize:24,fontWeight:FontWeight.w900))]),
- const SizedBox(height:19),Row(children:[const Expanded(child:Text('Son bildirimler',style:TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w900))),if(unread>0)TextButton(onPressed:markingAll?null:markAll,child:Text(markingAll?'İşleniyor…':'Tümünü okundu işaretle',style:const TextStyle(color:darkGreen,fontSize:9,fontWeight:FontWeight.w800)))]),
- if(items.isEmpty)Container(padding:const EdgeInsets.symmetric(vertical:32,horizontal:20),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(19),border:Border.all(color:line)),child:Column(children:[Container(width:58,height:58,decoration:const BoxDecoration(color:mint,shape:BoxShape.circle),child:const Icon(PhosphorIconsRegular.bellSlash,color:darkGreen,size:25)),const SizedBox(height:12),const Text('Şimdilik sessiz',style:TextStyle(color:ink,fontSize:14,fontWeight:FontWeight.w900)),const SizedBox(height:5),const Text('İşlerinle ilgili yeni gelişmeler burada görünecek.',textAlign:TextAlign.center,style:TextStyle(color:muted,fontSize:10,height:1.5))])),
- else ...items.map((n){final read=n['read_at']!=null;final type=n['type']?.toString()??'';return Padding(padding:const EdgeInsets.only(bottom:9),child:Material(color:white,borderRadius:BorderRadius.circular(17),child:InkWell(onTap:()=>markRead(n),borderRadius:BorderRadius.circular(17),child:Container(padding:const EdgeInsets.all(14),decoration:BoxDecoration(borderRadius:BorderRadius.circular(17),border:Border.all(color:read?line:const Color(0xFFD8E3CE)),boxShadow:[if(!read)BoxShadow(color:darkGreen.withValues(alpha:.035),blurRadius:12,offset:const Offset(0,3))]),child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[Container(width:40,height:40,decoration:BoxDecoration(color:read?soft:mint,borderRadius:BorderRadius.circular(13)),child:Icon(iconFor(type),color:darkGreen,size:19)),const SizedBox(width:11),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Expanded(child:Text(n['title']?.toString()??'Bildirim',style:TextStyle(color:ink,fontSize:11,fontWeight:read?FontWeight.w700:FontWeight.w900))),if(!read)Container(width:7,height:7,decoration:const BoxDecoration(color:Color(0xFF76945E),shape:BoxShape.circle))]),const SizedBox(height:4),Text(n['message']?.toString()??'',style:const TextStyle(color:muted,fontSize:10,height:1.45)),const SizedBox(height:7),Text(dateLabel(n['created_at']),style:const TextStyle(color:muted,fontSize:8,fontWeight:FontWeight.w700))]))])))));})
- ])));}
+ Future<void> load() async {
+  setState(()=>busy=true); error=null;
+  try { items=await DooraApi.instance.getNotifications(); }
+  catch(e) { error=DooraApi.instance.errorMessage(e); }
+  if(mounted)setState(()=>busy=false);
+ }
+ Future<void> markRead(Map<String,dynamic> item) async {
+  final id=item['id']?.toString()??'';
+  if(id.isEmpty||item['read_at']!=null)return;
+  setState(()=>item['read_at']=DateTime.now().toIso8601String());
+  try { await DooraApi.instance.markNotificationRead(id); }
+  catch(e) { if(mounted)toast(context,DooraApi.instance.errorMessage(e)); }
+ }
+ Future<void> markAll() async {
+  setState(()=>markingAll=true);
+  try {
+   await DooraApi.instance.markNotificationsRead();
+   if(mounted)setState(()=>items=items.map((n)=>{...n,'read_at':n['read_at']??DateTime.now().toIso8601String()}).toList());
+  } catch(e) { if(mounted)toast(context,DooraApi.instance.errorMessage(e)); }
+  finally { if(mounted)setState(()=>markingAll=false); }
+ }
+ String dateLabel(dynamic raw) {
+  final d=DateTime.tryParse(raw?.toString()??'')?.toLocal();
+  if(d==null)return 'Yeni';
+  final now=DateTime.now();
+  if(now.difference(d).inHours<24&&now.day==d.day)return 'Bugün · ${d.hour.toString().padLeft(2,'0')}:${d.minute.toString().padLeft(2,'0')}';
+  return '${d.day.toString().padLeft(2,'0')}.${d.month.toString().padLeft(2,'0')}.${d.year}';
+ }
+ IconData iconFor(String type) {
+  if(type.contains('offer'))return PhosphorIconsRegular.handshake;
+  if(type.contains('wallet')||type.contains('withdraw'))return PhosphorIconsRegular.wallet;
+  if(type.contains('task')||type.contains('work'))return PhosphorIconsRegular.briefcase;
+  if(type.contains('review'))return PhosphorIconsRegular.star;
+  return PhosphorIconsRegular.bell;
+ }
+ Widget notificationCard(Map<String,dynamic> n) {
+  final read=n['read_at']!=null;
+  final type=n['type']?.toString()??'';
+  return Padding(
+   padding:const EdgeInsets.only(bottom:9),
+   child:Material(
+    color:white,borderRadius:BorderRadius.circular(17),
+    child:InkWell(
+     onTap:()=>markRead(n),borderRadius:BorderRadius.circular(17),
+     child:Container(
+      padding:const EdgeInsets.all(14),
+      decoration:BoxDecoration(
+       borderRadius:BorderRadius.circular(17),
+       border:Border.all(color:read?line:const Color(0xFFD8E3CE)),
+       boxShadow:read?[]:[BoxShadow(color:darkGreen.withValues(alpha:.035),blurRadius:12,offset:const Offset(0,3))],
+      ),
+      child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
+       Container(width:40,height:40,decoration:BoxDecoration(color:read?soft:mint,borderRadius:BorderRadius.circular(13)),child:Icon(iconFor(type),color:darkGreen,size:19)),
+       const SizedBox(width:11),
+       Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Row(children:[
+         Expanded(child:Text(n['title']?.toString()??'Bildirim',style:TextStyle(color:ink,fontSize:11,fontWeight:read?FontWeight.w700:FontWeight.w900))),
+         if(!read)Container(width:7,height:7,decoration:const BoxDecoration(color:Color(0xFF76945E),shape:BoxShape.circle)),
+        ]),
+        const SizedBox(height:4),
+        Text(n['message']?.toString()??'',style:const TextStyle(color:muted,fontSize:10,height:1.45)),
+        const SizedBox(height:7),
+        Text(dateLabel(n['created_at']),style:const TextStyle(color:muted,fontSize:8,fontWeight:FontWeight.w700)),
+       ])),
+      ]),
+     ),
+    ),
+   ),
+  );
+ }
+ @override Widget build(BuildContext c) {
+  final unread=items.where((n)=>n['read_at']==null).length;
+  final children=<Widget>[
+   Container(
+    padding:const EdgeInsets.all(18),
+    decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF263B2B),Color(0xFF506B4C)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(21)),
+    child:Row(children:[
+     Container(width:44,height:44,decoration:BoxDecoration(color:white.withValues(alpha:.14),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsFill.bell,color:white,size:22)),
+     const SizedBox(width:13),
+     Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+      const Text('Her şeyden haberin olsun.',style:TextStyle(color:white,fontSize:15,fontWeight:FontWeight.w900)),
+      const SizedBox(height:4),
+      Text(unread==0?'Şu an okunmamış bildirimin yok.':'$unread okunmamış bildirimin var.',style:const TextStyle(color:Colors.white70,fontSize:10)),
+     ])),
+     if(unread>0)Text('$unread',style:const TextStyle(color:white,fontSize:24,fontWeight:FontWeight.w900)),
+    ]),
+   ),
+   const SizedBox(height:19),
+   Row(children:[
+    const Expanded(child:Text('Son bildirimler',style:TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w900))),
+    if(unread>0)TextButton(onPressed:markingAll?null:markAll,child:Text(markingAll?'İşleniyor…':'Tümünü okundu işaretle',style:const TextStyle(color:darkGreen,fontSize:9,fontWeight:FontWeight.w800))),
+   ]),
+  ];
+  if(items.isEmpty) {
+   children.add(Container(
+    padding:const EdgeInsets.symmetric(vertical:32,horizontal:20),
+    decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(19),border:Border.all(color:line)),
+    child:Column(children:[
+     Container(width:58,height:58,decoration:const BoxDecoration(color:mint,shape:BoxShape.circle),child:const Icon(PhosphorIconsRegular.bellSlash,color:darkGreen,size:25)),
+     const SizedBox(height:12),
+     const Text('Şimdilik sessiz',style:TextStyle(color:ink,fontSize:14,fontWeight:FontWeight.w900)),
+     const SizedBox(height:5),
+     const Text('İşlerinle ilgili yeni gelişmeler burada görünecek.',textAlign:TextAlign.center,style:TextStyle(color:muted,fontSize:10,height:1.5)),
+    ]),
+   ));
+  } else {
+   for(final n in items) { children.add(notificationCard(n)); }
+  }
+  return Scaffold(
+   backgroundColor:bg,
+   appBar:AppBar(
+    backgroundColor:bg,scrolledUnderElevation:0,
+    title:const Text('Bildirimler',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w900)),
+    leading:IconButton(onPressed:()=>Navigator.pop(c),icon:const Icon(Icons.arrow_back_ios_new,size:17,color:ink)),
+    actions:[IconButton(onPressed:busy?null:load,icon:const Icon(Icons.refresh_rounded,color:ink))],
+   ),
+   body:SafeArea(
+    child:busy?const Center(child:CircularProgressIndicator(color:darkGreen)):
+    error!=null?Padding(padding:const EdgeInsets.all(18),child:EmptyState(title:'Bildirimler yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)):
+    ListView(padding:const EdgeInsets.fromLTRB(18,8,18,28),children:children),
+   ),
+  );
+ }
 }
 class AuthPage extends StatefulWidget{const AuthPage({super.key});@override State<AuthPage> createState()=>_AuthPageState();}
 class _AuthPageState extends State<AuthPage>{
