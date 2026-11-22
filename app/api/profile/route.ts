@@ -14,9 +14,9 @@ export async function GET(request: NextRequest) {
         SELECT p.display_name, p.avatar_url, p.district, p.bio,
           COALESCE(p.is_verified, false) AS is_verified,
           COALESCE(u.name, 'DOORA üyesi') AS account_name
-        FROM public.user_profiles p
-        LEFT JOIN neon_auth.user u ON u.id::text = p.user_id
-        WHERE p.user_id = ${publicUserId}
+        FROM neon_auth.user u
+        LEFT JOIN public.user_profiles p ON p.user_id = u.id::text
+        WHERE u.id::text = ${publicUserId}
         LIMIT 1
       `;
       if (!profile) return NextResponse.json({ error: "Profil bulunamadı." }, { status: 404 });
