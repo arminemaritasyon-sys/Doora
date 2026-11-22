@@ -378,7 +378,7 @@ class _HeroPanel extends StatelessWidget {
     ),
     child: Stack(children: [
       Positioned(right: -43, top: -58, child: Container(width: 190, height: 190, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: white.withValues(alpha: .075), width: 29)))),
-      Positioned(right: 10, bottom: -34, child: Icon(PhosphorIconsDuotone.compassTool, size: 126, color: white.withValues(alpha: .075))),
+      Positioned(right: 10, bottom: -34, child: Icon(PhosphorIconsDuotone.sparkle, size: 126, color: white.withValues(alpha: .075))),
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -534,7 +534,7 @@ class JobCard extends StatelessWidget {
           Row(children: [
             if (task.ownerAvatar.isNotEmpty)
               ClipOval(child: CachedNetworkImage(
-                imageUrl: task.ownerAvatar,
+                imageUrl: task.ownerAvatar.startsWith('http') ? task.ownerAvatar : 'https://doora.arminemaritasyon.workers.dev' + task.ownerAvatar,
                 width: 27, height: 27, fit: BoxFit.cover,
                 placeholder: (_, __) => _OwnerInitial(name: task.owner),
                 errorWidget: (_, __, ___) => _OwnerInitial(name: task.owner),
