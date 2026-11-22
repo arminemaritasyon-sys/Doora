@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'theme/doora_theme.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -71,24 +71,7 @@ class _DooraAppState extends State<DooraApp> {
     return MaterialApp(
       title: 'DOORA',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        textTheme: GoogleFonts.manropeTextTheme(ThemeData.light().textTheme),
-        scaffoldBackgroundColor: paper,
-        colorScheme: ColorScheme.fromSeed(seedColor: forest, brightness: Brightness.light),
-        splashFactory: InkSparkle.splashFactory,
-        textSelectionTheme: const TextSelectionThemeData(cursorColor: forest, selectionHandleColor: forest),
-        appBarTheme: const AppBarTheme(backgroundColor: paper, foregroundColor: ink, elevation: 0, centerTitle: false),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: white,
-          hintStyle: const TextStyle(color: muted, fontSize: 14),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: line)),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: green, width: 1.4)),
-        ),
-      ),
+      theme: DooraTheme.light,
       home: loading ? const LaunchScreen() : DooraShell(
         user: user,
         onLogin: _openAuth,
