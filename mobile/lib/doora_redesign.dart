@@ -37,7 +37,7 @@ class _DiscoverState extends State<Discover>{final search=TextEditingController(
  SizedBox(height:80,child:ListView(scrollDirection:Axis.horizontal,children:[categoryTile('Tümü',PhosphorIconsRegular.squaresFour),...categories.map((v)=>categoryTile(v,catIcon(v)))])),
  const SizedBox(height:12),Container(height:47,padding:const EdgeInsets.symmetric(horizontal:12),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(14),border:Border.all(color:line)),child:Row(children:[const Icon(Icons.search,color:muted,size:19),const SizedBox(width:8),Expanded(child:TextField(controller:search,onSubmitted:(_)=>load(),decoration:const InputDecoration(border:InputBorder.none,hintText:'Hangi işi arıyorsun?',hintStyle:TextStyle(fontSize:11,color:muted)))),InkWell(onTap:load,child:const Icon(Icons.arrow_forward,color:green,size:18))])),
  const SizedBox(height:20),Row(children:[const Expanded(child:Text('Yakınındaki işler',style:TextStyle(color:ink,fontSize:16,fontWeight:FontWeight.w800))),PopupMenuButton<String>(onSelected:(v){setState(()=>sort=v);load();},itemBuilder:(_)=>['En yeni','En düşük bütçe','En yüksek bütçe'].map((v)=>PopupMenuItem(value:v,child:Text(v))).toList(),child:Row(children:[Text(sort,style:const TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700)),const Icon(Icons.keyboard_arrow_down,color:muted,size:16)]))]),
- const SizedBox(height:10),if(busy)const Skeletons()else if(error!=null)EmptyState(title:'İlanlar yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)else if(tasks.isEmpty)EmptyState(title:'Henüz ilan yok',message:'Bu bölgede listelenecek bir iş bulamadık. İlk ilanı sen oluşturabilirsin.',action:'İlan oluştur',onTap:widget.onCreate)else ...tasks.map((t)=>Padding(padding:const EdgeInsets.only(bottom:10),child:TaskCard(task:t,saved:saved.contains(t.id),onSave:()=>save(t),onTap:()=>openTask(c,t,widget.user,widget.onLogin,load))))
+ const SizedBox(height:10),if(busy)const Skeletons()else if(error!=null)EmptyState(title:'İlanlar yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)else if(tasks.isEmpty)EmptyState(title:'Henüz ilan yok',message:'Bu bölgede listelenecek bir iş bulamadık. İlk ilanı sen oluşturabilirsin.',action:'İlan oluştur',onTap:widget.onCreate)else ...tasks.map((t)=>Padding(padding:const EdgeInsets.only(bottom:10),child:TaskCard(task:t,saved:saved.contains(t.id),onSave:()=>save(t),onTap:()=>openTask(c,t,widget.user,widget.onLogin,load),onOffer:(){if(widget.user==null){widget.onLogin();}else{showModalBottomSheet(context:c,isScrollControlled:true,backgroundColor:Colors.transparent,builder:(_)=>OfferSheet(task:t,onSent:load));}})))
  ])));
  Widget categoryTile(String value,IconData icon){final active=category==value;return GestureDetector(onTap:(){setState(()=>category=value);load();},child:SizedBox(width:65,child:Column(children:[AnimatedContainer(duration:const Duration(milliseconds:180),width:52,height:52,decoration:BoxDecoration(color:active?green:const Color(0xFFEAF0EF),borderRadius:BorderRadius.circular(16)),child:Icon(icon,color:active?white:ink,size:22)),const SizedBox(height:6),Text(value,style:TextStyle(color:active?darkGreen:ink,fontSize:9,fontWeight:FontWeight.w700))])));}
 }
@@ -55,8 +55,8 @@ class _TaskAvatar extends StatelessWidget {
 }
 
 class TaskCard extends StatelessWidget {
- const TaskCard({super.key,required this.task,required this.onTap,this.saved=false,this.onSave});
- final DooraTask task; final VoidCallback onTap; final bool saved; final VoidCallback? onSave;
+ const TaskCard({super.key,required this.task,required this.onTap,this.saved=false,this.onSave,this.onOffer});
+ final DooraTask task; final VoidCallback onTap; final bool saved; final VoidCallback? onSave,onOffer;
  @override Widget build(BuildContext context)=>Material(
   color:white,borderRadius:BorderRadius.circular(18),
   child:InkWell(onTap:onTap,borderRadius:BorderRadius.circular(18),child:Container(
@@ -86,7 +86,7 @@ class TaskCard extends StatelessWidget {
      ])
     ]),
     const SizedBox(height:10),
-    SizedBox(width:double.infinity,height:38,child:OutlinedButton(onPressed:onTap,style:OutlinedButton.styleFrom(foregroundColor:darkGreen,side:const BorderSide(color:line),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(11))),child:const Text('İlanı incele',style:TextStyle(fontSize:10,fontWeight:FontWeight.w800))))
+    SizedBox(width:double.infinity,height:39,child:FilledButton(onPressed:onOffer??onTap,style:FilledButton.styleFrom(backgroundColor:onOffer==null?soft:darkGreen,foregroundColor:onOffer==null?darkGreen:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(11))),child:Text(onOffer==null?'İlanı incele':'Ben yaparım',style:const TextStyle(fontSize:10,fontWeight:FontWeight.w800))))
    ])
   ))
  );
