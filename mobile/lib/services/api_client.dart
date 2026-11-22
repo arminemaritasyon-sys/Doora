@@ -113,6 +113,13 @@ class DooraApi {
     return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
+  Future<List<Map<String, dynamic>>> getMyTasks() async {
+    final response = await _dio.get('/api/tasks', queryParameters: {'mine': '1'});
+    final rows = _asMap(response.data)['tasks'];
+    if (rows is! List) return [];
+    return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
   Future<List<Map<String, dynamic>>> getNearbyTasks() async {
     final response = await _dio.get('/api/tasks/nearby');
     final rows = _asMap(response.data)['tasks'];
@@ -177,6 +184,14 @@ class DooraApi {
   Future<Map<String, dynamic>> getPublicProfile(String userId) async {
     final response = await _dio.get('/api/profile', queryParameters: {'userId': userId});
     return _asMap(_asMap(response.data)['profile']);
+  }
+
+  Future<void> submitReview({required String taskId, required int rating, required String comment}) async {
+    await _dio.post('/api/reviews', data: {
+      'taskId': taskId,
+      'rating': rating,
+      'comment': comment.trim(),
+    });
   }
 
   Future<Map<String, dynamic>> getProviderReviews(String userId) async {
