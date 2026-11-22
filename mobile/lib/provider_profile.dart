@@ -47,18 +47,25 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
   }
 
   Future<void> load() async {
+    if (widget.userId.trim().isEmpty) {
+      if (mounted) setState(() { loading = false; error = 'Hizmet veren bilgisi bulunamadı.'; });
+      return;
+    }
     if (mounted) setState(() { loading = true; error = null; });
     try {
-      final values = await Future.wait([
-        DooraApi.instance.getPublicProfile(widget.userId),
-        DooraApi.instance.getPortfolio(widget.userId),
-        DooraApi.instance.getProviderReviews(widget.userId),
-      ]);
+      // Profil ana içeriktir. Portföy ve yorum servislerinden biri geçici
+      // olarak hata verse bile hizmet veren sayfası tamamen kapanmamalı.
+      final publicProfile = await DooraApi.instance.getPublicProfile(widget.userId);
+      if (publicProfile.isEmpty) throw StateError('Hizmet veren profili bulunamadı.');
+      List<Map<String, dynamic>> works = [];
+      Map<String, dynamic> reviews = {};
+      try { works = await DooraApi.instance.getPortfolio(widget.userId); } catch (_) {}
+      try { reviews = await DooraApi.instance.getProviderReviews(widget.userId); } catch (_) {}
       if (!mounted) return;
       setState(() {
-        profile = values[0] as Map<String, dynamic>;
-        portfolio = (values[1] as List<Map<String, dynamic>>);
-        reviewData = values[2] as Map<String, dynamic>;
+        profile = publicProfile;
+        portfolio = works;
+        reviewData = reviews;
       });
     } catch (e) {
       if (mounted) setState(() => error = DooraApi.instance.errorMessage(e));
