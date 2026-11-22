@@ -306,6 +306,26 @@ class DooraApi {
     };
   }
 
+  Future<void> deleteConversation(String peerId, {String? taskId}) async {
+    await _dio.delete('/api/messages', data: {
+      'peerId': peerId,
+      if (taskId != null && taskId.isNotEmpty) 'taskId': taskId,
+    });
+  }
+
+  Future<void> blockUser(String userId) async {
+    await _dio.post('/api/safety', data: {'action': 'block', 'userId': userId});
+  }
+
+  Future<void> reportUser(String userId, {required String category, String details = ''}) async {
+    await _dio.post('/api/safety', data: {
+      'action': 'report',
+      'userId': userId,
+      'category': category,
+      'details': details,
+    });
+  }
+
   Future<void> sendMessage(String recipientId, String message, {String? taskId}) async {
     await _dio.post('/api/messages', data: {
       'recipientId': recipientId,
@@ -354,11 +374,34 @@ class DooraApi {
 
   String errorMessage(Object error) {
     if (error is DioException) {
+      final path = error.requestOptions.path.toLowerCase();
       final data = error.response?.data;
-      if (data is Map) {
-        final message = data['message'] ?? data['error'];
-        if (message is String && message.isNotEmpty) return message;
+      final raw = data is Map ? (data['message'] ?? data['error'] ?? data['code']) : null;
+      final message = raw?.toString().trim() ?? '';
+      final normalized = message.toLowerCase();
+      if (path.contains('sign-in') || path.contains('login')) {
+        if (error.response?.statusCode == 401 || normalized.contains('invalid') ||
+            normalized.contains('password') || normalized.contains('credential')) {
+          return 'E-posta adresi veya şifre hatalı. Bilgilerini kontrol et.';
+        }
       }
+      if (error.response?.statusCode == 409 ||
+          normalized.contains('already exists') || normalized.contains('already registered')) {
+        return 'Bu e-posta adresiyle daha önce hesap oluşturulmuş.';
+      }
+      if (normalized.contains('invalid email')) return 'Geçerli bir e-posta adresi gir.';
+      if (normalized.contains('password') && normalized.contains('length')) return 'Şifren en az 8 karakter olmalı.';
+      if (normalized.contains('too many')) return 'Çok fazla deneme yaptın. Biraz bekleyip tekrar dene.';
+      if (message.isNotEmpty && !RegExp(r'^[A-Z_]+
+
+  Map<String, dynamic> _asMap(dynamic value) =>
+      value is Map ? Map<String, dynamic>.from(value) : <String, dynamic>{};
+}
+).hasMatch(message)) return message;
+      if (error.response?.statusCode == 401) return 'Oturumun sona ermiş. Yeniden giriş yap.';
+      if (error.response?.statusCode == 403) return 'Bu işlem için yetkin bulunmuyor.';
+      if (error.response?.statusCode == 404) return 'Aradığın kayıt bulunamadı.';
+      if (error.response?.statusCode == 429) return 'Çok fazla istek gönderdin. Biraz bekleyip tekrar dene.';
       if (error.type == DioExceptionType.connectionTimeout ||
           error.type == DioExceptionType.receiveTimeout ||
           error.type == DioExceptionType.connectionError) {
