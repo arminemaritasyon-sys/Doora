@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:reicons/reicons.dart';
@@ -1020,6 +1022,7 @@ class _AccountPageState extends State<AccountPage> {
       else ...[
         _AccountRow(icon: PhosphorIconsRegular.userCircle, title: 'Profil bilgilerim', subtitle: 'Adın, konumun ve kendini tanıt', onTap: () => Navigator.of(context).push(_route(EditProfilePage(profile: profile, onSaved: load)))),
         _AccountRow(icon: PhosphorIconsRegular.bell, title: 'Bildirimler', subtitle: 'İş ve teklif bildirimlerini görüntüle', onTap: () => Navigator.of(context).push(_route(const NotificationsPage()))),
+        _AccountRow(icon: PhosphorIconsRegular.images, title: 'Hizmet portföyüm', subtitle: 'Yaptığın işleri fotoğraflarla sergile', onTap: () => Navigator.of(context).push(_route(PortfolioPage(userId: widget.user?['id']?.toString() ?? '')))),
         _AccountRow(icon: PhosphorIconsRegular.shieldCheck, title: 'Güvenli kullanım', subtitle: 'DOORA’da güvenli işlem önerileri', onTap: () => _showInfo(context, 'Güvenli kullanım', 'Ödeme ve iş detaylarını DOORA üzerinden takip et. Kişisel bilgilerini ve doğrulama kodlarını kimseyle paylaşma.')),
         _AccountRow(icon: PhosphorIconsRegular.headset, title: 'Yardım ve destek', subtitle: 'Destek ekibine ulaş', onTap: () => _showInfo(context, 'Yardım ve destek', 'Destek kanalı bu yerel uygulama sürümüne henüz bağlanmadı.')),
         const SizedBox(height: 14),
