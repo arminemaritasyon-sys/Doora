@@ -34,7 +34,7 @@ jobs:
           source = manifest.read_text()
           permission = '    <uses-permission android:name="android.permission.INTERNET" />\n'
           if 'android.permission.INTERNET' not in source:
-              source = re.sub(r'(<manifest[^>]*>\\s*)', r'\\1' + permission, source, count=1)
+              source = re.sub(r'(<manifest[^>]*>\s*)', r'\1' + permission, source, count=1)
               manifest.write_text(source)
           print('Release manifest includes INTERNET permission:', 'android.permission.INTERNET' in manifest.read_text())
           PY
