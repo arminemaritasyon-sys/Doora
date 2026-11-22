@@ -549,43 +549,6 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) => Text(value, style: const TextStyle(color: ink, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -.45));
 }
 
-class _CategoryTile extends StatelessWidget {
-  const _CategoryTile({required this.label, required this.icon, required this.selected, required this.onTap});
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) => Material(
-    color: Colors.transparent,
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        width: 82,
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 7),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFFE8F1EA) : white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: selected ? const Color(0xFFC8DCCF) : const Color(0xFFE8EDE9)),
-        ),
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 39, height: 39,
-            decoration: BoxDecoration(color: selected ? forest : const Color(0xFFF1F4F1), borderRadius: BorderRadius.circular(13)),
-            child: Icon(icon, color: selected ? white : const Color(0xFF597567), size: 20),
-          ),
-          const SizedBox(height: 8),
-          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: selected ? forest : const Color(0xFF53615A), fontSize: 10, fontWeight: FontWeight.w800)),
-        ]),
-      ),
-    ),
-  );
-}
-
 IconData _categoryIcon(String value) {
   switch (value) {
     case 'Ev işleri': return PhosphorIconsRegular.broom;
