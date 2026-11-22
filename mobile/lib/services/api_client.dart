@@ -167,6 +167,11 @@ class DooraApi {
     return _asMap(_asMap(response.data)['profile']);
   }
 
+  Future<Map<String, dynamic>> getPublicProfile(String userId) async {
+    final response = await _dio.get('/api/profile', queryParameters: {'userId': userId});
+    return _asMap(_asMap(response.data)['profile']);
+  }
+
   Future<void> updateProfile({
     required String name,
     required String district,
