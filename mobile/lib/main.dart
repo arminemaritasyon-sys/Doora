@@ -152,7 +152,7 @@ class _DooraShellState extends State<DooraShell> {
     final pages = [
       DiscoverPage(user: widget.user, onLogin: widget.onLogin, onCreate: _createTask, refreshKey: refreshKey),
       MyWorkPage(user: widget.user, onLogin: widget.onLogin, onCreate: _createTask, refreshKey: refreshKey),
-      MessagesPage(user: widget.user, onLogin: widget.onLogin),
+      SavedPage(user: widget.user, onLogin: widget.onLogin),
       AccountPage(user: widget.user, onLogin: widget.onLogin, onSignOut: widget.onSignOut, onUserChanged: widget.onUserChanged),
     ];
     return Scaffold(
@@ -200,7 +200,7 @@ class _BottomDock extends StatelessWidget {
             child: const Icon(PhosphorIconsRegular.plus, color: white, size: 25),
           ).animate().scale(duration: 280.ms, curve: Curves.easeOutBack),
         ))),
-        _DockItem(icon: PhosphorIconsRegular.chatCircleDots, label: 'Mesajlar', selected: selected == 2, onTap: () => onSelect(2)),
+        _DockItem(icon: PhosphorIconsRegular.bookmarkSimple, label: 'Kaydedilen', selected: selected == 2, onTap: () => onSelect(2)),
         _DockItem(icon: ReiconIcons.userCircle, label: 'Hesabım', selected: selected == 3, onTap: () => onSelect(3)),
       ]),
     ),
@@ -251,7 +251,10 @@ class _DiscoverPageState extends State<DiscoverPage> {
   bool loading = true;
   String? error;
   String category = 'Tümü';
-  static const categories = ['Tümü', 'Temizlik', 'Tamir', 'Nakliye', 'Alışveriş', 'Montaj', 'Diğer'];
+  String district = 'Tüm Antalya';
+  String sort = 'En yeni';
+  static const districts = ['Tüm Antalya', 'Muratpaşa', 'Konyaaltı', 'Kepez', 'Aksu', 'Döşemealtı'];
+  static const categories = ['Tümü', 'Alışveriş', 'Teslimat', 'Ev işleri', 'Taşıma', 'Tamir', 'Diğer'];
 
   @override
   void initState() { super.initState(); load(); }
@@ -280,7 +283,13 @@ class _DiscoverPageState extends State<DiscoverPage> {
         savedIds = <String>{};
       }
       if (!mounted) return;
-      setState(() => tasks = rows.map(DooraTask.fromJson).toList());
+      var parsed = rows.map(DooraTask.fromJson).toList();
+      if (district != 'Tüm Antalya') {
+        parsed = parsed.where((task) => task.location.toLowerCase().contains(district.toLowerCase())).toList();
+      }
+      if (sort == 'En düşük bütçe') parsed.sort((a, b) => a.budget.compareTo(b.budget));
+      if (sort == 'En yüksek bütçe') parsed.sort((a, b) => b.budget.compareTo(a.budget));
+      setState(() => tasks = parsed);
     } catch (e) {
       if (!mounted) return;
       setState(() => error = DooraApi.instance.errorMessage(e));
@@ -321,7 +330,15 @@ class _DiscoverPageState extends State<DiscoverPage> {
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 125),
             sliver: SliverList(delegate: SliverChildListDelegate([
-              _HomeHeader(user: widget.user, onLogin: widget.onLogin),
+              _HomeHeader(
+                user: widget.user,
+                onLogin: widget.onLogin,
+                district: district,
+                onDistrictChanged: (value) {
+                  setState(() => district = value);
+                  load();
+                },
+              ),
               const SizedBox(height: 23),
               _HeroPanel(onCreate: widget.onCreate).animate().fadeIn(duration: 450.ms).slideY(begin: .05),
               const SizedBox(height: 25),
@@ -348,7 +365,30 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   },
                 ),
               ),
-              const SizedBox(height: 27),
+              const SizedBox(height: 23),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(children: [
+                  for (final option in ['En yeni', 'En düşük bütçe', 'En yüksek bütçe'])
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(option),
+                        selected: sort == option,
+                        onSelected: (_) {
+                          setState(() => sort = option);
+                          load();
+                        },
+                        selectedColor: const Color(0xFFDDF7EB),
+                        backgroundColor: white,
+                        side: BorderSide(color: sort == option ? const Color(0xFF86DDB7) : line),
+                        labelStyle: TextStyle(color: sort == option ? const Color(0xFF087A50) : muted, fontSize: 11, fontWeight: FontWeight.w700),
+                        showCheckmark: false,
+                      ),
+                    ),
+                ]),
+              ),
+              const SizedBox(height: 24),
               Row(children: [
                 const Expanded(child: _SectionTitle('Yakınındaki işler')),
                 Text(tasks.length.toString() + ' ilan', style: const TextStyle(color: muted, fontSize: 12, fontWeight: FontWeight.w600)),
@@ -376,9 +416,11 @@ class _DiscoverPageState extends State<DiscoverPage> {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.user, required this.onLogin});
+  const _HomeHeader({required this.user, required this.onLogin, required this.district, required this.onDistrictChanged});
   final Map<String, dynamic>? user;
   final VoidCallback onLogin;
+  final String district;
+  final ValueChanged<String> onDistrictChanged;
   @override
   Widget build(BuildContext context) {
     final name = user?['name']?.toString().split(' ').first ?? 'Merhaba';
@@ -393,6 +435,22 @@ class _HomeHeader extends StatelessWidget {
         const Text('DOORA', style: TextStyle(color: ink, fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2)),
         Text(user == null ? 'Günlük işler, kolay çözümler.' : 'Tekrar hoş geldin, ' + name, style: const TextStyle(color: muted, fontSize: 11)),
       ])),
+      PopupMenuButton<String>(
+        onSelected: onDistrictChanged,
+        tooltip: 'İlçe seç',
+        itemBuilder: (_) => _DiscoverPageState.districts.map((item) => PopupMenuItem(value: item, child: Text(item))).toList(),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
+          decoration: BoxDecoration(color: const Color(0xFFEAF7F0), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFCDEBDD))),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(PhosphorIconsRegular.mapPin, size: 14, color: Color(0xFF087A50)),
+            const SizedBox(width: 5),
+            ConstrainedBox(constraints: const BoxConstraints(maxWidth: 88), child: Text(district, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF087A50), fontSize: 10, fontWeight: FontWeight.w800))),
+            const Icon(PhosphorIconsRegular.caretDown, size: 12, color: Color(0xFF087A50)),
+          ]),
+        ),
+      ),
+      const SizedBox(width: 7),
       _RoundIconButton(icon: PhosphorIconsRegular.bell, onTap: () {
         if (user == null) { onLogin(); return; }
         Navigator.of(context).push(_route(const NotificationsPage()));
@@ -515,11 +573,11 @@ class _CategoryTile extends StatelessWidget {
 
 IconData _categoryIcon(String value) {
   switch (value) {
-    case 'Temizlik': return PhosphorIconsRegular.broom;
+    case 'Ev işleri': return PhosphorIconsRegular.broom;
+    case 'Teslimat': return PhosphorIconsRegular.package;
+    case 'Taşıma': return PhosphorIconsRegular.truck;
     case 'Tamir': return PhosphorIconsRegular.wrench;
-    case 'Nakliye': return PhosphorIconsRegular.truck;
     case 'Alışveriş': return PhosphorIconsRegular.shoppingBag;
-    case 'Montaj': return PhosphorIconsRegular.hammer;
     default: return PhosphorIconsRegular.squaresFour;
   }
 }
@@ -914,6 +972,96 @@ class _Segment extends StatelessWidget {
       child: Text(label, textAlign: TextAlign.center, style: TextStyle(color: selected ? ink : muted, fontSize: 11, fontWeight: FontWeight.w800)),
     ),
   ));
+}
+
+class SavedPage extends StatefulWidget {
+  const SavedPage({super.key, required this.user, required this.onLogin});
+  final Map<String, dynamic>? user;
+  final VoidCallback onLogin;
+  @override
+  State<SavedPage> createState() => _SavedPageState();
+}
+
+class _SavedPageState extends State<SavedPage> {
+  List<DooraTask> tasks = [];
+  bool loading = true;
+  String? error;
+
+  @override
+  void initState() { super.initState(); load(); }
+
+  Future<void> load() async {
+    if (widget.user == null) {
+      if (mounted) setState(() { tasks = []; loading = false; });
+      return;
+    }
+    setState(() { loading = true; error = null; });
+    try {
+      final ids = await DooraApi.instance.getSavedTaskIds();
+      final all = await DooraApi.instance.getTasks();
+      final rows = all.map(DooraTask.fromJson).where((task) => ids.contains(task.id)).toList();
+      if (mounted) setState(() => tasks = rows);
+    } catch (e) {
+      if (mounted) setState(() => error = DooraApi.instance.errorMessage(e));
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> remove(DooraTask task) async {
+    setState(() => tasks.removeWhere((item) => item.id == task.id));
+    try {
+      await DooraApi.instance.toggleSavedTask(task.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(DooraApi.instance.errorMessage(e))));
+        load();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    child: RefreshIndicator(
+      color: const Color(0xFF10B981),
+      onRefresh: load,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 125),
+        children: [
+          const Text('Kaydedilenler', style: TextStyle(color: ink, fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -.8)),
+          const SizedBox(height: 6),
+          const Text('Daha sonra incelemek istediklerin burada.', style: TextStyle(color: muted, fontSize: 13)),
+          const SizedBox(height: 22),
+          if (widget.user == null)
+            _EmptyState(icon: PhosphorIconsRegular.bookmarkSimple, title: 'Kaydettiklerini gör', description: 'İlanları kaydetmek ve daha sonra ulaşmak için giriş yap.', action: 'Giriş yap', onTap: widget.onLogin)
+          else if (loading)
+            const _LoadingList()
+          else if (error != null)
+            _EmptyState(icon: PhosphorIconsRegular.wifiSlash, title: 'Kaydedilenler yüklenemedi', description: error!, action: 'Tekrar dene', onTap: load)
+          else if (tasks.isEmpty)
+            const _EmptyState(icon: PhosphorIconsRegular.bookmarkSimple, title: 'Henüz kayıt yok', description: 'Beğendiğin ilanların üzerindeki yer imi simgesine dokun. Burada saklayalım.')
+          else
+            ...tasks.map((task) => Dismissible(
+              key: ValueKey(task.id),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 22),
+                decoration: BoxDecoration(color: const Color(0xFFFFE8E6), borderRadius: BorderRadius.circular(22)),
+                child: const Icon(PhosphorIconsRegular.trash, color: Color(0xFFB64B43)),
+              ),
+              onDismissed: (_) => remove(task),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: JobCard(task: task, saved: true, onSave: () => remove(task), onTap: () => _openTask(context, task, widget.user, widget.onLogin, onChanged: load)),
+              ),
+            )),
+        ],
+      ),
+    ),
+  );
 }
 
 class MessagesPage extends StatelessWidget {
