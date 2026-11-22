@@ -1234,6 +1234,34 @@ class _AccountPageState extends State<AccountPage> {
         _AccountRow(icon: PhosphorIconsRegular.userCircle, title: 'Profil bilgilerim', subtitle: 'Adın, konumun ve kendini tanıt', onTap: () => Navigator.of(context).push(_route(EditProfilePage(profile: profile, onSaved: load)))),
         _AccountRow(icon: PhosphorIconsRegular.bell, title: 'Bildirimler', subtitle: 'İş ve teklif bildirimlerini görüntüle', onTap: () => Navigator.of(context).push(_route(const NotificationsPage()))),
         _AccountRow(icon: PhosphorIconsRegular.images, title: 'Hizmet portföyüm', subtitle: 'Yaptığın işleri fotoğraflarla sergile', onTap: () => Navigator.of(context).push(_route(PortfolioPage(userId: widget.user?['id']?.toString() ?? '')))),
+        _AccountRow(icon: PhosphorIconsRegular.lightbulb, title: 'Nasıl çalışır?', subtitle: 'DOORA’yı 3 kısa adımda keşfet', onTap: () => showModalBottomSheet(
+          context: context,
+          showDragHandle: true,
+          isScrollControlled: true,
+          backgroundColor: white,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+          builder: (context) => SafeArea(child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 8, 22, 30),
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('DOORA nasıl çalışır?', style: TextStyle(color: ink, fontSize: 22, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 18),
+              for (final step in [
+                ('01', 'İhtiyacını paylaş', 'Yapılmasını istediğin işi, konumunu ve bütçeni belirterek ilan oluştur.'),
+                ('02', 'Teklifleri değerlendir', 'Yakınındaki kişilerden gelen teklifleri incele, sana uygun olanı seç.'),
+                ('03', 'İşi tamamla', 'İşin detaylarını netleştir, tamamlandığında süreci DOORA üzerinden takip et.'),
+              ])
+                Padding(padding: const EdgeInsets.only(bottom: 15), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Container(width: 42, height: 42, alignment: Alignment.center, decoration: BoxDecoration(color: const Color(0xFFEAF7F0), borderRadius: BorderRadius.circular(14)), child: Text(step.$1, style: const TextStyle(color: Color(0xFF087A50), fontWeight: FontWeight.w900))),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(step.$2, style: const TextStyle(color: ink, fontSize: 14, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 4),
+                    Text(step.$3, style: const TextStyle(color: muted, fontSize: 12, height: 1.45)),
+                  ])),
+                ])),
+            ]),
+          )),
+        )),
         _AccountRow(icon: PhosphorIconsRegular.shieldCheck, title: 'Güvenli kullanım', subtitle: 'DOORA’da güvenli işlem önerileri', onTap: () => _showInfo(context, 'Güvenli kullanım', 'Ödeme ve iş detaylarını DOORA üzerinden takip et. Kişisel bilgilerini ve doğrulama kodlarını kimseyle paylaşma.')),
         _AccountRow(icon: PhosphorIconsRegular.headset, title: 'Yardım ve destek', subtitle: 'Destek ekibine ulaş', onTap: () => _showInfo(context, 'Yardım ve destek', 'Destek kanalı bu yerel uygulama sürümüne henüz bağlanmadı.')),
         const SizedBox(height: 14),
