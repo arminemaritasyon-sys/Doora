@@ -285,7 +285,6 @@ class _MyTasksState extends State<MyTasks> {
   }
   if(mounted)setState(()=>busy=false);
  }
- Widget segmentButton(String label,int index)=>Expanded(child:GestureDetector(onTap:()=>setState(()=>segment=index),child:Container(padding:const EdgeInsets.symmetric(vertical:11),decoration:BoxDecoration(color:segment==index?white:Colors.transparent,borderRadius:BorderRadius.circular(10)),child:Text(label,textAlign:TextAlign.center,style:TextStyle(color:segment==index?ink:muted,fontSize:10,fontWeight:FontWeight.w800)))));
  Widget offerSection(){
   if(offersError!=null)return EmptyState(title:'Tekliflerin yüklenemedi',message:offersError!,action:'Tekrar dene',onTap:load);
   if(offers.isEmpty)return const EmptyState(title:'Henüz teklif vermedin',message:'İlgini çeken bir ilanda “Ben yaparım” diyerek teklifini iletebilirsin.');
@@ -405,15 +404,13 @@ class Profile extends StatefulWidget {
 }
 class _ProfileState extends State<Profile> {
  Map<String,dynamic>? wallet; Map<String,dynamic> profile={};
- bool loadingWallet=false,loadingProfile=false; String? walletError;
+ bool loadingWallet=false; String? walletError;
  @override void initState(){super.initState();if(widget.user!=null){loadWallet();loadProfile();}}
  @override void didUpdateWidget(covariant Profile old){super.didUpdateWidget(old);if(old.user!=widget.user){wallet=null;profile={};walletError=null;if(widget.user!=null){loadWallet();loadProfile();}}}
  Future<void> loadProfile()async{
   if(widget.user==null)return;
-  setState(()=>loadingProfile=true);
   try{final value=await DooraApi.instance.getProfile();if(mounted)setState(()=>profile=value);}
   catch(_){}
-  finally{if(mounted)setState(()=>loadingProfile=false);}
  }
  Future<void> refreshAccount()async{await Future.wait([loadWallet(),loadProfile()]);}
  Future<void> loadWallet()async{
