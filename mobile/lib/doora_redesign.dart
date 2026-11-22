@@ -5,6 +5,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'models/doora_task.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
+import 'provider_profile.dart';
 
 const bg=Color(0xFFF7F8F5), white=Colors.white, ink=Color(0xFF20251F), muted=Color(0xFF7A8474), line=Color(0xFFE8EDE4), green=Color(0xFFA9B98E), darkGreen=Color(0xFF263B2B), mint=Color(0xFFEDF1E9), soft=Color(0xFFF5F7F2);
 const districts=['Muratpaşa','Konyaaltı','Kepez','Aksu','Döşemealtı'];
@@ -113,7 +114,7 @@ class TaskDetail extends StatelessWidget {
      const SizedBox(height:12),Text(task.location.isEmpty?'Antalya':task.location,style:const TextStyle(color:muted,fontSize:11)),
      const Divider(height:28,color:line),const Text('İşin detayları',style:TextStyle(color:ink,fontSize:14,fontWeight:FontWeight.w800)),
      const SizedBox(height:8),Text(task.description.isEmpty?'İlan sahibi henüz açıklama eklememiş.':task.description,style:const TextStyle(color:muted,fontSize:12,height:1.6)),
-     const SizedBox(height:18),ListTile(tileColor:soft,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(15)),leading:_TaskAvatar(name:task.owner,url:task.ownerAvatar,radius:21),title:Text(task.owner,style:const TextStyle(color:ink,fontSize:12,fontWeight:FontWeight.w800)),subtitle:const Text('DOORA üyesi',style:TextStyle(color:muted,fontSize:9)),trailing:Text(task.offers.toString()+' teklif',style:const TextStyle(color:darkGreen,fontSize:10,fontWeight:FontWeight.w800))),
+     const SizedBox(height:18),ListTile(tileColor:soft,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(15)),leading:_TaskAvatar(name:task.owner,url:task.ownerAvatar,radius:21),title:Text(task.owner,style:const TextStyle(color:ink,fontSize:12,fontWeight:FontWeight.w800)),subtitle:const Text('Hizmet veren profilini görüntüle',style:TextStyle(color:muted,fontSize:9)),trailing:Row(mainAxisSize:MainAxisSize.min,children:[Text(task.offers.toString()+' teklif',style:const TextStyle(color:darkGreen,fontSize:10,fontWeight:FontWeight.w800)),const SizedBox(width:5),const Icon(Icons.chevron_right,color:muted,size:17)]),onTap:task.ownerId.isEmpty?null:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>ProviderProfilePage(userId:task.ownerId,fallbackName:task.owner,currentUserId:user?['id']?.toString())))),
     ]))),
    ]),
    bottomNavigationBar:SafeArea(top:false,child:Container(padding:const EdgeInsets.all(14),decoration:const BoxDecoration(color:white,border:Border(top:BorderSide(color:line))),child:Row(children:[
