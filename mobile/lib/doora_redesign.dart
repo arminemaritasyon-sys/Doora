@@ -247,18 +247,18 @@ class MyTasks extends StatefulWidget {
  @override State<MyTasks> createState()=>_MyTasksState();
 }
 class _MyTasksState extends State<MyTasks> {
- List<DooraTask> tasks=[]; List<Map<String,dynamic>> offers=[]; bool busy=false; String? error; int segment=0;
+ List<DooraTask> tasks=[]; List<Map<String,dynamic>> offers=[]; bool busy=false; String? error,offersError; int segment=0;
  @override void initState(){super.initState();load();}
  @override void didUpdateWidget(covariant MyTasks old){super.didUpdateWidget(old);if(old.refresh!=widget.refresh||old.user!=widget.user)load();}
  Future<void> load() async {
   if(widget.user==null){if(mounted)setState(() { tasks=[]; offers=[]; busy=false; });return;}
-  setState(()=>busy=true);error=null;
+  setState(()=>busy=true);error=null;offersError=null;
   final id=widget.user?['id']?.toString()??'';
   try {
    final sent=await DooraApi.instance.getMyOffers();
    if(mounted)setState(()=>offers=sent);
   } catch(e) {
-   if(mounted)setState(()=>error='Teklif geçmişi yüklenemedi: ${DooraApi.instance.errorMessage(e)}');
+   if(mounted)setState(()=>offersError=DooraApi.instance.errorMessage(e));
   }
   try {
    final rows=await DooraApi.instance.getMyTasks();
@@ -270,6 +270,7 @@ class _MyTasksState extends State<MyTasks> {
  }
  Widget segmentButton(String label,int index)=>Expanded(child:GestureDetector(onTap:()=>setState(()=>segment=index),child:Container(padding:const EdgeInsets.symmetric(vertical:11),decoration:BoxDecoration(color:segment==index?white:Colors.transparent,borderRadius:BorderRadius.circular(10)),child:Text(label,textAlign:TextAlign.center,style:TextStyle(color:segment==index?ink:muted,fontSize:10,fontWeight:FontWeight.w800)))));
  Widget offerSection(){
+  if(offersError!=null)return EmptyState(title:'Tekliflerin yüklenemedi',message:offersError!,action:'Tekrar dene',onTap:load);
   if(offers.isEmpty)return const EmptyState(title:'Henüz teklif vermedin',message:'İlgini çeken bir ilanda “Ben yaparım” diyerek teklifini iletebilirsin.');
   return Column(children:offers.map((o)=>offerHistoryCard(o)).toList());
  }
@@ -515,6 +516,7 @@ class _NotificationsState extends State<Notifications> {
   return '${d.day.toString().padLeft(2,'0')}.${d.month.toString().padLeft(2,'0')}.${d.year}';
  }
  IconData iconFor(String type) {
+  if(type.contains('message'))return PhosphorIconsRegular.chatCircle;
   if(type.contains('offer'))return PhosphorIconsRegular.handshake;
   if(type.contains('wallet')||type.contains('withdraw'))return PhosphorIconsRegular.wallet;
   if(type.contains('task')||type.contains('work'))return PhosphorIconsRegular.briefcase;
