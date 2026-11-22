@@ -1,0 +1,30 @@
+name: Validate DOORA backend changes
+
+on:
+  push:
+    branches:
+      - mobile/flutter-foundation
+    paths:
+      - "app/api/**"
+      - "app/admin/**"
+      - "lib/**"
+      - "db/migrations/**"
+      - "package.json"
+      - "tsconfig.json"
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: TypeScript check
+        run: npx tsc --noEmit
