@@ -291,10 +291,11 @@ class DooraApi {
     return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
-  Future<Map<String, dynamic>> getConversation(String peerId, {String? taskId}) async {
+  Future<Map<String, dynamic>> getConversation(String peerId, {String? taskId, bool includePeer = false}) async {
     final response = await _dio.get('/api/messages', queryParameters: {
       'peerId': peerId,
       if (taskId != null && taskId.isNotEmpty) 'taskId': taskId,
+      if (includePeer) 'includePeer': '1',
     });
     final data = _asMap(response.data);
     final rows = data['messages'];
