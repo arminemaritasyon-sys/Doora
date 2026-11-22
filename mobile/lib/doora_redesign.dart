@@ -380,10 +380,77 @@ class _ProfileState extends State<Profile> {
    _ProfileItem(icon:PhosphorIconsRegular.bell,title:'Bildirimler',subtitle:'İş ve teklif bildirimleri',tap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const Notifications()))),
    _ProfileItem(icon:PhosphorIconsRegular.lightbulb,title:'Nasıl çalışır?',subtitle:'DOORA’yı 3 adımda keşfet',tap:()=>showModalBottomSheet(context:c,showDragHandle:true,backgroundColor:white,builder:(_)=>const HowSheet())),
    _ProfileItem(icon:PhosphorIconsRegular.shieldCheck,title:'Güvenli kullanım',subtitle:'Güvenli işlem önerileri',tap:()=>toast(c,'Doğrulama kodlarını kimseyle paylaşma.')),
+   if(widget.user!=null)_ProfileItem(icon:PhosphorIconsRegular.gearSix,title:'Ayarlar',subtitle:'Profil bilgileri ve bildirim tercihleri',tap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const SettingsPage()))),
    if(widget.user!=null)Padding(padding:const EdgeInsets.only(top:7),child:OutlinedButton.icon(onPressed:widget.onLogout,icon:const Icon(Icons.logout),label:const Text('Çıkış yap'),style:OutlinedButton.styleFrom(foregroundColor:ink,side:const BorderSide(color:line),padding:const EdgeInsets.symmetric(vertical:13),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14)))))
   ])));
  }
 }
+
+class SettingsPage extends StatefulWidget {
+ const SettingsPage({super.key});
+ @override State<SettingsPage> createState()=>_SettingsPageState();
+}
+class _SettingsPageState extends State<SettingsPage> {
+ final name=TextEditingController(),district=TextEditingController(),bio=TextEditingController();
+ bool taskUpdates=true,offerUpdates=true,walletUpdates=true,productUpdates=false;
+ bool loading=true,saving=false;String? error;
+ @override void initState(){super.initState();load();}
+ @override void dispose(){name.dispose();district.dispose();bio.dispose();super.dispose();}
+ Future<void> load()async{
+  setState(()=>loading=true);
+  try{
+   final p=await DooraApi.instance.getProfile();
+   name.text=p['name']?.toString()??'';district.text=p['district']?.toString()??'';bio.text=p['bio']?.toString()??'';
+   final n=p['notifications'] is Map?Map<String,dynamic>.from(p['notifications'] as Map):<String,dynamic>{};
+   taskUpdates=n['taskUpdates']!=false;offerUpdates=n['offerUpdates']!=false;walletUpdates=n['walletUpdates']!=false;productUpdates=n['productUpdates']==true;
+   if(mounted)setState(()=>error=null);
+  }catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}
+  finally{if(mounted)setState(()=>loading=false);}
+ }
+ Future<void> save()async{
+  if(name.text.trim().length<2){setState(()=>error='Ad soyad en az 2 karakter olmalı.');return;}
+  setState(()=>saving=true);error=null;
+  try{
+   await DooraApi.instance.updateProfile(name:name.text,district:district.text,bio:bio.text,notifications:{'taskUpdates':taskUpdates,'offerUpdates':offerUpdates,'walletUpdates':walletUpdates,'productUpdates':productUpdates});
+   if(mounted){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Ayarların kaydedildi.'),behavior:SnackBarBehavior.floating));Navigator.pop(context);}
+  }catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}
+  finally{if(mounted)setState(()=>saving=false);}
+ }
+ Widget field(String label,TextEditingController controller,{int lines=1})=>Padding(
+  padding:const EdgeInsets.only(bottom:12),
+  child:TextField(controller:controller,maxLines:lines,decoration:InputDecoration(labelText:label,filled:true,fillColor:white,border:OutlineInputBorder(borderRadius:BorderRadius.circular(13),borderSide:const BorderSide(color:line)),enabledBorder:OutlineInputBorder(borderRadius:BorderRadius.circular(13),borderSide:const BorderSide(color:line)))),
+ );
+ Widget pref(String title,String subtitle,bool value,ValueChanged<bool> change)=>SwitchListTile(
+  value:value,onChanged:change,activeColor:darkGreen,contentPadding:const EdgeInsets.symmetric(horizontal:12),
+  title:Text(title,style:const TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w800)),
+  subtitle:Text(subtitle,style:const TextStyle(color:muted,fontSize:9)),
+ );
+ @override Widget build(BuildContext context)=>Scaffold(
+  backgroundColor:bg,
+  appBar:AppBar(backgroundColor:bg,elevation:0,title:const Text('Ayarlar',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w900)),iconTheme:const IconThemeData(color:ink)),
+  body:loading?const Center(child:CircularProgressIndicator(color:darkGreen)):ListView(
+   padding:const EdgeInsets.fromLTRB(18,12,18,28),
+   children:[
+    Container(padding:const EdgeInsets.all(15),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(18),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+     const Text('Profil bilgileri',style:TextStyle(color:ink,fontSize:14,fontWeight:FontWeight.w900)),
+     const SizedBox(height:14),field('Ad soyad',name),field('İlçe',district),field('Hakkında',bio,lines:3),
+    ])),
+    const SizedBox(height:13),
+    Container(decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(18),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+     const Padding(padding:EdgeInsets.fromLTRB(14,15,14,5),child:Text('Bildirim tercihleri',style:TextStyle(color:ink,fontSize:14,fontWeight:FontWeight.w900))),
+     pref('İş güncellemeleri','İlanların ve iş durumların',taskUpdates,(v)=>setState(()=>taskUpdates=v)),
+     pref('Teklif bildirimleri','Yeni teklifler ve teklif durumları',offerUpdates,(v)=>setState(()=>offerUpdates=v)),
+     pref('Cüzdan bildirimleri','Bakiye ve hesap hareketleri',walletUpdates,(v)=>setState(()=>walletUpdates=v)),
+     pref('DOORA duyuruları','Ürün ve hizmet duyuruları',productUpdates,(v)=>setState(()=>productUpdates=v)),
+    ])),
+    if(error!=null)Padding(padding:const EdgeInsets.only(top:12),child:Text(error!,style:const TextStyle(color:Colors.red,fontSize:10))),
+    const SizedBox(height:14),
+    SizedBox(height:49,child:FilledButton(onPressed:saving?null:save,style:FilledButton.styleFrom(backgroundColor:darkGreen,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14))),child:Text(saving?'Kaydediliyor…':'Değişiklikleri kaydet',style:const TextStyle(color:white,fontWeight:FontWeight.w800)))),
+   ],
+  ),
+ );
+}
+
 class _WalletAction extends StatelessWidget{const _WalletAction({required this.icon,required this.label,required this.onTap});final IconData icon;final String label;final VoidCallback onTap;@override Widget build(BuildContext c)=>Material(color:white,borderRadius:BorderRadius.circular(15),child:InkWell(onTap:onTap,borderRadius:BorderRadius.circular(15),child:Container(padding:const EdgeInsets.symmetric(vertical:14),decoration:BoxDecoration(borderRadius:BorderRadius.circular(15),border:Border.all(color:line)),child:Row(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(icon,color:darkGreen,size:18),const SizedBox(width:8),Text(label,style:const TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w800))]))));}
 class WalletActionSheet extends StatefulWidget{const WalletActionSheet({super.key,required this.action,required this.onDone});final String action;final VoidCallback onDone;@override State<WalletActionSheet> createState()=>_WalletActionSheetState();}
 class _WalletActionSheetState extends State<WalletActionSheet>{final amount=TextEditingController();final iban=TextEditingController();bool busy=false;String? error;@override void dispose(){amount.dispose();iban.dispose();super.dispose();}Future<void> submit()async{final n=num.tryParse(amount.text.replaceAll('.','').replaceAll(',','.'));if(n==null||n<=0||n>50000){setState(()=>error='1 ₺ ile 50.000 ₺ arasında geçerli bir tutar gir.');return;}if(widget.action=='withdraw'&&!RegExp(r'^TR[0-9]{24}$').hasMatch(iban.text.replaceAll(' ','').toUpperCase())){setState(()=>error='Geçerli bir TR IBAN gir.');return;}setState(()=>busy=true);try{await DooraApi.instance.walletAction(action:widget.action,amount:n,iban:iban.text);widget.onDone();if(mounted){Navigator.pop(context);toast(context,widget.action=='test_topup'?'Test bakiyen eklendi.':'Çekim talebin alındı.');}}catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}finally{if(mounted)setState(()=>busy=false);}}@override Widget build(BuildContext c)=>Padding(padding:EdgeInsets.only(bottom:MediaQuery.of(c).viewInsets.bottom),child:Container(padding:const EdgeInsets.fromLTRB(20,12,20,24),decoration:const BoxDecoration(color:white,borderRadius:BorderRadius.vertical(top:Radius.circular(25))),child:SafeArea(top:false,child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[Center(child:Container(width:38,height:4,decoration:BoxDecoration(color:line,borderRadius:BorderRadius.circular(5)))),const SizedBox(height:14),Text(widget.action=='test_topup'?'Bakiye yükle':'Bakiye çek',style:const TextStyle(color:ink,fontSize:18,fontWeight:FontWeight.w900)),const SizedBox(height:5),Text(widget.action=='test_topup'?'Cüzdanına eklenecek test bakiyesi tutarını gir.':'Çekim talebin için IBAN bilgini ve tutarı gir.',style:const TextStyle(color:muted,fontSize:10)),const SizedBox(height:14),if(widget.action=='withdraw')TextField(controller:iban,textCapitalization:TextCapitalization.characters,decoration:const InputDecoration(labelText:'IBAN',hintText:'TR00 0000 0000 0000 0000 0000 00')),if(widget.action=='withdraw')const SizedBox(height:10),TextField(controller:amount,keyboardType:const TextInputType.numberWithOptions(decimal:true),decoration:const InputDecoration(labelText:'Tutar',suffixText:'₺',hintText:'Örn. 500')),if(error!=null)Padding(padding:const EdgeInsets.only(top:9),child:Text(error!,style:const TextStyle(color:Colors.red,fontSize:10))),const SizedBox(height:15),SizedBox(width:double.infinity,height:48,child:FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:darkGreen,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14))),child:Text(busy?'İşleniyor…':widget.action=='test_topup'?'Bakiye yükle':'Çekim talebi oluştur',style:const TextStyle(color:white,fontWeight:FontWeight.w800))))]))));}
