@@ -1084,7 +1084,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
         ]),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Vazgeç')),
-          FilledButton(onPressed: title.text.trim().length < 2 ? null : () => Navigator.pop(dialogContext, true), child: const Text('Ekle')),
+          FilledButton(onPressed: () { if (title.text.trim().length >= 2) Navigator.pop(dialogContext, true); }, child: const Text('Ekle')),
         ],
       ),
     );
@@ -1101,7 +1101,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
       await load();
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Çalışman portföyüne eklendi.')));
     } catch (e) {
-      if (mounted) setState(() => error = e is Exception ? e.toString().replaceFirst('Exception: ', '') : DooraApi.instance.errorMessage(e));
+      if (mounted) setState(() => error = e.toString().contains('Görsel çok büyük') ? 'Görsel çok büyük. Daha küçük bir fotoğraf seç.' : DooraApi.instance.errorMessage(e));
     } finally {
       title.dispose();
       description.dispose();
@@ -1163,6 +1163,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
                   final raw = item['imageData']?.toString() ?? '';
                   final comma = raw.indexOf(',');
                   final encoded = comma >= 0 ? raw.substring(comma + 1) : raw;
+                  dynamic imageBytes;
+                  try { if (encoded.isNotEmpty) imageBytes = base64Decode(encoded); } catch (_) { imageBytes = null; }
                   return Material(
                     color: white,
                     borderRadius: BorderRadius.circular(19),
@@ -1171,8 +1173,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       onLongPress: () => removeItem(item['id']?.toString() ?? ''),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         Expanded(child: Stack(fit: StackFit.expand, children: [
-                          if (encoded.isNotEmpty)
-                            Image.memory(base64Decode(encoded), fit: BoxFit.cover, errorBuilder: (_, __, ___) => const ColoredBox(color: mint, child: Icon(PhosphorIconsRegular.image, color: forest)))
+                          if (imageBytes != null)
+                            Image.memory(imageBytes, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const ColoredBox(color: mint, child: Icon(PhosphorIconsRegular.image, color: forest)))
                           else
                             const ColoredBox(color: mint, child: Icon(PhosphorIconsRegular.image, color: forest)),
                           Positioned(right: 8, top: 8, child: Material(color: white.withValues(alpha: .92), shape: const CircleBorder(), child: InkWell(onTap: () => removeItem(item['id']?.toString() ?? ''), customBorder: const CircleBorder(), child: const Padding(padding: EdgeInsets.all(7), child: Icon(PhosphorIconsRegular.trash, size: 15, color: Color(0xFF9A4A43)))))),
