@@ -312,18 +312,55 @@ class _MyTasksState extends State<MyTasks> {
    if(offer['task_status']=='completed'&&status=='accepted')Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:()=>openReview(offer['task_id']?.toString()??''),icon:const Icon(Icons.star_outline_rounded,size:15),label:const Text('İşi değerlendir'),style:TextButton.styleFrom(foregroundColor:darkGreen))),
   ]));
  }
- @override Widget build(BuildContext c)=>SafeArea(child:RefreshIndicator(color:green,onRefresh:load,child:ListView(padding:const EdgeInsets.fromLTRB(18,20,18,110),children:[
-  const Text('İşlerim',style:TextStyle(color:ink,fontSize:23,fontWeight:FontWeight.w900)),const SizedBox(height:5),const Text('İlanlarını ve teklif süreçlerini takip et.',style:TextStyle(color:muted,fontSize:11)),const SizedBox(height:17),
-  Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFF1F4EE),borderRadius:BorderRadius.circular(13)),child:Row(children:[segmentButton('Paylaştıklarım',0),segmentButton('Teklif Verdiklerim',1)])),
-  const SizedBox(height:16),
-  if(widget.user==null)EmptyState(title:'Hesabına giriş yap',message:'İşlerini takip etmek için giriş yap.',action:'Giriş yap',onTap:widget.onLogin)
+ @override Widget build(BuildContext c)=>SafeArea(child:RefreshIndicator(color:green,onRefresh:load,child:ListView(padding:const EdgeInsets.fromLTRB(18,18,18,112),children:[
+  Row(children:[
+   const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    Text('İşlerim',style:TextStyle(color:ink,fontSize:25,fontWeight:FontWeight.w900,letterSpacing:-.8)),
+    SizedBox(height:4),Text('İlanlarını ve tekliflerini tek yerden yönet.',style:TextStyle(color:muted,fontSize:10)),
+   ])),
+   IconButton(onPressed:busy?null:load,icon:const Icon(Icons.refresh_rounded,color:darkGreen)),
+  ]),
+  const SizedBox(height:14),
+  Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(
+   gradient:const LinearGradient(colors:[Color(0xFF263B2B),Color(0xFF405B43)],begin:Alignment.topLeft,end:Alignment.bottomRight),
+   borderRadius:BorderRadius.circular(20)),
+   child:Row(children:[
+    Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+     const Text('DOORA iş panelin',style:TextStyle(color:Colors.white70,fontSize:9,fontWeight:FontWeight.w700)),
+     const SizedBox(height:5),
+     Text(widget.user==null?'İşlerini takip etmeye başla':'Her şey kontrol altında.',style:const TextStyle(color:white,fontSize:16,fontWeight:FontWeight.w900)),
+     const SizedBox(height:4),
+     const Text('İlanlarını ve teklif süreçlerini kolayca takip et.',style:TextStyle(color:Colors.white70,fontSize:9)),
+    ])),
+    Container(width:58,height:58,decoration:BoxDecoration(color:white.withValues(alpha:.13),borderRadius:BorderRadius.circular(17)),
+     child:const Icon(PhosphorIconsRegular.briefcase,color:white,size:27)),
+   ]),
+  ),
+  const SizedBox(height:15),
+  Row(children:[
+   Expanded(child:_taskMetric('Paylaştığın ilan',tasks.length.toString(),PhosphorIconsRegular.notePencil)),
+   const SizedBox(width:8),
+   Expanded(child:_taskMetric('Verdiğin teklif',offers.length.toString(),PhosphorIconsRegular.paperPlaneTilt)),
+  ]),
+  const SizedBox(height:17),
+  Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFECEF E7),borderRadius:BorderRadius.circular(14)),child:Row(children:[
+   Expanded(child:GestureDetector(onTap:()=>setState(()=>segment=0),child:AnimatedContainer(duration:const Duration(milliseconds:160),padding:const EdgeInsets.symmetric(vertical:12),decoration:BoxDecoration(color:segment==0?white:Colors.transparent,borderRadius:BorderRadius.circular(11),boxShadow:segment==0?[BoxShadow(color:ink.withValues(alpha:.05),blurRadius:8,offset:const Offset(0,2))]:[]),child:Text('Paylaştıklarım  ${tasks.length}',textAlign:TextAlign.center,style:TextStyle(color:segment==0?darkGreen:muted,fontSize:9,fontWeight:FontWeight.w900))))),
+   Expanded(child:GestureDetector(onTap:()=>setState(()=>segment=1),child:AnimatedContainer(duration:const Duration(milliseconds:160),padding:const EdgeInsets.symmetric(vertical:12),decoration:BoxDecoration(color:segment==1?white:Colors.transparent,borderRadius:BorderRadius.circular(11),boxShadow:segment==1?[BoxShadow(color:ink.withValues(alpha:.05),blurRadius:8,offset:const Offset(0,2))]:[]),child:Text('Teklif verdiklerim  ${offers.length}',textAlign:TextAlign.center,style:TextStyle(color:segment==1?darkGreen:muted,fontSize:9,fontWeight:FontWeight.w900))))),
+  ])),
+  const SizedBox(height:14),
+  if(widget.user==null)EmptyState(title:'Hesabına giriş yap',message:'İşlerini ve tekliflerini takip etmek için giriş yap.',action:'Giriş yap',onTap:widget.onLogin)
   else if(busy)const Skeletons()
   else if(segment==1)offerSection()
   else if(error!=null)EmptyState(title:'İşlerin yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)
-  else if(tasks.isEmpty)EmptyState(title:'Henüz ilan paylaşmadın',message:'İlk ilanını oluştur ve yakınındaki kişilerden teklif al.',action:'İlan oluştur',onTap:widget.onCreate)
+  else if(tasks.isEmpty)EmptyState(title:'Henüz ilan paylaşmadın',message:'İlk ilanını oluştur, yakınındaki kişilerden teklif almaya başla.',action:'İlan oluştur',onTap:widget.onCreate)
   else ...tasks.map((t)=>Padding(padding:const EdgeInsets.only(bottom:10),child:myTaskCard(t))),
  ])));
 }
+
+Widget _taskMetric(String label,String value,IconData icon)=>Container(
+ padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(15),border:Border.all(color:line)),
+ child:Row(children:[Container(width:34,height:34,decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(11)),child:Icon(icon,color:darkGreen,size:17)),const SizedBox(width:9),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(value,style:const TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w900)),Text(label,style:const TextStyle(color:muted,fontSize:8,fontWeight:FontWeight.w700))]))]),
+);
 
 class Saved extends StatefulWidget {
  const Saved({super.key,required this.user,required this.onLogin});
@@ -367,9 +404,18 @@ class Profile extends StatefulWidget {
  @override State<Profile> createState()=>_ProfileState();
 }
 class _ProfileState extends State<Profile> {
- Map<String,dynamic>? wallet; bool loadingWallet=false; String? walletError;
- @override void initState(){super.initState();if(widget.user!=null)loadWallet();}
- @override void didUpdateWidget(covariant Profile old){super.didUpdateWidget(old);if(old.user!=widget.user){wallet=null;walletError=null;if(widget.user!=null)loadWallet();}}
+ Map<String,dynamic>? wallet; Map<String,dynamic> profile={};
+ bool loadingWallet=false,loadingProfile=false; String? walletError;
+ @override void initState(){super.initState();if(widget.user!=null){loadWallet();loadProfile();}}
+ @override void didUpdateWidget(covariant Profile old){super.didUpdateWidget(old);if(old.user!=widget.user){wallet=null;profile={};walletError=null;if(widget.user!=null){loadWallet();loadProfile();}}}
+ Future<void> loadProfile()async{
+  if(widget.user==null)return;
+  setState(()=>loadingProfile=true);
+  try{final value=await DooraApi.instance.getProfile();if(mounted)setState(()=>profile=value);}
+  catch(_){}
+  finally{if(mounted)setState(()=>loadingProfile=false);}
+ }
+ Future<void> refreshAccount()async{await Future.wait([loadWallet(),loadProfile()]);}
  Future<void> loadWallet()async{
   if(widget.user==null)return;setState(()=>loadingWallet=true);walletError=null;
   try{final data=await DooraApi.instance.getWallet();if(mounted)setState(()=>wallet=data);}
@@ -378,15 +424,19 @@ class _ProfileState extends State<Profile> {
  }
  String money(dynamic value){final parts=(num.tryParse(value?.toString()??'')??0).toStringAsFixed(2).split('.');final whole=parts.first.replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'),(m)=>'.');return '$whole,${parts.last} ₺';}
  @override Widget build(BuildContext c){
-  final name=widget.user?['name']?.toString()??'DOORA üyesi';
+  final name=profile['name']?.toString()??widget.user?['name']?.toString()??'DOORA üyesi';
+  final avatar=profile['avatarUrl']?.toString()??'';
+  final verified=profile['isVerified']==true;
   final account=wallet?['account'] is Map?Map<String,dynamic>.from(wallet!['account'] as Map):<String,dynamic>{};
   final available=account['available_balance']??0,held=account['held_balance']??0;
   final transactions=wallet?['transactions'] is List?List<Map<String,dynamic>>.from((wallet!['transactions'] as List).whereType<Map>().map((e)=>Map<String,dynamic>.from(e))):<Map<String,dynamic>>[];
-  return SafeArea(child:RefreshIndicator(color:darkGreen,onRefresh:loadWallet,child:ListView(padding:const EdgeInsets.fromLTRB(18,18,18,112),children:[
-   const Text('Hesabım',style:TextStyle(color:ink,fontSize:24,fontWeight:FontWeight.w900,letterSpacing:-.7)),
-   const SizedBox(height:4),const Text('Hesabın, cüzdanın ve tüm işlemlerin.',style:TextStyle(color:muted,fontSize:11)),
+  return SafeArea(child:RefreshIndicator(color:darkGreen,onRefresh:refreshAccount,child:ListView(padding:const EdgeInsets.fromLTRB(18,18,18,112),children:[
+   Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    Text('Hesabım',style:TextStyle(color:ink,fontSize:25,fontWeight:FontWeight.w900,letterSpacing:-.8)),
+    SizedBox(height:4),Text('DOORA deneyimini buradan yönet.',style:TextStyle(color:muted,fontSize:11)),
+   ])),Container(width:42,height:42,decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsRegular.userCircle,color:darkGreen,size:23))]),
    const SizedBox(height:17),
-   Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(19),border:Border.all(color:line)),child:Row(children:[CircleAvatar(radius:25,backgroundColor:mint,child:Text(name.isEmpty?'D':name.characters.first.toUpperCase(),style:const TextStyle(color:darkGreen,fontWeight:FontWeight.w900,fontSize:18))),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(widget.user==null?'DOORA’ya hoş geldin':name,style:const TextStyle(color:ink,fontWeight:FontWeight.w900,fontSize:14)),const SizedBox(height:3),Text(widget.user?['email']?.toString()??'İşlerini kolayca yönet.',style:const TextStyle(color:muted,fontSize:10))])),if(widget.user!=null)const Icon(PhosphorIconsRegular.userCircle,color:darkGreen,size:23)])),
+   Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(19),border:Border.all(color:line)),child:Row(children:[_TaskAvatar(name:name,url:avatar,radius:27),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(widget.user==null?'DOORA’ya hoş geldin':name,style:const TextStyle(color:ink,fontWeight:FontWeight.w900,fontSize:14)),const SizedBox(height:3),Text(widget.user?['email']?.toString()??'İşlerini kolayca yönet.',style:const TextStyle(color:muted,fontSize:10))])),if(verified)const Icon(Icons.verified_rounded,color:Color(0xFF3985C8),size:20)])),
    const SizedBox(height:15),
    if(widget.user==null)Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(19),border:Border.all(color:line)),child:Column(children:[const Icon(PhosphorIconsRegular.wallet,color:darkGreen,size:30),const SizedBox(height:9),const Text('DOORA cüzdanını kullan',style:TextStyle(color:ink,fontSize:14,fontWeight:FontWeight.w900)),const SizedBox(height:5),const Text('Bakiyeni ve iş hareketlerini takip etmek için giriş yap.',textAlign:TextAlign.center,style:TextStyle(color:muted,fontSize:10)),const SizedBox(height:12),SizedBox(width:double.infinity,child:FilledButton(onPressed:widget.onLogin,style:FilledButton.styleFrom(backgroundColor:darkGreen),child:const Text('Giriş yap / Kayıt ol')))]))
    else Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF1F3024),Color(0xFF3B5940),Color(0xFF607653)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(22),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.18),blurRadius:22,offset:const Offset(0,9))]),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -399,6 +449,14 @@ class _ProfileState extends State<Profile> {
     if(loadingWallet&&wallet==null)const Padding(padding:EdgeInsets.only(top:12),child:LinearProgressIndicator(minHeight:2,backgroundColor:Colors.white24,color:white)),
    ])),
    if(widget.user!=null) ...[
+    const SizedBox(height:17),
+    const Text('Hızlı erişim',style:TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w900)),
+    const SizedBox(height:9),
+    Row(children:[
+     Expanded(child:_WalletAction(icon:PhosphorIconsRegular.chatCircle,label:'Mesajlar',onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>MessagesInboxPage(currentUserId:widget.user?['id']?.toString()??''))))),
+     const SizedBox(width:8),
+     Expanded(child:_WalletAction(icon:PhosphorIconsRegular.images,label:'Portföyüm',onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>ProviderProfilePage(userId:widget.user?['id']?.toString()??'',fallbackName:name,currentUserId:widget.user?['id']?.toString()))))),
+    ]),
     const SizedBox(height:11),
     Row(children:[
      Expanded(child:_WalletAction(icon:PhosphorIconsRegular.plusCircle,label:'Bakiye yükle',onTap:()=>showModalBottomSheet(context:c,isScrollControlled:true,backgroundColor:Colors.transparent,builder:(_)=>WalletActionSheet(action:'test_topup',onDone:loadWallet)))),
@@ -406,7 +464,7 @@ class _ProfileState extends State<Profile> {
      Expanded(child:_WalletAction(icon:PhosphorIconsRegular.arrowUpRight,label:'Bakiye çek',onTap:()=>showModalBottomSheet(context:c,isScrollControlled:true,backgroundColor:Colors.transparent,builder:(_)=>WalletActionSheet(action:'withdraw',onDone:loadWallet)))),
     ]),
     const SizedBox(height:19),
-    Row(children:[const Expanded(child:Text('Son hesap hareketleri',style:TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w900))),TextButton(onPressed:loadWallet,child:const Text('Yenile',style:TextStyle(color:darkGreen,fontSize:10,fontWeight:FontWeight.w800)))]),
+    Row(children:[const Expanded(child:Text('Son hesap hareketleri',style:TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w900))),TextButton(onPressed:refreshAccount,child:const Text('Yenile',style:TextStyle(color:darkGreen,fontSize:10,fontWeight:FontWeight.w800)))]),
     if(loadingWallet&&wallet==null)const Skeletons()
     else if(transactions.isEmpty)Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(17),border:Border.all(color:line)),child:const Row(children:[Icon(PhosphorIconsRegular.receipt,color:muted,size:20),SizedBox(width:10),Expanded(child:Text('Henüz hesap hareketi yok.',style:TextStyle(color:muted,fontSize:10)))]))
     else ...transactions.take(4).map((tx){final type=tx['type']?.toString()??'';final outgoing=type=='escrow_lock'||type=='withdrawal_request';return Container(margin:const EdgeInsets.only(bottom:8),padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(15),border:Border.all(color:line)),child:Row(children:[Container(width:35,height:35,decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(12)),child:Icon(outgoing?PhosphorIconsRegular.arrowUpRight:PhosphorIconsRegular.arrowDownLeft,color:darkGreen,size:18)),const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(tx['description']?.toString()??'Hesap hareketi',maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w800)),const SizedBox(height:3),Text(tx['status']=='pending'?'Bekliyor':'Tamamlandı',style:const TextStyle(color:muted,fontSize:8))])),Text((outgoing?'−':'+')+money(tx['amount']),style:TextStyle(color:outgoing?ink:darkGreen,fontSize:11,fontWeight:FontWeight.w900))]));}),
@@ -665,41 +723,65 @@ class _AuthPageState extends State<AuthPage>{
   labelStyle:const TextStyle(color:muted,fontSize:11),hintStyle:const TextStyle(color:muted,fontSize:11),
  );
  @override Widget build(BuildContext c)=>Scaffold(
-  backgroundColor:white,
-  appBar:AppBar(backgroundColor:white,leading:IconButton(onPressed:()=>Navigator.maybePop(c),icon:const Icon(Icons.arrow_back_ios_new_rounded,size:18,color:ink))),
-  body:SafeArea(child:ListView(padding:const EdgeInsets.fromLTRB(22,4,22,28),children:[
-   Container(padding:const EdgeInsets.fromLTRB(20,22,20,20),decoration:BoxDecoration(
-    gradient:const LinearGradient(colors:[Color(0xFF263B2B),Color(0xFF405B43),Color(0xFF71865F)],begin:Alignment.topLeft,end:Alignment.bottomRight),
-    borderRadius:BorderRadius.circular(24)),
-    child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-     Row(children:[Container(width:38,height:38,decoration:BoxDecoration(color:white.withValues(alpha:.15),borderRadius:BorderRadius.circular(12)),child:const Center(child:Text('d',style:TextStyle(color:white,fontSize:25,fontWeight:FontWeight.w900)))),const SizedBox(width:10),const Text('DOORA',style:TextStyle(color:white,fontSize:13,fontWeight:FontWeight.w900,letterSpacing:2))]),
-     const SizedBox(height:22),
-     Text(verify?'E-posta doğrulaması':signup?'Yeni bir başlangıç.':'İşini kolaylaştır.',style:const TextStyle(color:white,fontSize:23,fontWeight:FontWeight.w900,height:1.15)),
-     const SizedBox(height:6),
-     Text(verify?'Sana gönderdiğimiz doğrulama kodunu gir.':'DOORA ile ihtiyacını paylaş, doğru insanlarla buluş.',style:const TextStyle(color:Colors.white70,fontSize:11,height:1.5)),
-    ]),
-   ),
-   const SizedBox(height:22),
-   if(!verify)const SizedBox(height:2),
-   if(!verify)Row(children:[
-    Expanded(child: _modeButton('Giriş yap',false)),
-    const SizedBox(width:8),
-    Expanded(child: _modeButton('Kayıt ol',true)),
+  backgroundColor:bg,
+  appBar:AppBar(
+   backgroundColor:bg,scrolledUnderElevation:0,
+   leading:IconButton(onPressed:()=>Navigator.maybePop(c),icon:const Icon(Icons.arrow_back_ios_new_rounded,size:17,color:ink)),
+   title:const Text('doora.',style:TextStyle(color:ink,fontSize:19,fontWeight:FontWeight.w900,letterSpacing:-1)),
+  ),
+  body:SafeArea(child:Center(child:ConstrainedBox(
+   constraints:const BoxConstraints(maxWidth:480),
+   child:ListView(padding:const EdgeInsets.fromLTRB(22,12,22,30),children:[
+    Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(
+     color:const Color(0xFFEAF0E2),borderRadius:BorderRadius.circular(20),border:Border.all(color:const Color(0xFFDCE5D2))),
+     child:Row(children:[
+      Container(width:46,height:46,decoration:BoxDecoration(color:darkGreen,borderRadius:BorderRadius.circular(15)),
+       child:const Center(child:Text('d',style:TextStyle(color:white,fontSize:29,fontWeight:FontWeight.w900)))),
+      const SizedBox(width:13),
+      Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+       const Text('DOORA',style:TextStyle(color:darkGreen,fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1.5)),
+       const SizedBox(height:4),
+       Text(verify?'E-posta adresini doğrula':signup?'Aramıza katıl.':'Tekrar hoş geldin.',
+        style:const TextStyle(color:ink,fontSize:19,fontWeight:FontWeight.w900,letterSpacing:-.5)),
+       const SizedBox(height:3),
+       Text(verify?'Gelen 6 haneli kodu gir.':'İşlerini kolayca hallet, doğru kişilerle buluş.',
+        style:const TextStyle(color:muted,fontSize:9.5)),
+      ])),
+     ]),
+    ),
+    const SizedBox(height:18),
+    if(!verify)Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFECEF E7),borderRadius:BorderRadius.circular(14)),child:Row(children:[
+     Expanded(child:_modeButton('Giriş yap',false)),
+     Expanded(child:_modeButton('Kayıt ol',true)),
+    ])),
+    const SizedBox(height:14),
+    Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(20),border:Border.all(color:line)),
+     child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+      if(signup&&!verify) ...[
+       const Text('Seni tanıyalım',style:TextStyle(color:ink,fontSize:13,fontWeight:FontWeight.w900)),
+       const SizedBox(height:12),
+       TextField(controller:name,textCapitalization:TextCapitalization.words,autofillHints:const [AutofillHints.name],decoration:field('Ad soyad','Adını ve soyadını yaz')),
+       const SizedBox(height:11),
+      ],
+      if(verify)const Text('Doğrulama kodu',style:TextStyle(color:ink,fontSize:13,fontWeight:FontWeight.w900)),
+      if(verify)const SizedBox(height:12),
+      TextField(controller:email,keyboardType:TextInputType.emailAddress,autocorrect:false,autofillHints:const [AutofillHints.email],decoration:field('E-posta adresi','ornek@mail.com')),
+      const SizedBox(height:11),
+      if(!verify)TextField(controller:pass,obscureText:!showPassword,autofillHints:[signup?AutofillHints.newPassword:AutofillHints.password],decoration:field('Şifre','En az 8 karakter',suffix:IconButton(onPressed:()=>setState(()=>showPassword=!showPassword),icon:Icon(showPassword?Icons.visibility_off_outlined:Icons.visibility_outlined,color:muted,size:19)))),
+      if(signup&&!verify)const SizedBox(height:11),
+      if(signup&&!verify)TextField(controller:confirm,obscureText:true,decoration:field('Şifre tekrar','Şifreni yeniden yaz')),
+      if(verify)TextField(controller:otp,keyboardType:TextInputType.number,maxLength:6,decoration:field('6 haneli kod','E-postana gelen kod')),
+      if(error!=null)Padding(padding:const EdgeInsets.only(top:12),child:Container(padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:const Color(0xFFFFF0EF),borderRadius:BorderRadius.circular(12)),child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[const Icon(Icons.error_outline_rounded,color:Color(0xFFB33F3A),size:16),const SizedBox(width:8),Expanded(child:Text(error!,style:const TextStyle(color:Color(0xFFB33F3A),fontSize:10,height:1.4)))]))),
+      const SizedBox(height:16),
+      SizedBox(height:50,child:FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14)),elevation:0),
+       child:busy?const SizedBox(width:18,height:18,child:CircularProgressIndicator(strokeWidth:2,color:white)):Text(verify?'E-postayı doğrula':signup?'Hesap oluştur':'Giriş yap',style:const TextStyle(fontSize:12,fontWeight:FontWeight.w900)))),
+      if(!verify)Padding(padding:const EdgeInsets.only(top:13),child:Text(signup?'Hesabın zaten var mı? Giriş yap':'Henüz hesabın yok mu? Kayıt ol',textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:10))),
+     ]),
+    ),
+    const SizedBox(height:14),
+    const Text('Güvenli giriş · Bilgilerin koruma altında',textAlign:TextAlign.center,style:TextStyle(color:muted,fontSize:9)),
    ]),
-   const SizedBox(height:16),
-   if(signup&&!verify)TextField(controller:name,textCapitalization:TextCapitalization.words,decoration:field('Ad soyad','Adını ve soyadını yaz')),
-   if(signup&&!verify)const SizedBox(height:11),
-   TextField(controller:email,keyboardType:TextInputType.emailAddress,autocorrect:false,decoration:field('E-posta adresi','ornek@mail.com')),
-   const SizedBox(height:11),
-   if(!verify)TextField(controller:pass,obscureText:!showPassword,decoration:field('Şifre','En az 8 karakter',suffix:IconButton(onPressed:()=>setState(()=>showPassword=!showPassword),icon:Icon(showPassword?Icons.visibility_off_outlined:Icons.visibility_outlined,color:muted,size:19)))),
-   if(signup&&!verify)const SizedBox(height:11),
-   if(signup&&!verify)TextField(controller:confirm,obscureText:true,decoration:field('Şifre tekrar','Şifreni yeniden yaz')),
-   if(verify)TextField(controller:otp,keyboardType:TextInputType.number,maxLength:6,decoration:field('Doğrulama kodu','6 haneli kod'),),
-   if(error!=null)Padding(padding:const EdgeInsets.only(top:12),child:Container(padding:const EdgeInsets.all(11),decoration:BoxDecoration(color:const Color(0xFFFFF0EF),borderRadius:BorderRadius.circular(12)),child:Text(error!,style:const TextStyle(color:Color(0xFFB33F3A),fontSize:11)))),
-   const SizedBox(height:18),
-   SizedBox(width:double.infinity,height:51,child:FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14))),child:busy?const SizedBox(width:19,height:19,child:CircularProgressIndicator(strokeWidth:2,color:white)):Text(verify?'Doğrula ve giriş yap':signup?'Hesap oluştur':'Giriş yap',style:const TextStyle(fontSize:12,fontWeight:FontWeight.w900)))),
-   if(!verify)Padding(padding:const EdgeInsets.only(top:14),child:Text(signup?'Hesabın zaten var mı? Giriş yap':'Henüz DOORA hesabın yok mu? Kayıt ol',textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:10))),
-  ])),
+  ))),
  );
  Widget _modeButton(String label,bool value)=>GestureDetector(onTap:busy?null:()=>setState(()=>signup=value),child:AnimatedContainer(duration:const Duration(milliseconds:160),padding:const EdgeInsets.symmetric(vertical:12),decoration:BoxDecoration(color:signup==value?white:Colors.transparent,borderRadius:BorderRadius.circular(11),boxShadow:signup==value?[BoxShadow(color:ink.withValues(alpha:.06),blurRadius:8,offset:const Offset(0,2))]:[]),child:Text(label,textAlign:TextAlign.center,style:TextStyle(color:signup==value?darkGreen:muted,fontSize:11,fontWeight:FontWeight.w900))));
 }
