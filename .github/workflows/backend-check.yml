@@ -11,6 +11,7 @@ on:
       - "db/migrations/**"
       - "package.json"
       - "tsconfig.json"
+      - ".github/workflows/backend-check.yml"
 
 permissions:
   contents: read
