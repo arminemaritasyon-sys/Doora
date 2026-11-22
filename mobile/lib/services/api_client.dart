@@ -172,6 +172,18 @@ class DooraApi {
     return _asMap(_asMap(response.data)['profile']);
   }
 
+  Future<Map<String, dynamic>> getProviderReviews(String userId) async {
+    final response = await _dio.get('/api/reviews', queryParameters: {'userId': userId});
+    final data = _asMap(response.data);
+    final rows = data['reviews'];
+    return {
+      'summary': _asMap(data['summary']),
+      'reviews': rows is List
+          ? rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList()
+          : <Map<String, dynamic>>[],
+    };
+  }
+
   Future<void> updateProfile({
     required String name,
     required String district,
