@@ -5,11 +5,38 @@ import { getCurrentUser } from "@/lib/auth/server";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const publicUserId = request.nextUrl.searchParams.get("userId");
+  if (publicUserId) {
+    if (publicUserId.length > 200) return NextResponse.json({ error: "Profil bulunamadı." }, { status: 400 });
+    try {
+      const [profile] = await db`
+        SELECT p.display_name, p.avatar_url, p.district, p.bio,
+          COALESCE(p.is_verified, false) AS is_verified,
+          COALESCE(u.name, 'DOORA üyesi') AS account_name
+        FROM neon_auth.user u
+        LEFT JOIN public.user_profiles p ON p.user_id = u.id::text
+        WHERE u.id::text = ${publicUserId}
+        LIMIT 1
+      `;
+      if (!profile) return NextResponse.json({ error: "Profil bulunamadı." }, { status: 404 });
+      return NextResponse.json({ profile: {
+        name: profile.display_name || profile.account_name || "DOORA üyesi",
+        avatarUrl: profile.avatar_url || "",
+        district: profile.district || "",
+        bio: profile.bio || "",
+        isVerified: profile.is_verified === true
+      } });
+    } catch (error) {
+      console.error("[profile] public profile read failed", error);
+      return NextResponse.json({ error: "Profil şu anda görüntülenemiyor." }, { status: 503 });
+    }
+  }
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });
   const [profile] = await db`
     SELECT p.display_name, p.avatar_url, p.district, p.bio,
+      COALESCE(p.is_verified, false) AS is_verified,
       COALESCE(n.task_updates, true) AS task_updates,
       COALESCE(n.offer_updates, true) AS offer_updates,
       COALESCE(n.wallet_updates, true) AS wallet_updates,
@@ -18,7 +45,7 @@ export async function GET() {
     LEFT JOIN public.user_profiles p ON p.user_id = ${user.id}
     LEFT JOIN public.user_notification_preferences n ON n.user_id = ${user.id}
   `;
-  return NextResponse.json({ profile: { name: profile?.display_name || user.name || "", avatarUrl: profile?.avatar_url || "", district: profile?.district || "", bio: profile?.bio || "", isVerified: false, notifications: { taskUpdates: profile?.task_updates ?? true, offerUpdates: profile?.offer_updates ?? true, walletUpdates: profile?.wallet_updates ?? true, productUpdates: profile?.product_updates ?? false } } });
+  return NextResponse.json({ profile: { name: profile?.display_name || user.name || "", avatarUrl: profile?.avatar_url || "", district: profile?.district || "", bio: profile?.bio || "", isVerified: profile?.is_verified === true, notifications: { taskUpdates: profile?.task_updates ?? true, offerUpdates: profile?.offer_updates ?? true, walletUpdates: profile?.wallet_updates ?? true, productUpdates: profile?.product_updates ?? false } } });
 }
 
 const schema = z.object({
@@ -43,7 +70,7 @@ export async function PATCH(request: NextRequest) {
       INSERT INTO public.user_profiles(user_id, display_name, district, bio, avatar_url)
       VALUES (${user.id}, ${name}, ${district || null}, ${bio || null}, ${avatarUrl || null})
       ON CONFLICT(user_id) DO UPDATE SET display_name=EXCLUDED.display_name, district=EXCLUDED.district,
-        bio=EXCLUDED.bio, avatar_url=EXCLUDED.avatar_url, updated_at=now()
+        bio=EXCLUDED.bio, avatar_url=COALESCE(EXCLUDED.avatar_url, public.user_profiles.avatar_url), updated_at=now()
     `;
     await db`
       INSERT INTO public.user_notification_preferences(user_id, task_updates, offer_updates, wallet_updates, product_updates)

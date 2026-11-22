@@ -1,3 +1,45 @@
+export async function GET(request: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });
+  const taskId = request.nextUrl.searchParams.get("taskId");
+  try {
+    if (taskId) {
+      const [task] = await db`SELECT id FROM public.tasks WHERE id = ${taskId}::uuid AND owner_id = ${user.id} LIMIT 1`;
+      if (!task) return NextResponse.json({ error: "Bu ilanı görüntüleme yetkin yok." }, { status: 403 });
+      const offers = await db`
+        SELECT o.id, o.task_id, o.user_id, o.amount, o.message, o.status, o.created_at,
+          COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS provider_name,
+          p.avatar_url AS provider_avatar,
+          COALESCE(p.is_verified, false) AS provider_verified
+        FROM public.offers o
+        LEFT JOIN public.user_profiles p ON p.user_id = o.user_id
+        LEFT JOIN neon_auth.user u ON u.id::text = o.user_id
+        WHERE o.task_id = ${taskId}::uuid
+        ORDER BY o.created_at DESC
+        LIMIT 100
+      `;
+      return NextResponse.json({ offers });
+    }
+    const offers = await db`
+      SELECT o.id, o.task_id, o.amount, o.message, o.status, o.created_at,
+        t.title AS task_title, t.district, t.budget AS task_budget, t.status AS task_status,
+        COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS owner_name,
+        p.avatar_url AS owner_avatar
+      FROM public.offers o
+      JOIN public.tasks t ON t.id = o.task_id
+      LEFT JOIN public.user_profiles p ON p.user_id = t.owner_id
+      LEFT JOIN neon_auth.user u ON u.id::text = t.owner_id
+      WHERE o.user_id = ${user.id}
+      ORDER BY o.created_at DESC
+      LIMIT 100
+    `;
+    return NextResponse.json({ offers });
+  } catch (error) {
+    console.error("[offers] GET failed", error);
+    return NextResponse.json({ error: "Teklifler şu anda alınamıyor." }, { status: 503 });
+  }
+}
+
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
