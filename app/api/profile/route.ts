@@ -70,7 +70,7 @@ export async function PATCH(request: NextRequest) {
       INSERT INTO public.user_profiles(user_id, display_name, district, bio, avatar_url)
       VALUES (${user.id}, ${name}, ${district || null}, ${bio || null}, ${avatarUrl || null})
       ON CONFLICT(user_id) DO UPDATE SET display_name=EXCLUDED.display_name, district=EXCLUDED.district,
-        bio=EXCLUDED.bio, avatar_url=EXCLUDED.avatar_url, updated_at=now()
+        bio=EXCLUDED.bio, avatar_url=COALESCE(EXCLUDED.avatar_url, public.user_profiles.avatar_url), updated_at=now()
     `;
     await db`
       INSERT INTO public.user_notification_preferences(user_id, task_updates, offer_updates, wallet_updates, product_updates)
