@@ -1114,12 +1114,43 @@ class _RoundIconButton extends StatelessWidget {
 class _LoadingList extends StatelessWidget {
   const _LoadingList();
   @override
-  Widget build(BuildContext context) => Column(children: List.generate(3, (index) => Container(
-    height: 155,
-    margin: const EdgeInsets.only(bottom: 12),
-    decoration: BoxDecoration(color: white, borderRadius: BorderRadius.circular(20), border: Border.all(color: line)),
-    child: const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: forest))),
-  )));
+  Widget build(BuildContext context) => Column(children: List.generate(3, (index) =>
+    Container(
+      height: 165,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: white, borderRadius: BorderRadius.circular(22), border: Border.all(color: line)),
+      child: Shimmer.fromColors(
+        baseColor: const Color(0xFFE9EEEA),
+        highlightColor: const Color(0xFFF8FAF8),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(width: 46, height: 46, decoration: BoxDecoration(color: white, borderRadius: BorderRadius.circular(15))),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Container(width: 74, height: 8, decoration: BoxDecoration(color: white, borderRadius: BorderRadius.circular(8))),
+              const SizedBox(height: 9),
+              Container(width: double.infinity, height: 11, decoration: BoxDecoration(color: white, borderRadius: BorderRadius.circular(8))),
+            ])),
+            const SizedBox(width: 14),
+            Container(width: 55, height: 14, decoration: BoxDecoration(color: white, borderRadius: BorderRadius.circular(8))),
+          ]),
+          const SizedBox(height: 17),
+          Container(width: double.infinity, height: 8, decoration: BoxDecoration(color: white, borderRadius: BorderRadius.circular(8))),
+          const SizedBox(height: 8),
+          Container(width: 190, height: 8, decoration: BoxDecoration(color: white, borderRadius: BorderRadius.circular(8))),
+          const Spacer(),
+          Container(width: double.infinity, height: 1, color: white),
+          const SizedBox(height: 13),
+          Row(children: [
+            Container(width: 26, height: 26, decoration: const BoxDecoration(color: white, shape: BoxShape.circle)),
+            const SizedBox(width: 8),
+            Container(width: 90, height: 8, decoration: BoxDecoration(color: white, borderRadius: BorderRadius.circular(8))),
+          ]),
+        ]),
+      ),
+    ),
+  ));
 }
 
 class _EmptyState extends StatelessWidget {
