@@ -845,6 +845,40 @@ class MessagesPage extends StatelessWidget {
   ]));
 }
 
+class _AccountRow extends StatelessWidget {
+  const _AccountRow({required this.icon, required this.title, required this.subtitle, required this.onTap});
+  final IconData icon;
+  final String title, subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Material(
+      color: white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), border: Border.all(color: line)),
+          child: Row(children: [
+            Container(width: 39, height: 39, decoration: BoxDecoration(color: mint, borderRadius: BorderRadius.circular(13)), child: Icon(icon, color: forest, size: 19)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 3),
+              Text(subtitle, style: const TextStyle(color: muted, fontSize: 10)),
+            ])),
+            const Icon(PhosphorIconsRegular.caretRight, color: muted, size: 17),
+          ]),
+        ),
+      ),
+    ),
+  );
+}
+
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key, required this.user, required this.onLogin, required this.onSignOut, required this.onUserChanged});
   final Map<String, dynamic>? user;
