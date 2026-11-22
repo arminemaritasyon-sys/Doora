@@ -198,6 +198,10 @@ class _MyTasksState extends State<MyTasks> {
   finally{if(mounted)setState(()=>busy=false);}
  }
  Widget segmentButton(String label,int index)=>Expanded(child:GestureDetector(onTap:()=>setState(()=>segment=index),child:Container(padding:const EdgeInsets.symmetric(vertical:11),decoration:BoxDecoration(color:segment==index?white:Colors.transparent,borderRadius:BorderRadius.circular(10)),child:Text(label,textAlign:TextAlign.center,style:TextStyle(color:segment==index?ink:muted,fontSize:10,fontWeight:FontWeight.w800)))));
+ Widget offerSection(){
+  if(offers.isEmpty)return const EmptyState(title:'Henüz teklif vermedin',message:'İlgini çeken bir ilanda “Ben yaparım” diyerek teklifini iletebilirsin.');
+  return Column(children:offers.map((o)=>offerHistoryCard(o)).toList());
+ }
  Widget offerHistoryCard(Map<String,dynamic> offer){
   final status=offer['status']?.toString()??'pending';
   final label=status=='accepted'?'Kabul edildi':status=='rejected'?'Reddedildi':status=='withdrawn'?'Geri çekildi':'Yanıt bekliyor';
@@ -215,7 +219,7 @@ class _MyTasksState extends State<MyTasks> {
   Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFF1F4EE),borderRadius:BorderRadius.circular(13)),child:Row(children:[segmentButton('Paylaştıklarım',0),segmentButton('Teklif Verdiklerim',1)])),
   const SizedBox(height:16),
   if(widget.user==null)EmptyState(title:'Hesabına giriş yap',message:'İşlerini takip etmek için giriş yap.',action:'Giriş yap',onTap:widget.onLogin)
-  else if(segment==1)offers.isEmpty?const EmptyState(title:'Henüz teklif vermedin',message:'İlgini çeken bir ilanda “Ben yaparım” diyerek teklifini iletebilirsin.'):...offers.map((o)=>offerHistoryCard(o))
+  else if(segment==1)offerSection()
   else if(busy)const Skeletons()
   else if(error!=null)EmptyState(title:'İşlerin yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)
   else if(tasks.isEmpty)EmptyState(title:'Henüz ilan paylaşmadın',message:'İlk ilanını oluştur ve yakınındaki kişilerden teklif al.',action:'İlan oluştur',onTap:widget.onCreate)
