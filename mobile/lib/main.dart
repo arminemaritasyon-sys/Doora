@@ -245,6 +245,7 @@ class DiscoverPage extends StatefulWidget {
 class _DiscoverPageState extends State<DiscoverPage> {
   final search = TextEditingController();
   List<DooraTask> tasks = [];
+  Set<String> savedIds = <String>{};
   bool loading = true;
   String? error;
   String category = 'Tümü';
@@ -255,7 +256,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
   @override
   void didUpdateWidget(covariant DiscoverPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.refreshKey != widget.refreshKey) load();
+    if (oldWidget.refreshKey != widget.refreshKey || oldWidget.user != widget.user) load();
   }
   @override
   void dispose() { search.dispose(); super.dispose(); }
@@ -263,7 +264,19 @@ class _DiscoverPageState extends State<DiscoverPage> {
   Future<void> load() async {
     setState(() { loading = true; error = null; });
     try {
-      final rows = await DooraApi.instance.getTasks(query: search.text, category: category);
+      final hasFilter = search.text.trim().isNotEmpty || category != 'Tümü';
+      List<Map<String, dynamic>> rows;
+      if (widget.user != null && !hasFilter) {
+        rows = await DooraApi.instance.getNearbyTasks();
+        if (rows.isEmpty) rows = await DooraApi.instance.getTasks();
+      } else {
+        rows = await DooraApi.instance.getTasks(query: search.text, category: category);
+      }
+      if (widget.user != null) {
+        try { savedIds = await DooraApi.instance.getSavedTaskIds(); } catch (_) { savedIds = <String>{}; }
+      } else {
+        savedIds = <String>{};
+      }
       if (!mounted) return;
       setState(() => tasks = rows.map(DooraTask.fromJson).toList());
     } catch (e) {
@@ -271,6 +284,27 @@ class _DiscoverPageState extends State<DiscoverPage> {
       setState(() => error = DooraApi.instance.errorMessage(e));
     } finally {
       if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> toggleSaved(DooraTask task) async {
+    if (widget.user == null) { widget.onLogin(); return; }
+    final wasSaved = savedIds.contains(task.id);
+    setState(() {
+      if (wasSaved) { savedIds.remove(task.id); } else { savedIds.add(task.id); }
+    });
+    try {
+      final saved = await DooraApi.instance.toggleSavedTask(task.id);
+      if (!mounted) return;
+      setState(() {
+        if (saved) { savedIds.add(task.id); } else { savedIds.remove(task.id); }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        if (wasSaved) { savedIds.add(task.id); } else { savedIds.remove(task.id); }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(DooraApi.instance.errorMessage(e))));
     }
   }
 
@@ -327,7 +361,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
               else
                 ...tasks.map((task) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: JobCard(task: task, onTap: () => _openTask(context, task, widget.user, widget.onLogin, onChanged: load)),
+                  child: JobCard(task: task, saved: savedIds.contains(task.id), onSave: () => toggleSaved(task), onTap: () => _openTask(context, task, widget.user, widget.onLogin, onChanged: load)),
                 )),
               const SizedBox(height: 12),
               _TrustStrip(),
@@ -489,9 +523,11 @@ IconData _categoryIcon(String value) {
 }
 
 class JobCard extends StatelessWidget {
-  const JobCard({super.key, required this.task, required this.onTap});
+  const JobCard({super.key, required this.task, required this.onTap, this.saved = false, this.onSave});
   final DooraTask task;
   final VoidCallback onTap;
+  final bool saved;
+  final VoidCallback? onSave;
   @override
   Widget build(BuildContext context) => Material(
     color: white,
@@ -520,6 +556,16 @@ class JobCard extends StatelessWidget {
               Text(task.formattedBudget, style: const TextStyle(color: forest, fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: -.4)),
               const SizedBox(height: 3),
               const Text('BÜTÇE', style: TextStyle(color: Color(0xFF9AA59E), fontSize: 8, fontWeight: FontWeight.w800, letterSpacing: .7)),
+              if (onSave != null)
+                SizedBox(
+                  height: 28, width: 30,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                    onPressed: onSave,
+                    icon: Icon(saved ? PhosphorIconsFill.heart : PhosphorIconsRegular.heart, color: saved ? const Color(0xFFCC665E) : const Color(0xFF8C9991), size: 17),
+                  ),
+                ),
             ]),
           ]),
           if (task.description.isNotEmpty) ...[
