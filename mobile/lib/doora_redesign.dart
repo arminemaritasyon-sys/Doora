@@ -343,7 +343,7 @@ class _MyTasksState extends State<MyTasks> {
    Expanded(child:_taskMetric('Verdiğin teklif',offers.length.toString(),PhosphorIconsRegular.paperPlaneTilt)),
   ]),
   const SizedBox(height:17),
-  Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFECEF E7),borderRadius:BorderRadius.circular(14)),child:Row(children:[
+  Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFECEFE7),borderRadius:BorderRadius.circular(14)),child:Row(children:[
    Expanded(child:GestureDetector(onTap:()=>setState(()=>segment=0),child:AnimatedContainer(duration:const Duration(milliseconds:160),padding:const EdgeInsets.symmetric(vertical:12),decoration:BoxDecoration(color:segment==0?white:Colors.transparent,borderRadius:BorderRadius.circular(11),boxShadow:segment==0?[BoxShadow(color:ink.withValues(alpha:.05),blurRadius:8,offset:const Offset(0,2))]:[]),child:Text('Paylaştıklarım  ${tasks.length}',textAlign:TextAlign.center,style:TextStyle(color:segment==0?darkGreen:muted,fontSize:9,fontWeight:FontWeight.w900))))),
    Expanded(child:GestureDetector(onTap:()=>setState(()=>segment=1),child:AnimatedContainer(duration:const Duration(milliseconds:160),padding:const EdgeInsets.symmetric(vertical:12),decoration:BoxDecoration(color:segment==1?white:Colors.transparent,borderRadius:BorderRadius.circular(11),boxShadow:segment==1?[BoxShadow(color:ink.withValues(alpha:.05),blurRadius:8,offset:const Offset(0,2))]:[]),child:Text('Teklif verdiklerim  ${offers.length}',textAlign:TextAlign.center,style:TextStyle(color:segment==1?darkGreen:muted,fontSize:9,fontWeight:FontWeight.w900))))),
   ])),
@@ -750,7 +750,7 @@ class _AuthPageState extends State<AuthPage>{
      ]),
     ),
     const SizedBox(height:18),
-    if(!verify)Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFECEF E7),borderRadius:BorderRadius.circular(14)),child:Row(children:[
+    if(!verify)Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFECEFE7),borderRadius:BorderRadius.circular(14)),child:Row(children:[
      Expanded(child:_modeButton('Giriş yap',false)),
      Expanded(child:_modeButton('Kayıt ol',true)),
     ])),
