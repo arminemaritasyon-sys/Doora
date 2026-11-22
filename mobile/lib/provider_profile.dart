@@ -1,0 +1,351 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+import 'services/api_client.dart';
+
+const _ink = Color(0xFF20251F);
+const _muted = Color(0xFF7A8474);
+const _line = Color(0xFFE8EDE4);
+const _paper = Color(0xFFF7F8F5);
+const _green = Color(0xFFA9B98E);
+const _forest = Color(0xFF263B2B);
+
+class ProviderProfilePage extends StatefulWidget {
+  const ProviderProfilePage({
+    super.key,
+    required this.userId,
+    required this.fallbackName,
+    this.currentUserId,
+  });
+
+  final String userId;
+  final String fallbackName;
+  final String? currentUserId;
+
+  @override
+  State<ProviderProfilePage> createState() => _ProviderProfilePageState();
+}
+
+class _ProviderProfilePageState extends State<ProviderProfilePage> {
+  Map<String, dynamic> profile = {};
+  List<Map<String, dynamic>> portfolio = [];
+  bool loading = true;
+  bool uploading = false;
+  String? error;
+
+  bool get isOwnProfile =>
+      widget.currentUserId != null && widget.currentUserId == widget.userId;
+
+  @override
+  void initState() {
+    super.initState();
+    load();
+  }
+
+  Future<void> load() async {
+    if (mounted) setState(() { loading = true; error = null; });
+    try {
+      final values = await Future.wait([
+        DooraApi.instance.getPublicProfile(widget.userId),
+        DooraApi.instance.getPortfolio(widget.userId),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        profile = values[0] as Map<String, dynamic>;
+        portfolio = (values[1] as List<Map<String, dynamic>>);
+      });
+    } catch (e) {
+      if (mounted) setState(() => error = DooraApi.instance.errorMessage(e));
+    } finally {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> addWork() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 82,
+      maxWidth: 1440,
+    );
+    if (image == null || !mounted) return;
+
+    final bytes = await File(image.path).readAsBytes();
+    if (bytes.length > 1_300_000) {
+      _toast('Görsel çok büyük. Daha küçük bir fotoğraf seç.');
+      return;
+    }
+
+    final title = TextEditingController();
+    final description = TextEditingController();
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+        ),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Portföye çalışma ekle', style: TextStyle(
+                  color: _ink, fontSize: 18, fontWeight: FontWeight.w900,
+                )),
+                const SizedBox(height: 14),
+                TextField(controller: title, maxLength: 100,
+                  decoration: const InputDecoration(labelText: 'Çalışma başlığı')),
+                const SizedBox(height: 8),
+                TextField(controller: description, maxLength: 500, maxLines: 3,
+                  decoration: const InputDecoration(labelText: 'Kısa açıklama')),
+                const SizedBox(height: 14),
+                SizedBox(width: double.infinity, child: FilledButton(
+                  onPressed: () => Navigator.pop(sheetContext, true),
+                  style: FilledButton.styleFrom(backgroundColor: _forest),
+                  child: const Text('Portföye ekle'),
+                )),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    if (title.text.trim().length < 2) {
+      title.dispose();
+      description.dispose();
+      _toast('Çalışma başlığı en az 2 karakter olmalı.');
+      return;
+    }
+
+    setState(() => uploading = true);
+    try {
+      final extension = image.name.toLowerCase();
+      final mime = extension.endsWith('.png')
+          ? 'image/png'
+          : extension.endsWith('.webp')
+              ? 'image/webp'
+              : 'image/jpeg';
+      await DooraApi.instance.addPortfolioItem(
+        title: title.text,
+        description: description.text,
+        imageData: 'data:$mime;base64,${base64Encode(bytes)}',
+      );
+      await load();
+      if (mounted) _toast('Çalışman portföyüne eklendi.');
+    } catch (e) {
+      if (mounted) _toast(DooraApi.instance.errorMessage(e));
+    } finally {
+      title.dispose();
+      description.dispose();
+      if (mounted) setState(() => uploading = false);
+    }
+  }
+
+  void _toast(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: _ink,
+    ));
+  }
+
+  Widget _portfolioCard(Map<String, dynamic> item) {
+    final raw = item['imageData']?.toString() ?? item['image_data']?.toString() ?? '';
+    final encoded = raw.contains(',') ? raw.substring(raw.indexOf(',') + 1) : raw;
+    Widget picture;
+    try {
+      picture = Image.memory(base64Decode(encoded), fit: BoxFit.cover);
+    } catch (_) {
+      picture = const ColoredBox(
+        color: Color(0xFFEDF1E9),
+        child: Center(child: Icon(Icons.image_outlined, color: _forest, size: 30)),
+      );
+    }
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _line),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        AspectRatio(aspectRatio: 1.18, child: picture),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 11, 12, 13),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(item['title']?.toString() ?? 'Çalışma',
+              maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: _ink, fontSize: 12, fontWeight: FontWeight.w900)),
+            if ((item['description']?.toString() ?? '').isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(item['description'].toString(), maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: _muted, fontSize: 9, height: 1.4)),
+            ],
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final name = profile['name']?.toString().trim().isNotEmpty == true
+        ? profile['name'].toString()
+        : widget.fallbackName;
+    final bio = profile['bio']?.toString() ?? '';
+    final district = profile['district']?.toString() ?? '';
+    final verified = profile['isVerified'] == true;
+    final avatar = profile['avatarUrl']?.toString() ?? '';
+
+    return Scaffold(
+      backgroundColor: _paper,
+      appBar: AppBar(
+        backgroundColor: _paper,
+        title: const Text('Hizmet veren profili', style: TextStyle(
+          color: _ink, fontSize: 16, fontWeight: FontWeight.w900,
+        )),
+      ),
+      body: loading
+          ? const Center(child: CircularProgressIndicator(color: _forest))
+          : error != null
+              ? Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.cloud_off_outlined, color: _muted, size: 32),
+                    const SizedBox(height: 10),
+                    Text(error!, textAlign: TextAlign.center,
+                      style: const TextStyle(color: _muted, fontSize: 12)),
+                    TextButton(onPressed: load, child: const Text('Tekrar dene')),
+                  ])),
+                )
+              : RefreshIndicator(
+                  color: _forest,
+                  onRefresh: load,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(18, 12, 18, 30),
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: _line),
+                        ),
+                        child: Column(children: [
+                          CircleAvatar(
+                            radius: 39,
+                            backgroundColor: const Color(0xFFEDF1E9),
+                            backgroundImage: avatar.isNotEmpty
+                                ? NetworkImage(DooraApi.instance.absoluteUrl(avatar))
+                                : null,
+                            child: avatar.isEmpty
+                                ? Text(name.isEmpty ? 'D' : name.characters.first.toUpperCase(),
+                                    style: const TextStyle(color: _forest, fontSize: 25, fontWeight: FontWeight.w900))
+                                : null,
+                          ),
+                          const SizedBox(height: 12),
+                          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                            Flexible(child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: _ink, fontSize: 17, fontWeight: FontWeight.w900))),
+                            if (verified) ...[
+                              const SizedBox(width: 6),
+                              const Icon(Icons.verified, color: Color(0xFF3985C8), size: 18),
+                            ],
+                          ]),
+                          if (verified) const Padding(
+                            padding: EdgeInsets.only(top: 4),
+                            child: Text('Doğrulanmış kullanıcı', style: TextStyle(
+                              color: Color(0xFF3985C8), fontSize: 9, fontWeight: FontWeight.w800,
+                            )),
+                          ),
+                          if (district.isNotEmpty) Padding(
+                            padding: const EdgeInsets.only(top: 7),
+                            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                              const Icon(Icons.location_on_outlined, color: _muted, size: 14),
+                              const SizedBox(width: 3),
+                              Text(district, style: const TextStyle(color: _muted, fontSize: 10)),
+                            ]),
+                          ),
+                          if (bio.isNotEmpty) Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Text(bio, textAlign: TextAlign.center,
+                              style: const TextStyle(color: _muted, fontSize: 11, height: 1.5)),
+                          ),
+                        ]),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(children: [
+                        const Expanded(child: Text('Hizmet portföyü', style: TextStyle(
+                          color: _ink, fontSize: 16, fontWeight: FontWeight.w900,
+                        ))),
+                        Text('${portfolio.length}/24', style: const TextStyle(
+                          color: _muted, fontSize: 10, fontWeight: FontWeight.w700,
+                        )),
+                      ]),
+                      const SizedBox(height: 11),
+                      if (portfolio.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 18),
+                          decoration: BoxDecoration(
+                            color: Colors.white, borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: _line),
+                          ),
+                          child: const Column(children: [
+                            Icon(Icons.photo_library_outlined, color: _green, size: 30),
+                            SizedBox(height: 9),
+                            Text('Henüz portföy çalışması yok', style: TextStyle(
+                              color: _ink, fontSize: 12, fontWeight: FontWeight.w800,
+                            )),
+                            SizedBox(height: 4),
+                            Text('Tamamlanan işlerini burada sergileyebilirsin.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: _muted, fontSize: 10)),
+                          ]),
+                        )
+                      else
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: portfolio.length,
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10,
+                            childAspectRatio: .84,
+                          ),
+                          itemBuilder: (_, index) => _portfolioCard(portfolio[index]),
+                        ),
+                      if (isOwnProfile && portfolio.length < 24) ...[
+                        const SizedBox(height: 13),
+                        OutlinedButton.icon(
+                          onPressed: uploading ? null : addWork,
+                          icon: uploading
+                              ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.add_photo_alternate_outlined),
+                          label: Text(uploading ? 'Ekleniyor…' : 'Portföye çalışma ekle'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _forest,
+                            side: const BorderSide(color: _line),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+    );
+  }
+}
