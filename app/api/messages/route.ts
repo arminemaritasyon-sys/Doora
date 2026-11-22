@@ -19,6 +19,13 @@ export async function GET(request: NextRequest) {
       if (peerId === user.id || peerId.length > 200) {
         return NextResponse.json({ error: "Sohbet bulunamadı." }, { status: 400 });
       }
+      const [blocked] = await db`
+        SELECT 1 FROM public.user_blocks
+        WHERE (blocker_id = ${user.id} AND blocked_id = ${peerId})
+           OR (blocker_id = ${peerId} AND blocked_id = ${user.id})
+        LIMIT 1
+      `;
+      if (blocked) return NextResponse.json({ error: "Bu kullanıcıyla mesajlaşma mümkün değil." }, { status: 403 });
       await db`
         UPDATE public.direct_messages SET read_at = now()
         WHERE sender_id = ${peerId} AND recipient_id = ${user.id}
@@ -53,6 +60,11 @@ export async function GET(request: NextRequest) {
         FROM public.direct_messages
         WHERE (sender_id = ${user.id} OR recipient_id = ${user.id})
           AND NOT (${user.id} = ANY(hidden_by))
+          AND NOT EXISTS (
+            SELECT 1 FROM public.user_blocks b
+            WHERE (b.blocker_id = ${user.id} AND b.blocked_id = CASE WHEN sender_id = ${user.id} THEN recipient_id ELSE sender_id END)
+               OR (b.blocker_id = CASE WHEN sender_id = ${user.id} THEN recipient_id ELSE sender_id END AND b.blocked_id = ${user.id})
+          )
       ), ranked AS (
         SELECT *, row_number() OVER (PARTITION BY peer_id, task_id ORDER BY created_at DESC) AS rn,
           sum(unread) OVER (PARTITION BY peer_id, task_id) AS unread_count
