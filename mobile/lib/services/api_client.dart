@@ -149,6 +149,13 @@ class DooraApi {
     return _asMap(_asMap(response.data)['task']);
   }
 
+  Future<List<Map<String, dynamic>>> getMyOffers() async {
+    final response = await _dio.get('/api/offers');
+    final rows = _asMap(response.data)['offers'];
+    if (rows is! List) return [];
+    return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
   Future<Map<String, dynamic>> createOffer({
     required String taskId,
     required num amount,
