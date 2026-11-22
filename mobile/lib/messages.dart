@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'services/api_client.dart';
 
@@ -17,6 +18,13 @@ Widget _personAvatar(String name, String url, {double radius = 23}) {
       style: TextStyle(color: _msgGreen, fontWeight: FontWeight.w900, fontSize: radius * .72)),
   );
   if (url.isEmpty) return fallback;
+  if (url.startsWith('data:image/')) {
+    try {
+      final bytes = base64Decode(url.substring(url.indexOf(',') + 1));
+      return ClipOval(child: SizedBox(width: radius * 2, height: radius * 2,
+        child: Image.memory(bytes, fit: BoxFit.cover, errorBuilder: (_, __, ___) => fallback)));
+    } catch (_) { return fallback; }
+  }
   return ClipOval(child: SizedBox(width: radius * 2, height: radius * 2,
     child: Image.network(DooraApi.instance.absoluteUrl(url), fit: BoxFit.cover,
       errorBuilder: (_, __, ___) => fallback,
