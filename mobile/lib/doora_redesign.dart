@@ -1,19 +1,22 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import 'models/doora_task.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
 import 'provider_profile.dart';
 import 'messages.dart';
 
-const bg=Color(0xFFF7F9F5), white=Color(0xFFFFFEFC), ink=Color(0xFF252B25), muted=Color(0xFF818A80), line=Color(0xFFE7ECE5), green=Color(0xFFE7F0E5), darkGreen=Color(0xFF86A989), mint=Color(0xFFEDF4EB), soft=Color(0xFFF2F6F0);
+const bg=Color(0xFFF5F7F1), white=Color(0xFFFFFEFC), ink=Color(0xFF171D18), muted=Color(0xFF59645A), line=Color(0xFFE0E7DD), green=Color(0xFFD5E4D0), darkGreen=Color(0xFF648B65), mint=Color(0xFFE4EDE0), soft=Color(0xFFEDF2E9);
 const districts=['Muratpaşa','Konyaaltı','Kepez','Aksu','Döşemealtı'];
+const provinces=['Adana','Adıyaman','Afyonkarahisar','Ağrı','Amasya','Ankara','Antalya','Artvin','Aydın','Balıkesir','Bilecik','Bingöl','Bitlis','Bolu','Burdur','Bursa','Çanakkale','Çankırı','Çorum','Denizli','Diyarbakır','Edirne','Elazığ','Erzincan','Erzurum','Eskişehir','Gaziantep','Giresun','Gümüşhane','Hakkâri','Hatay','Iğdır','Isparta','İstanbul','İzmir','Kahramanmaraş','Karabük','Karaman','Kars','Kastamonu','Kayseri','Kırıkkale','Kırklareli','Kırşehir','Kilis','Kocaeli','Konya','Kütahya','Malatya','Manisa','Mardin','Mersin','Muğla','Muş','Nevşehir','Niğde','Ordu','Osmaniye','Rize','Sakarya','Samsun','Siirt','Sinop','Sivas','Şanlıurfa','Şırnak','Tekirdağ','Tokat','Trabzon','Tunceli','Uşak','Van','Yalova','Yozgat','Zonguldak'];
 const categories=['Alışveriş','Teslimat','Ev işleri','Taşıma','Tamir','Diğer'];
 IconData catIcon(String c){switch(c){case 'Alışveriş':return PhosphorIconsRegular.shoppingBag;case 'Teslimat':return PhosphorIconsRegular.truck;case 'Ev işleri':return PhosphorIconsRegular.broom;case 'Taşıma':return PhosphorIconsRegular.package;case 'Tamir':return PhosphorIconsRegular.wrench;default:return PhosphorIconsRegular.squaresFour;}}
 Route<T> dooraRoute<T>({required WidgetBuilder builder}) => PageRouteBuilder<T>(
@@ -202,25 +205,25 @@ class Discover extends StatefulWidget {
 }
 class _DiscoverState extends State<Discover>{
  final search=TextEditingController(); List<DooraTask> tasks=[]; Set<String> saved={};
- int unreadCount=0,unreadMessageCount=0; Timer? badgeTimer;
- String district='Tüm Antalya',category='Tümü',sort='En yeni'; double minBudget=0,maxBudget=50000; bool busy=true; String? error;
+ int unreadCount=0,unreadMessageCount=0; Timer? badgeTimer,searchDebounce;
+ String district='Tüm Türkiye',category='Tümü',sort='En yeni'; double minBudget=0,maxBudget=50000; bool busy=true; String? error;
  static const labels=['Tümü','Ulaşım','Tadilat','Temizlik','Taşıma','Diğer'];
  static const icons=[PhosphorIconsRegular.squaresFour,PhosphorIconsRegular.car,PhosphorIconsRegular.paintRoller,PhosphorIconsRegular.broom,PhosphorIconsRegular.package,PhosphorIconsRegular.dotsThree];
  static const taskUrl='https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=600&q=85';
  @override void initState(){super.initState();load();badgeTimer=Timer.periodic(const Duration(seconds:12),(_)=>refreshBadges());}
  @override void didUpdateWidget(covariant Discover old){super.didUpdateWidget(old);if(old.refresh!=widget.refresh||old.user!=widget.user)load();}
- @override void dispose(){badgeTimer?.cancel();search.dispose();super.dispose();}
+ @override void dispose(){badgeTimer?.cancel();searchDebounce?.cancel();search.dispose();super.dispose();}
  String apiCategory(String v){switch(v){case 'Ulaşım':return 'Teslimat';case 'Tadilat':return 'Tamir';case 'Temizlik':return 'Ev işleri';default:return v;}}
  Future<void> refreshBadges()async{if(widget.user==null)return;try{final v=await Future.wait([DooraApi.instance.getUnreadNotificationCount(),DooraApi.instance.getUnreadMessageCount()]);if(mounted)setState((){unreadCount=v[0];unreadMessageCount=v[1];});}catch(_){}}
  Future<void> load()async{
   if(!mounted)return;setState((){busy=true;error=null;});
   try{
    List<Map<String,dynamic>> rows;
-   try{rows=widget.user!=null&&search.text.isEmpty&&category=='Tümü'?await DooraApi.instance.getNearbyTasks():await DooraApi.instance.getTasks(query:search.text,category:apiCategory(category));if(rows.isEmpty)rows=await DooraApi.instance.getTasks(query:search.text,category:apiCategory(category));}
+   try{rows=widget.user!=null&&search.text.isEmpty&&category=='Tümü'&&district=='Tüm Türkiye'?await DooraApi.instance.getNearbyTasks():await DooraApi.instance.getTasks(query:search.text,category:apiCategory(category),city:district);if(rows.isEmpty)rows=await DooraApi.instance.getTasks(query:search.text,category:apiCategory(category),city:district);}
    catch(_){rows=await DooraApi.instance.getTasks(query:search.text,category:apiCategory(category));}
    int unread=0,msg=0;if(widget.user!=null){try{saved=await DooraApi.instance.getSavedTaskIds();}catch(_){saved={};}try{unread=await DooraApi.instance.getUnreadNotificationCount();}catch(_){}try{msg=await DooraApi.instance.getUnreadMessageCount();}catch(_){}}
    var list=rows.map(DooraTask.fromJson).toList()..removeWhere((t)=>t.budget<minBudget||t.budget>maxBudget);
-   if(district!='Tüm Antalya')list=list.where((t)=>t.location.toLowerCase().contains(district.toLowerCase())).toList();
+   
    if(sort=='En düşük bütçe')list.sort((a,b)=>a.budget.compareTo(b.budget));if(sort=='En yüksek bütçe')list.sort((a,b)=>b.budget.compareTo(a.budget));
    if(mounted)setState((){tasks=list;unreadCount=unread;unreadMessageCount=msg;});
   }catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}finally{if(mounted)setState(()=>busy=false);}
@@ -274,39 +277,46 @@ class _DiscoverState extends State<Discover>{
        child:Icon(icons[i],color:active?white:const Color(0xFF6E675F),size:23),
       ),
       const SizedBox(height:8),
-      Text(labels[i],maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(color:active?darkGreen:const Color(0xFF716A62),fontSize:10,fontWeight:active?FontWeight.w800:FontWeight.w600)),
+      Text(labels[i],maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(color:ink,fontSize:10,fontWeight:active?FontWeight.w900:FontWeight.w700)),
      ]),
     ));
    },
   ),
  );
- Widget searchView()=>Container(height:49,padding:const EdgeInsets.symmetric(horizontal:17),decoration:BoxDecoration(color:const Color(0xFFF8F6F2),borderRadius:BorderRadius.circular(24),border:Border.all(color:white,width:1.2),boxShadow:[BoxShadow(color:ink.withValues(alpha:.055),blurRadius:19,offset:const Offset(0,7))]),child:Row(children:[const Icon(Icons.search,color:Color(0xFF8C776B),size:24),const SizedBox(width:13),Expanded(child:TextField(controller:search,onSubmitted:(_)=>load(),textInputAction:TextInputAction.search,decoration:const InputDecoration(border:InputBorder.none,hintText:'Ne aramıştınız?',hintStyle:TextStyle(color:Color(0xFF96938D),fontSize:15)))),IconButton(onPressed:()=>showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(_)=>DistrictSheet(value:district,onSelect:(v){setState(()=>district=v);load();})),icon:const Icon(Icons.tune,color:ink,size:22))]));
+ Widget searchView()=>Container(height:49,padding:const EdgeInsets.symmetric(horizontal:17),decoration:BoxDecoration(color:const Color(0xFFF8F6F2),borderRadius:BorderRadius.circular(24),border:Border.all(color:white,width:1.2),boxShadow:[BoxShadow(color:ink.withValues(alpha:.055),blurRadius:19,offset:const Offset(0,7))]),child:Row(children:[const Icon(Icons.search,color:Color(0xFF8C776B),size:24),const SizedBox(width:13),Expanded(child:TextField(controller:search,onChanged:(_){searchDebounce?.cancel();searchDebounce=Timer(const Duration(milliseconds:320),load);},onSubmitted:(_)=>load(),textInputAction:TextInputAction.search,decoration:const InputDecoration(border:InputBorder.none,hintText:'İlan, hizmet veya kelime ara',hintStyle:TextStyle(color:Color(0xFF96938D),fontSize:15)))),IconButton(onPressed:()=>showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(_)=>ProvinceSheet(value:district,onSelect:(v){setState(()=>district=v);load();})),icon:const Icon(Icons.tune,color:ink,size:22))]));
  Widget sortSheet()=>SafeArea(child:Padding(padding:const EdgeInsets.all(20),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Sıralama',style:TextStyle(color:ink,fontSize:18,fontWeight:FontWeight.w800)),...['En yeni','En düşük bütçe','En yüksek bütçe'].map((v)=>ListTile(title:Text(v),trailing:v==sort?const Icon(Icons.check,color:darkGreen):null,onTap:(){Navigator.pop(context);setState(()=>sort=v);load();})),ListTile(title:const Text('Filtreler'),leading:const Icon(Icons.tune,color:darkGreen),onTap:(){Navigator.pop(context);budgetFilter();})])));
- Widget taskCard(BuildContext c,DooraTask t)=>Container(
-  height:128,padding:const EdgeInsets.all(7),
-  decoration:BoxDecoration(color:const Color(0xFFFAF9F6),borderRadius:BorderRadius.circular(24),border:Border.all(color:Colors.white,width:1.4),boxShadow:[BoxShadow(color:ink.withValues(alpha:.075),blurRadius:22,offset:const Offset(0,8))]),
-  child:Row(children:[
-   ClipRRect(borderRadius:BorderRadius.circular(18),child:Image.network(taskUrl,width:96,height:114,fit:BoxFit.cover,errorBuilder:(_,__,___)=>Container(width:96,height:114,color:mint,child:const Icon(Icons.home_outlined,color:darkGreen,size:32)))),
-   const SizedBox(width:11),
-   Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-    Row(children:[
-     Container(padding:const EdgeInsets.symmetric(horizontal:8,vertical:4),decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(18)),child:Row(mainAxisSize:MainAxisSize.min,children:[Container(width:6,height:6,decoration:const BoxDecoration(color:Color(0xFF63864C),shape:BoxShape.circle)),const SizedBox(width:5),const Text('Aktif',style:TextStyle(color:ink,fontSize:9,fontWeight:FontWeight.w600))])),
-     const Spacer(),InkWell(onTap:()=>save(t),customBorder:const CircleBorder(),child:Container(width:28,height:28,decoration:const BoxDecoration(color:Color(0xFFF7F5F1),shape:BoxShape.circle),child:Icon(saved.contains(t.id)?PhosphorIconsFill.heart:PhosphorIconsRegular.heart,color:saved.contains(t.id)?const Color(0xFFE36B75):ink,size:17)))
-    ]),
-    const SizedBox(height:3),
-    Expanded(child:Align(alignment:Alignment.centerLeft,child:Text(t.title,maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Color(0xFF1A1A1A),fontSize:12.5,fontWeight:FontWeight.w800,height:1.18)))),
-    Row(children:[const Icon(Icons.location_on_outlined,color:muted,size:13),const SizedBox(width:2),Expanded(child:Text(t.location.isEmpty?'Antalya':t.location,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:Color(0xFF555750),fontSize:8.5))),const Icon(Icons.schedule_outlined,color:muted,size:12),const SizedBox(width:3),Text(t.time,style:const TextStyle(color:Color(0xFF555750),fontSize:8.5))]),
-    const Padding(padding:EdgeInsets.symmetric(vertical:5),child:Divider(height:1,color:line)),
-    Row(children:[
-     _TaskAvatar(name:t.owner,url:t.ownerAvatar,radius:11),
-     const SizedBox(width:5),
-     Expanded(child:Text(t.owner,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:8))),
-     Container(padding:const EdgeInsets.symmetric(horizontal:8,vertical:6),decoration:BoxDecoration(color:const Color(0xFFF0EAE3),borderRadius:BorderRadius.circular(10)),child:Text(t.formattedBudget,style:const TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w800))),
-     const SizedBox(width:6),
-     SizedBox(height:29,child:FilledButton(onPressed:()=>openTask(c,t,widget.user,widget.onLogin,load),style:FilledButton.styleFrom(backgroundColor:const Color(0xFF171918),foregroundColor:white,shape:const StadiumBorder(),padding:const EdgeInsets.symmetric(horizontal:14),elevation:0),child:const Text('Teklif Ver',style:TextStyle(fontSize:9,fontWeight:FontWeight.w700))))
-    ])
-   ]))
-  ])
+ Future<void> openOffer(DooraTask task) async {
+  if(widget.user==null){widget.onLogin();return;}
+  await showModalBottomSheet(context:context,isScrollControlled:true,backgroundColor:Colors.transparent,barrierColor:ink.withValues(alpha:.38),builder:(_)=>OfferSheet(task:task,onSent:load));
+ }
+ void openOwner(DooraTask task){
+  if(task.ownerId.isEmpty)return;
+  Navigator.push(context,dooraRoute(builder:(_)=>ProviderProfilePage(userId:task.ownerId,fallbackName:task.owner,currentUserId:widget.user?['id']?.toString())));
+ }
+ Widget taskCard(BuildContext c,DooraTask t)=>Material(
+  color:white,borderRadius:BorderRadius.circular(23),
+  child:InkWell(onTap:()=>openTask(c,t,widget.user,widget.onLogin,load),borderRadius:BorderRadius.circular(23),child:Container(
+   height:132,padding:const EdgeInsets.all(8),
+   decoration:BoxDecoration(borderRadius:BorderRadius.circular(23),border:Border.all(color:line),boxShadow:[BoxShadow(color:ink.withValues(alpha:.055),blurRadius:18,offset:const Offset(0,7))]),
+   child:Row(children:[
+    ClipRRect(borderRadius:BorderRadius.circular(17),child:t.imageUrls.isNotEmpty?Image.network(DooraApi.instance.absoluteUrl(t.imageUrls.first),width:98,height:116,fit:BoxFit.cover,errorBuilder:(_,__,___)=>Container(width:98,height:116,color:mint,child:const Icon(Icons.image_outlined,color:darkGreen,size:30))):Container(width:98,height:116,color:mint,child:const Icon(Icons.home_work_outlined,color:darkGreen,size:30))),
+    const SizedBox(width:11),
+    Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+     Row(children:[Container(padding:const EdgeInsets.symmetric(horizontal:8,vertical:4),decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(18)),child:Text(t.category,style:const TextStyle(color:ink,fontSize:9,fontWeight:FontWeight.w800))),const Spacer(),InkWell(onTap:()=>save(t),customBorder:const CircleBorder(),child:Container(width:29,height:29,decoration:const BoxDecoration(color:soft,shape:BoxShape.circle),child:Icon(saved.contains(t.id)?PhosphorIconsFill.heart:PhosphorIconsRegular.heart,color:saved.contains(t.id)?const Color(0xFFE36B75):ink,size:17)))]),
+     const SizedBox(height:3),
+     Expanded(child:Align(alignment:Alignment.centerLeft,child:Text(t.title,maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:13,fontWeight:FontWeight.w900,height:1.18)))),
+     Row(children:[const Icon(Icons.location_on_outlined,color:muted,size:13),const SizedBox(width:2),Expanded(child:Text(t.location.isEmpty?'Antalya':t.location,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:9))),const Icon(Icons.schedule_outlined,color:muted,size:12),const SizedBox(width:3),Text(t.time,style:const TextStyle(color:muted,fontSize:8.5))]),
+     const Padding(padding:EdgeInsets.symmetric(vertical:5),child:Divider(height:1,color:line)),
+     Row(children:[
+      InkWell(onTap:()=>openOwner(t),borderRadius:BorderRadius.circular(20),child:Padding(padding:const EdgeInsets.symmetric(vertical:3),child:Row(mainAxisSize:MainAxisSize.min,children:[_TaskAvatar(name:t.owner,url:t.ownerAvatar,radius:11),const SizedBox(width:5),ConstrainedBox(constraints:const BoxConstraints(maxWidth:80),child:Text(t.owner,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:8.5,fontWeight:FontWeight.w700)))]))),
+      const Spacer(),
+      Text(t.formattedBudget,style:const TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w900)),
+      const SizedBox(width:7),
+      SizedBox(height:29,child:FilledButton(onPressed:()=>openOffer(t),style:FilledButton.styleFrom(backgroundColor:ink,foregroundColor:white,shape:const StadiumBorder(),padding:const EdgeInsets.symmetric(horizontal:13),elevation:0),child:const Text('Teklif ver',style:TextStyle(fontSize:9,fontWeight:FontWeight.w800))))
+     ])
+    ]))
+   ])
+  ))
  );
  Widget banner()=>Container(height:104,padding:const EdgeInsets.symmetric(horizontal:22,vertical:17),decoration:BoxDecoration(borderRadius:BorderRadius.circular(28),gradient:const LinearGradient(colors:[Color(0xFF302B27),Color(0xFF5B463B),Color(0xFF302B27)],begin:Alignment.topLeft,end:Alignment.bottomRight),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.17),blurRadius:18,offset:const Offset(0,8))]),child:Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.center,children:[Text('DOORA’da',style:TextStyle(color:white,fontSize:20,fontWeight:FontWeight.w400,letterSpacing:-.4)),Text('her şey daha kolay.',style:TextStyle(color:white,fontSize:20,fontWeight:FontWeight.w400,letterSpacing:-.5)),SizedBox(height:5),Text('Hemen keşfet  →',style:TextStyle(color:Color(0xFFD9C8BB),fontSize:11))])),Transform.rotate(angle:-.12,child:Container(width:70,height:70,decoration:BoxDecoration(color:const Color(0xFF2A2521),borderRadius:BorderRadius.circular(19),border:Border.all(color:const Color(0xFF786A5F)),boxShadow:[BoxShadow(color:Colors.black.withValues(alpha:.35),blurRadius:16,offset:const Offset(0,7))]),child:const Center(child:Text('d.',style:TextStyle(color:white,fontSize:45,fontWeight:FontWeight.w400,letterSpacing:-3))))) ]));
  Future<void> budgetFilter()async{var draft=RangeValues(minBudget,maxBudget);final result=await showModalBottomSheet<RangeValues>(context:context,backgroundColor:white,showDragHandle:true,builder:(sheetContext)=>StatefulBuilder(builder:(context,setSheet)=>Padding(padding:const EdgeInsets.fromLTRB(20,8,20,22),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Bütçe aralığı',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w900)),const SizedBox(height:6),Text(draft.start.round().toString()+' ₺ – '+draft.end.round().toString()+' ₺',style:const TextStyle(color:darkGreen,fontSize:13,fontWeight:FontWeight.w800)),RangeSlider(values:draft,min:0,max:50000,divisions:100,activeColor:darkGreen,labels:RangeLabels(draft.start.round().toString(),draft.end.round().toString()),onChanged:(v)=>setSheet(()=>draft=v)),Row(children:[TextButton(onPressed:()=>setSheet(()=>draft=const RangeValues(0,50000)),child:const Text('Sıfırla')),const Spacer(),FilledButton(onPressed:()=>Navigator.pop(sheetContext,draft),style:FilledButton.styleFrom(backgroundColor:darkGreen),child:const Text('Uygula'))])]))));if(result!=null&&mounted){setState((){minBudget=result.start;maxBudget=result.end;});load();}}
@@ -332,9 +342,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
   if(!mounted)return;
   setState(()=>busy=true);
   try {
-   final rows=await DooraApi.instance.getTasks(query:search.text,category:apiCategory(category));
+   final rows=await DooraApi.instance.getTasks(query:search.text,category:apiCategory(category),city:district);
    var list=rows.map(DooraTask.fromJson).toList();
-   if(district!='Tüm Antalya')list=list.where((t)=>t.location.toLowerCase().contains(district.toLowerCase())).toList();
+
    list=list.where((t)=>t.budget>=minBudget&&t.budget<=maxBudget).toList();
    if(maxDistance<50)list=list.where((t)=>t.distanceKm>=0&&t.distanceKm<=maxDistance).toList();
    if(minRating>0)list=list.where((t)=>t.providerRating>=minRating).toList();
@@ -355,7 +365,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
    decoration:BoxDecoration(borderRadius:BorderRadius.circular(18),border:Border.all(color:selected?const Color(0xFFD7E5D5):line)),
    child:Row(mainAxisSize:MainAxisSize.min,children:[if(icon!=null)Padding(padding:const EdgeInsets.only(right:5),child:Icon(icon,size:13,color:selected?darkGreen:muted)),Text(label,style:TextStyle(color:selected?darkGreen:muted,fontSize:10,fontWeight:selected?FontWeight.w700:FontWeight.w500))]),
   ))));
- void chooseDistrict(){showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(sheet)=>DistrictSheet(value:district,onSelect:(v){setState(()=>district=v);load();}));}
+ void chooseDistrict(){showModalBottomSheet(context:context,isScrollControlled:true,backgroundColor:white,showDragHandle:true,builder:(sheet)=>ProvinceSheet(value:district,onSelect:(v){setState(()=>district=v);load();}));}
  void chooseSort(){showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(sheet)=>SafeArea(child:Column(mainAxisSize:MainAxisSize.min,children:['En yeni','En düşük bütçe','En yüksek bütçe','En yüksek puan'].map((v)=>ListTile(title:Text(v,style:const TextStyle(color:ink,fontSize:13)),trailing:sort==v?const Icon(Icons.check,color:darkGreen):null,onTap:(){Navigator.pop(sheet);setState(()=>sort=v);load();})).toList())));}
  void chooseBudget(){double low=minBudget,high=maxBudget;showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(sheet)=>StatefulBuilder(builder:(ctx,setSheet)=>Padding(padding:const EdgeInsets.fromLTRB(20,8,20,24),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[
   const Text('Fiyat aralığı',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w700)),
@@ -397,6 +407,30 @@ class _AllTasksPageState extends State<AllTasksPage> {
 }
 
 Widget circle(IconData icon,VoidCallback tap)=>Material(color:white,shape:const CircleBorder(),child:InkWell(onTap:tap,customBorder:const CircleBorder(),child:Container(width:36,height:36,decoration:BoxDecoration(shape:BoxShape.circle,border:Border.all(color:line)),child:Icon(icon,color:ink,size:17))));
+class ProvinceSheet extends StatefulWidget {
+ const ProvinceSheet({super.key,required this.value,required this.onSelect});
+ final String value; final ValueChanged<String> onSelect;
+ @override State<ProvinceSheet> createState()=>_ProvinceSheetState();
+}
+class _ProvinceSheetState extends State<ProvinceSheet> {
+ final search=TextEditingController();
+ @override void dispose(){search.dispose();super.dispose();}
+ @override Widget build(BuildContext c){
+  final q=search.text.toLocaleLowerCase();
+  final filtered=provinces.where((p)=>p.toLocaleLowerCase().contains(q)).toList();
+  return SafeArea(child:Padding(padding:EdgeInsets.fromLTRB(18,4,18,MediaQuery.of(c).viewInsets.bottom+12),child:SizedBox(height:MediaQuery.of(c).size.height*.72,child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+   const Text('İl seç',style:TextStyle(color:ink,fontSize:18,fontWeight:FontWeight.w900)),
+   const SizedBox(height:12),
+   TextField(controller:search,onChanged:(_)=>setState((){}),autofocus:true,decoration:InputDecoration(prefixIcon:const Icon(Icons.search,color:ink),hintText:'Türkiye’de il ara',filled:true,fillColor:bg,border:OutlineInputBorder(borderRadius:BorderRadius.circular(14),borderSide:BorderSide.none))),
+   const SizedBox(height:8),
+   Expanded(child:ListView(children:[
+    ListTile(title:const Text('Tüm Türkiye',style:TextStyle(color:ink,fontWeight:FontWeight.w800)),trailing:widget.value=='Tüm Türkiye'?const Icon(Icons.check_circle,color:darkGreen):null,onTap:(){widget.onSelect('Tüm Türkiye');Navigator.pop(c);}),
+    ...filtered.map((p)=>ListTile(dense:true,title:Text(p,style:const TextStyle(color:ink,fontWeight:FontWeight.w600)),trailing:widget.value==p?const Icon(Icons.check_circle,color:darkGreen):null,onTap:(){widget.onSelect(p);Navigator.pop(c);})),
+   ])),
+  ]))));
+ }
+}
+
 class DistrictSheet extends StatelessWidget{const DistrictSheet({super.key,required this.value,required this.onSelect});final String value;final ValueChanged<String> onSelect;@override Widget build(BuildContext c)=>SafeArea(child:Padding(padding:const EdgeInsets.all(20),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Bölge seç',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800)),...['Tüm Antalya',...districts].map((d)=>ListTile(title:Text(d),trailing:d==value?const Icon(Icons.check_circle,color:green):null,onTap:(){onSelect(d);Navigator.pop(c);} ))])));}
 class _TaskAvatar extends StatelessWidget {
  const _TaskAvatar({required this.name,required this.url,this.radius=13});
@@ -510,39 +544,81 @@ class OfferSheet extends StatefulWidget{const OfferSheet({super.key,required thi
 class _OfferSheetState extends State<OfferSheet>{late final amount=TextEditingController(text:widget.task.budget.toStringAsFixed(0));final message=TextEditingController();bool busy=false;String? error;@override void dispose(){amount.dispose();message.dispose();super.dispose();}Future<void> send()async{final n=num.tryParse(amount.text.replaceAll('.','').replaceAll(',','.'));if(n==null||n<=0){setState(()=>error='Geçerli bir tutar gir.');return;}setState(()=>busy=true);try{await DooraApi.instance.createOffer(taskId:widget.task.id,amount:n,message:message.text);widget.onSent?.call();if(mounted){Navigator.pop(context);toast(context,'Teklifin iletildi.');}}catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}finally{if(mounted)setState(()=>busy=false);}}
  @override Widget build(BuildContext c)=>Padding(padding:EdgeInsets.only(bottom:MediaQuery.of(c).viewInsets.bottom),child:Container(padding:const EdgeInsets.fromLTRB(18,10,18,20),decoration:const BoxDecoration(color:white,borderRadius:BorderRadius.vertical(top:Radius.circular(25))),child:SafeArea(top:false,child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[Center(child:Container(width:36,height:4,decoration:BoxDecoration(color:line,borderRadius:BorderRadius.circular(4)))),Row(children:[const Expanded(child:Text('Teklif ver',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w900))),IconButton(onPressed:()=>Navigator.pop(c),icon:const Icon(Icons.close,color:muted))]),TextField(controller:amount,keyboardType:TextInputType.number,decoration:const InputDecoration(hintText:'Teklif tutarı',suffixText:'₺')),const SizedBox(height:9),Wrap(spacing:7,children:[for(final f in [.9,1.0,1.1])ActionChip(label:Text((widget.task.budget*f).round().toString()+' ₺'),onPressed:()=>setState(()=>amount.text=(widget.task.budget*f).round().toString()),backgroundColor:soft,side:const BorderSide(color:line))]),const SizedBox(height:9),TextField(controller:message,maxLines:2,decoration:const InputDecoration(hintText:'Kısa mesaj (isteğe bağlı)')),if(error!=null)Text(error!,style:const TextStyle(color:Colors.red,fontSize:10)),const SizedBox(height:12),SizedBox(width:double.infinity,child:FilledButton(onPressed:busy?null:send,style:FilledButton.styleFrom(backgroundColor:green,foregroundColor:white,padding:const EdgeInsets.symmetric(vertical:14)),child:Text(busy?'Gönderiliyor…':'Teklif Gönder')))]))));}
 
-class CreatePage extends StatefulWidget{const CreatePage({super.key,required this.onDone});final VoidCallback onDone;@override State<CreatePage> createState()=>_CreatePageState();}
-class _CreatePageState extends State<CreatePage>{final title=TextEditingController(),desc=TextEditingController(),budget=TextEditingController(text:'450');String category='Alışveriş',district='Muratpaşa';double slider=450;bool busy=false;String? error;@override void dispose(){title.dispose();desc.dispose();budget.dispose();super.dispose();}Future<void> submit()async{final n=num.tryParse(budget.text.replaceAll('.','').replaceAll(',','.'));if(title.text.trim().length<5||desc.text.trim().length<10||n==null||n<=0){setState(()=>error='Başlık, açıklama ve bütçeyi kontrol et.');return;}setState(()=>busy=true);try{await DooraApi.instance.createTask(title:title.text,description:desc.text,category:category,budget:n,district:district);widget.onDone();if(mounted){Navigator.pop(context);toast(context,'İlanın yayınlandı.');}}catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}finally{if(mounted)setState(()=>busy=false);}}
-  @override Widget build(BuildContext c)=>Scaffold(
-   backgroundColor:bg,
-   appBar:AppBar(backgroundColor:bg,scrolledUnderElevation:0,title:const Text('İlan oluştur',style:TextStyle(fontSize:16,fontWeight:FontWeight.w900,color:ink)),leading:IconButton(onPressed:()=>Navigator.pop(c),icon:const Icon(Icons.arrow_back_ios_new,size:17,color:ink))),
-   bottomNavigationBar:SafeArea(top:false,child:Padding(padding:const EdgeInsets.fromLTRB(18,8,18,14),child:SizedBox(height:52,child:FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(16)),elevation:0),child:Row(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(busy?Icons.hourglass_top_rounded:Icons.arrow_upward_rounded,size:18),const SizedBox(width:9),Text(busy?'Yayınlanıyor…':'İlanı yayınla',style:const TextStyle(fontSize:13,fontWeight:FontWeight.w800))]))))),
-   body:SafeArea(child:ListView(padding:const EdgeInsets.fromLTRB(18,8,18,22),children:[
-    Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFFEDF4EB),Color(0xFFF7F8F5)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(22),border:Border.all(color:line)),child:Row(children:[Container(width:46,height:46,decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(15)),child:const Icon(Icons.auto_awesome_outlined,color:darkGreen,size:23)),const SizedBox(width:13),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('İhtiyacını paylaş.',style:TextStyle(color:ink,fontSize:20,fontWeight:FontWeight.w900,letterSpacing:-.5)),SizedBox(height:4),Text('Yakınındaki kişilerden teklif al, işini kolayca çözüme kavuştur.',style:TextStyle(color:muted,fontSize:10,height:1.45))]))])),
-    const SizedBox(height:20),
-    Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(20),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-     const FormLabel('Hangi konuda yardıma ihtiyacın var?'),const SizedBox(height:12),
-     GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:3,mainAxisSpacing:9,crossAxisSpacing:9,childAspectRatio:1.45,children:categories.map((v){final active=category==v;return GestureDetector(onTap:()=>setState(()=>category=v),child:AnimatedContainer(duration:const Duration(milliseconds:160),decoration:BoxDecoration(color:active?const Color(0xFFF0EAE3):const Color(0xFFF8F9F6),borderRadius:BorderRadius.circular(13),border:Border.all(color:active?green:line,width:active?1.4:1)),child:Row(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(catIcon(v),color:active?darkGreen:muted,size:18),const SizedBox(width:6),Flexible(child:Text(v,maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(color:active?darkGreen:ink,fontSize:9,fontWeight:FontWeight.w800)))])));}).toList())
-    ])),
-    const SizedBox(height:12),
-    Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(20),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-     const FormLabel('İlan bilgileri'),const SizedBox(height:12),
-     const FormLabel('İlan başlığı'),const SizedBox(height:6),TextField(controller:title,onChanged:(_)=>setState((){}),textCapitalization:TextCapitalization.sentences,decoration:const InputDecoration(hintText:'Örn. Market alışverişi yapılacak',prefixIcon:Icon(Icons.edit_outlined,size:18))),
-     const SizedBox(height:14),const FormLabel('İşin detayları'),const SizedBox(height:6),TextField(controller:desc,minLines:4,maxLines:6,textCapitalization:TextCapitalization.sentences,decoration:const InputDecoration(hintText:'Ne yapılmasını istediğini, varsa önemli detayları anlat…',alignLabelWithHint:true)),
-    ])),
-    const SizedBox(height:12),
-    Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(20),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-     const FormLabel('Bütçe ve konum'),const SizedBox(height:12),
-     Row(children:[const Expanded(child:Text('Ayırdığın bütçe',style:TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w800))),Text(budget.text+' ₺',style:const TextStyle(color:darkGreen,fontSize:18,fontWeight:FontWeight.w900))]),
-     Slider(value:slider.clamp(50,10000).toDouble(),min:50,max:10000,divisions:199,activeColor:darkGreen,inactiveColor:line,onChanged:(v)=>setState((){slider=v;budget.text=v.round().toString();})),
-     TextField(controller:budget,keyboardType:TextInputType.number,onChanged:(v){final n=double.tryParse(v);if(n!=null)setState(()=>slider=n.clamp(50,10000).toDouble());},decoration:const InputDecoration(prefixIcon:Icon(Icons.payments_outlined,size:18),suffixText:'₺',hintText:'Bütçe gir')),
-     const SizedBox(height:14),const FormLabel('İşin yapılacağı ilçe'),const SizedBox(height:6),DropdownButtonFormField<String>(value:district,decoration:const InputDecoration(prefixIcon:Icon(Icons.location_on_outlined,size:18)),items:districts.map((d)=>DropdownMenuItem(value:d,child:Text(d))).toList(),onChanged:(v)=>setState(()=>district=v??district)),
-    ])),
-    const SizedBox(height:12),
-    Container(padding:const EdgeInsets.all(15),decoration:BoxDecoration(color:const Color(0xFFEDF4EB),borderRadius:BorderRadius.circular(17)),child:Row(children:[const Icon(Icons.lightbulb_outline_rounded,color:darkGreen,size:20),const SizedBox(width:10),const Expanded(child:Text('Açık ve anlaşılır bir açıklama, doğru teklifleri daha hızlı almanı sağlar.',style:TextStyle(color:darkGreen,fontSize:10,height:1.45,fontWeight:FontWeight.w600)))])),
-    if(error!=null)Padding(padding:const EdgeInsets.only(top:12),child:Text(error!,style:const TextStyle(color:Colors.red,fontSize:11,fontWeight:FontWeight.w600))),
-   ]))
-  );
+class CreatePage extends StatefulWidget {
+ const CreatePage({super.key,required this.onDone});
+ final VoidCallback onDone;
+ @override State<CreatePage> createState()=>_CreatePageState();
+}
+class _CreatePageState extends State<CreatePage> {
+ final title=TextEditingController(),desc=TextEditingController(),budget=TextEditingController(text:'450');
+ final List<XFile> images=[];
+ String category='Alışveriş',district='Muratpaşa',city='Antalya';
+ double slider=450; bool busy=false; String? error;
+ @override void dispose(){title.dispose();desc.dispose();budget.dispose();super.dispose();}
+ Future<void> pickImages() async {
+  if(images.length>=4){toast(context,'En fazla 4 fotoğraf ekleyebilirsin.');return;}
+  final picked=await ImagePicker().pickMultiImage(imageQuality:76,maxWidth:1280);
+  if(picked.isEmpty||!mounted)return;
+  setState(()=>images.addAll(picked.take(4-images.length)));
  }
+ Future<void> submit() async {
+  final n=num.tryParse(budget.text.replaceAll('.','').replaceAll(',','.'));
+  if(title.text.trim().length<5||desc.text.trim().length<10||n==null||n<=0){setState(()=>error='Başlık, açıklama ve bütçeyi kontrol et.');return;}
+  setState(()=>busy=true);error=null;
+  try {
+   final encoded=<String>[];
+   for(final image in images){
+    final bytes=await File(image.path).readAsBytes();
+    if(bytes.length>650000)throw StateError('Fotoğraflardan biri çok büyük. Lütfen daha küçük görsel seç.');
+    final ext=image.name.toLowerCase();
+    final mime=ext.endsWith('.png')?'image/png':ext.endsWith('.webp')?'image/webp':'image/jpeg';
+    encoded.add('data:$mime;base64,\u0024{base64Encode(bytes)}');
+   }
+   await DooraApi.instance.createTask(title:title.text,description:desc.text,category:category,budget:n,district:district,city:city,images:encoded);
+   widget.onDone();
+   if(mounted){Navigator.pop(context);toast(context,'İlanın yayınlandı.');}
+  } catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}
+  finally{if(mounted)setState(()=>busy=false);}
+ }
+ Future<void> chooseCity() async {
+  await showModalBottomSheet(context:context,isScrollControlled:true,backgroundColor:white,showDragHandle:true,builder:(_)=>ProvinceSheet(value:city,onSelect:(v){setState(()=>city=v);}));
+ }
+ Widget section({required String title,required Widget child})=>Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(21),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,style:const TextStyle(color:ink,fontSize:14,fontWeight:FontWeight.w900)),const SizedBox(height:13),child]));
+ @override Widget build(BuildContext c)=>Scaffold(
+  backgroundColor:bg,
+  appBar:AppBar(backgroundColor:bg,scrolledUnderElevation:0,title:const Text('Yeni ilan',style:TextStyle(fontSize:17,fontWeight:FontWeight.w900,color:ink)),leading:IconButton(onPressed:()=>Navigator.pop(c),icon:const Icon(Icons.arrow_back_ios_new,size:17,color:ink))),
+  bottomNavigationBar:SafeArea(top:false,child:Padding(padding:const EdgeInsets.fromLTRB(18,8,18,14),child:SizedBox(height:54,child:FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(17)),elevation:0),child:Row(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(busy?Icons.hourglass_top_rounded:Icons.arrow_upward_rounded,size:18),const SizedBox(width:9),Text(busy?'Yayınlanıyor…':'İlanı yayınla',style:const TextStyle(fontSize:13,fontWeight:FontWeight.w900))]))))),
+  body:SafeArea(child:ListView(padding:const EdgeInsets.fromLTRB(18,8,18,24),children:[
+   Container(padding:const EdgeInsets.all(19),decoration:BoxDecoration(color:const Color(0xFFE3EDE0),borderRadius:BorderRadius.circular(22)),child:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('İhtiyacını anlat.',style:TextStyle(color:ink,fontSize:21,fontWeight:FontWeight.w900,letterSpacing:-.6)),SizedBox(height:5),Text('Yakınındaki hizmet verenler sana teklif göndersin.',style:TextStyle(color:muted,fontSize:11,height:1.45))])),
+   const SizedBox(height:13),
+   section(title:'Kategori',child:GridView.count(shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),crossAxisCount:3,mainAxisSpacing:8,crossAxisSpacing:8,childAspectRatio:1.5,children:categories.map((v){final active=category==v;return GestureDetector(onTap:()=>setState(()=>category=v),child:AnimatedContainer(duration:const Duration(milliseconds:180),decoration:BoxDecoration(color:active?mint:bg,borderRadius:BorderRadius.circular(13),border:Border.all(color:active?darkGreen:line)),child:Row(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(catIcon(v),color:ink,size:17),const SizedBox(width:5),Flexible(child:Text(v,style:const TextStyle(color:ink,fontSize:9,fontWeight:FontWeight.w800),overflow:TextOverflow.ellipsis))])));}).toList())),
+   const SizedBox(height:12),
+   section(title:'İlan detayları',child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    const FormLabel('İlan başlığı'),const SizedBox(height:6),TextField(controller:title,maxLength:100,textCapitalization:TextCapitalization.sentences,decoration:const InputDecoration(hintText:'Örn. Ev için temizlik desteği')),
+    const SizedBox(height:10),const FormLabel('Açıklama'),const SizedBox(height:6),TextField(controller:desc,minLines:4,maxLines:6,maxLength:1200,textCapitalization:TextCapitalization.sentences,decoration:const InputDecoration(hintText:'Yapılacak işi, önemli ayrıntıları ve beklentini anlat…',alignLabelWithHint:true)),
+   ])),
+   const SizedBox(height:12),
+   section(title:'Fotoğraflar',child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    const Text('İşin daha iyi anlaşılması için en fazla 4 fotoğraf ekle.',style:TextStyle(color:muted,fontSize:10)),
+    const SizedBox(height:11),
+    Wrap(spacing:9,runSpacing:9,children:[
+     ...images.asMap().entries.map((entry)=>Stack(children:[ClipRRect(borderRadius:BorderRadius.circular(14),child:Image.file(File(entry.value.path),width:82,height:82,fit:BoxFit.cover)),Positioned(right:3,top:3,child:InkWell(onTap:()=>setState(()=>images.removeAt(entry.key)),child:Container(width:22,height:22,decoration:const BoxDecoration(color:Colors.black87,shape:BoxShape.circle),child:const Icon(Icons.close,color:white,size:14))))])),
+     if(images.length<4)InkWell(onTap:pickImages,borderRadius:BorderRadius.circular(14),child:Container(width:82,height:82,decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(14),border:Border.all(color:darkGreen.withValues(alpha:.35))),child:const Icon(Icons.add_photo_alternate_outlined,color:ink,size:26))),
+    ]),
+   ])),
+   const SizedBox(height:12),
+   section(title:'Bütçe ve konum',child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    Row(children:[const Expanded(child:Text('Ayırdığın bütçe',style:TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w800))),Text(budget.text+' ₺',style:const TextStyle(color:darkGreen,fontSize:18,fontWeight:FontWeight.w900))]),
+    Slider(value:slider.clamp(50,10000).toDouble(),min:50,max:10000,divisions:199,activeColor:darkGreen,inactiveColor:line,onChanged:(v)=>setState((){slider=v;budget.text=v.round().toString();})),
+    TextField(controller:budget,keyboardType:TextInputType.number,onChanged:(v){final n=double.tryParse(v);if(n!=null)setState(()=>slider=n.clamp(50,10000).toDouble());},decoration:const InputDecoration(prefixIcon:Icon(Icons.payments_outlined,size:18),suffixText:'₺',hintText:'Bütçe gir')),
+    const SizedBox(height:14),const FormLabel('İl'),const SizedBox(height:6),
+    InkWell(onTap:chooseCity,borderRadius:BorderRadius.circular(13),child:Container(padding:const EdgeInsets.symmetric(horizontal:14,vertical:15),decoration:BoxDecoration(color:bg,borderRadius:BorderRadius.circular(13),border:Border.all(color:line)),child:Row(children:[const Icon(Icons.location_city_outlined,color:ink,size:18),const SizedBox(width:10),Expanded(child:Text(city,style:const TextStyle(color:ink,fontSize:12,fontWeight:FontWeight.w700))),const Icon(Icons.keyboard_arrow_down,color:ink)]))),
+    const SizedBox(height:12),const FormLabel('İlçe / bölge'),const SizedBox(height:6),TextField(controller:TextEditingController(text:district),onChanged:(v)=>district=v,decoration:const InputDecoration(prefixIcon:Icon(Icons.map_outlined,size:18),hintText:'İlçe veya mahalle')),
+   ])),
+   if(error!=null)Padding(padding:const EdgeInsets.only(top:12),child:Text(error!,style:const TextStyle(color:Colors.red,fontSize:11,fontWeight:FontWeight.w700))),
+  ]))
+ );
+}
 class FormLabel extends StatelessWidget{const FormLabel(this.text,{super.key});final String text;@override Widget build(BuildContext c)=>Text(text,style:const TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w800));}
 
 class MyTasks extends StatefulWidget {
@@ -608,17 +684,17 @@ class _MyTasksState extends State<MyTasks> {
   ]),
   const SizedBox(height:14),
   Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(
-   gradient:const LinearGradient(colors:[Color(0xFFE8F1E6),Color(0xFFDDEBDD)],begin:Alignment.topLeft,end:Alignment.bottomRight),
+   gradient:const LinearGradient(colors:[Color(0xFF648B65),Color(0xFF456B4A)],begin:Alignment.topLeft,end:Alignment.bottomRight),
    borderRadius:BorderRadius.circular(20)),
    child:Row(children:[
     Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-     const Text('DOORA iş panelin',style:TextStyle(color:Colors.white70,fontSize:9,fontWeight:FontWeight.w700)),
+     const Text('DOORA iş panelin',style:TextStyle(color:white,fontSize:9,fontWeight:FontWeight.w700)),
      const SizedBox(height:5),
      Text(widget.user==null?'İşlerini takip etmeye başla':'Her şey kontrol altında.',style:const TextStyle(color:white,fontSize:16,fontWeight:FontWeight.w900)),
      const SizedBox(height:4),
      const Text('İlanlarını ve teklif süreçlerini kolayca takip et.',style:TextStyle(color:Colors.white70,fontSize:9)),
     ])),
-    Container(width:58,height:58,decoration:BoxDecoration(color:white.withValues(alpha:.13),borderRadius:BorderRadius.circular(17)),
+    Container(width:58,height:58,decoration:BoxDecoration(color:Colors.white.withValues(alpha:.18),borderRadius:BorderRadius.circular(17)),
      child:const Icon(PhosphorIconsRegular.briefcase,color:white,size:27)),
    ]),
   ),
@@ -670,9 +746,9 @@ class _SavedState extends State<Saved> {
   catch(e){if(mounted){setState(()=>tasks=old);toast(context,DooraApi.instance.errorMessage(e));}}
  }
  @override Widget build(BuildContext c)=>SafeArea(child:RefreshIndicator(color:darkGreen,onRefresh:load,child:ListView(padding:const EdgeInsets.fromLTRB(18,18,18,112),children:[
-  Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Kaydedilenler',style:TextStyle(color:ink,fontSize:24,fontWeight:FontWeight.w900,letterSpacing:-.7)),SizedBox(height:4),Text('Beğendiğin işleri burada sakla.',style:TextStyle(color:muted,fontSize:11))])),Container(width:42,height:42,decoration:BoxDecoration(color:const Color(0xFFF0EAE3),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsRegular.bookmarkSimple,color:darkGreen,size:22))]),
+  Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Kaydedilenler',style:TextStyle(color:ink,fontSize:24,fontWeight:FontWeight.w900,letterSpacing:-.7)),SizedBox(height:4),Text('Beğendiğin işleri burada sakla.',style:TextStyle(color:muted,fontSize:11))])),Container(width:42,height:42,decoration:BoxDecoration(color:const Color(0xFFE2E9DE),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsRegular.bookmarkSimple,color:ink,size:22))]),
   const SizedBox(height:17),
-  Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFFE8F1E6),Color(0xFFDDEBDD)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(21),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.12),blurRadius:18,offset:const Offset(0,8))]),child:Row(children:[Container(width:43,height:43,decoration:BoxDecoration(color:white.withValues(alpha:.13),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsFill.bookmarkSimple,color:white,size:21)),const SizedBox(width:13),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(tasks.length.toString(),style:const TextStyle(color:white,fontSize:23,fontWeight:FontWeight.w900)),const Text('Kaydettiğin ilan',style:TextStyle(color:Colors.white70,fontSize:10,fontWeight:FontWeight.w600))])),const Text('Sonra devam et.  →',style:TextStyle(color:Colors.white70,fontSize:9,fontWeight:FontWeight.w700))])),
+  Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFFE8F1E6),Color(0xFFDDEBDD)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(21),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.12),blurRadius:18,offset:const Offset(0,8))]),child:Row(children:[Container(width:43,height:43,decoration:BoxDecoration(color:white.withValues(alpha:.13),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsFill.bookmarkSimple,color:white,size:21)),const SizedBox(width:13),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(tasks.length.toString(),style:const TextStyle(color:white,fontSize:23,fontWeight:FontWeight.w900)),const Text('Kaydettiğin ilan',style:TextStyle(color:white,fontSize:10,fontWeight:FontWeight.w600))])),const Text('Sonra devam et.  →',style:TextStyle(color:Colors.white70,fontSize:9,fontWeight:FontWeight.w700))])),
   const SizedBox(height:20),
   Row(children:[const Expanded(child:Text('Senin listen',style:TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w900))),Text(tasks.length==1?'1 ilan':'${tasks.length} ilan',style:const TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700))]),
   const SizedBox(height:11),
@@ -899,7 +975,7 @@ class _NotificationsState extends State<Notifications> {
        boxShadow:read?[]:[BoxShadow(color:darkGreen.withValues(alpha:.035),blurRadius:12,offset:const Offset(0,3))],
       ),
       child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-       Container(width:40,height:40,decoration:BoxDecoration(color:read?soft:mint,borderRadius:BorderRadius.circular(13)),child:Icon(iconFor(type),color:darkGreen,size:19)),
+       Container(width:40,height:40,decoration:BoxDecoration(color:read?soft:mint,borderRadius:BorderRadius.circular(13)),child:Icon(iconFor(type),color:ink,size:19)),
        const SizedBox(width:11),
        Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         Row(children:[
@@ -923,7 +999,7 @@ class _NotificationsState extends State<Notifications> {
    Padding(
     padding:const EdgeInsets.fromLTRB(2,8,2,2),
     child:Row(children:[
-     Container(width:42,height:42,decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsRegular.bell,color:darkGreen,size:21)),
+     Container(width:42,height:42,decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsRegular.bell,color:ink,size:21)),
      const SizedBox(width:12),
      Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
       const Text('Bildirimlerin',style:TextStyle(color:ink,fontSize:21,fontWeight:FontWeight.w700,letterSpacing:-.6)),
