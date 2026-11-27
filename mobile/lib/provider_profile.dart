@@ -7,10 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'services/api_client.dart';
 
 const _ink = Color(0xFF20251F);
-const _muted = Color(0xFF7A8474);
+const _muted = Color(0xFF586357);
 const _line = Color(0xFFE7ECE5);
 const _paper = Color(0xFFF7F9F5);
-const _green = Color(0xFFB8D0B5);
+const _green = Color(0xFF9DB99A);
 const _forest = Color(0xFF86A989);
 
 class ProviderProfilePage extends StatefulWidget {
@@ -32,6 +32,7 @@ class ProviderProfilePage extends StatefulWidget {
 class _ProviderProfilePageState extends State<ProviderProfilePage> {
   Map<String, dynamic> profile = {};
   List<Map<String, dynamic>> portfolio = [];
+  List<Map<String, dynamic>> openTasks = [];
   Map<String, dynamic> reviewData = {};
   bool loading = true;
   bool uploading = false;
@@ -65,6 +66,8 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
       setState(() {
         profile = publicProfile;
         portfolio = works;
+        final rawTasks = publicProfile['openTasks'];
+        openTasks = rawTasks is List ? rawTasks.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList() : [];
         reviewData = reviews;
       });
     } catch (e) {
@@ -338,6 +341,57 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                           )),
                         ]),
                       ),
+                      if (openTasks.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        Row(children: [
+                          const Expanded(child: Text('Açık ilanları', style: TextStyle(
+                            color: _ink, fontSize: 16, fontWeight: FontWeight.w900,
+                          ))),
+                          Text('${openTasks.length} ilan', style: const TextStyle(
+                            color: _muted, fontSize: 10, fontWeight: FontWeight.w700,
+                          )),
+                        ]),
+                        const SizedBox(height: 10),
+                        ...openTasks.map((task) => Container(
+                          margin: const EdgeInsets.only(bottom: 9),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(17),
+                            border: Border.all(color: _line),
+                          ),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Row(children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                decoration: BoxDecoration(color: const Color(0xFFE4EDE0), borderRadius: BorderRadius.circular(20)),
+                                child: Text(task['category']?.toString() ?? 'Hizmet',
+                                  style: const TextStyle(color: _ink, fontSize: 9, fontWeight: FontWeight.w800)),
+                              ),
+                              const Spacer(),
+                              Text('${task['budget'] ?? ''} ₺', style: const TextStyle(
+                                color: _ink, fontSize: 13, fontWeight: FontWeight.w900,
+                              )),
+                            ]),
+                            const SizedBox(height: 8),
+                            Text(task['title']?.toString() ?? 'İlan',
+                              style: const TextStyle(color: _ink, fontSize: 12, fontWeight: FontWeight.w900)),
+                            if ((task['description']?.toString() ?? '').isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(task['description'].toString(), maxLines: 2, overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: _muted, fontSize: 10, height: 1.4)),
+                            ],
+                            const SizedBox(height: 7),
+                            Row(children: [
+                              const Icon(Icons.location_on_outlined, color: _muted, size: 13),
+                              const SizedBox(width: 3),
+                              Text('${task['location'] ?? task['city'] ?? district}', style: const TextStyle(color: _muted, fontSize: 9)),
+                              const Spacer(),
+                              Text('${task['offers'] ?? 0} teklif', style: const TextStyle(color: _forest, fontSize: 9, fontWeight: FontWeight.w800)),
+                            ]),
+                          ]),
+                        )),
+                      ],
                       if (reviews.isNotEmpty) ...[
                         const SizedBox(height: 18),
                         const Text('Müşteri yorumları', style: TextStyle(
