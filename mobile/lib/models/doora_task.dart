@@ -38,8 +38,8 @@ class DooraTask {
     status: json['status']?.toString() ?? 'open',
     ownerAvatar: json['owner_avatar']?.toString() ?? '',
     imageUrls: _images(json),
-    distanceKm: _number(json['distance_km'] ?? json['distanceKm']),
-    providerRating: _number(json['provider_rating'] ?? json['providerRating'] ?? json['rating']),
+    distanceKm: (json['distance_km'] ?? json['distanceKm']) == null ? -1 : _number(json['distance_km'] ?? json['distanceKm']),
+    providerRating: (json['provider_rating'] ?? json['providerRating'] ?? json['rating']) == null ? -1 : _number(json['provider_rating'] ?? json['providerRating'] ?? json['rating']),
   );
 
   static List<String> _images(Map<String, dynamic> json) {
