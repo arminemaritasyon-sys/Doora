@@ -1048,7 +1048,7 @@ class _ProfileState extends State<Profile> {
       if(task.imageUrls.length<4)IconButton(onPressed:()=>addListingPhotos(task),tooltip:'Fotoğraf ekle',icon:const Icon(Icons.add_a_photo_outlined,color:ink,size:18)),
       IconButton(onPressed:()=>changeListingStatus(task),tooltip:task.status=='paused'?'Yayınla':'Duraklat',icon:Icon(task.status=='paused'?Icons.play_arrow_rounded:Icons.pause_rounded,color:ink,size:20)),
      ]),
-    ]))),
+    ])))),
     const SizedBox(height:19),
     Container(decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(17),border:Border.all(color:line)),child:Column(children:[
      InkWell(onTap:()=>setState(()=>showTransactions=!showTransactions),borderRadius:BorderRadius.circular(17),child:Padding(padding:const EdgeInsets.symmetric(horizontal:14,vertical:15),child:Row(children:[const Icon(PhosphorIconsRegular.receipt,color:ink,size:20),const SizedBox(width:10),const Expanded(child:Text('Hesap hareketleri',style:TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w900))),Text('${transactions.length}',style:const TextStyle(color:muted,fontSize:11,fontWeight:FontWeight.w700)),const SizedBox(width:6),Icon(showTransactions?Icons.keyboard_arrow_up_rounded:Icons.keyboard_arrow_down_rounded,color:ink)]))),
