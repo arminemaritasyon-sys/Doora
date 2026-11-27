@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - mobile/flutter-foundation
+      - mobile/doora-ux-fixes
     paths:
       - "app/api/**"
       - "app/admin/**"
