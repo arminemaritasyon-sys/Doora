@@ -221,7 +221,8 @@ class _ShellState extends State<Shell> {
     final pages = [
       Discover(user: widget.user, onLogin: widget.onLogin, onCreate: create, refresh: refresh),
       MyTasks(user: widget.user, onLogin: widget.onLogin, onCreate: create, refresh: refresh),
-      Saved(user: widget.user, onLogin: widget.onLogin),
+      const SizedBox.shrink(),
+      MyTasks(user: widget.user, onLogin: widget.onLogin, onCreate: create, refresh: refresh),
       Profile(user: widget.user, onLogin: widget.onLogin, onLogout: widget.onLogout),
     ];
     return Scaffold(
@@ -258,7 +259,7 @@ class _ShellState extends State<Shell> {
                     child: const Icon(Icons.add_rounded, color: white, size: 30),
                   ),
                 ))),
-                nav(PhosphorIconsRegular.heart, 'Kaydedilen', 2),
+                nav(PhosphorIconsRegular.briefcase, 'İşlerim', 2),
                 nav(PhosphorIconsRegular.user, 'Hesabım', 3),
               ]),
             ),
@@ -272,14 +273,14 @@ class _ShellState extends State<Shell> {
     final selected = tab == index;
     final activeIcon = index == 0 ? PhosphorIconsFill.compass
         : index == 1 ? PhosphorIconsFill.chatCircle
-        : index == 2 ? PhosphorIconsFill.heart : PhosphorIconsFill.user;
+        : index == 2 ? PhosphorIconsFill.briefcase : PhosphorIconsFill.user;
     return Expanded(child: TactileTap(
       onTap: () {
         if (index != 0 && widget.user == null) { widget.onLogin(); return; }
         if (index == 1) {
           Navigator.push(context, dooraRoute(builder: (_) => MessagesInboxPage(
             currentUserId: widget.user?['id']?.toString() ?? '',
-          )));
+          ))).then((_) => _refreshMessageBadge());
           return;
         }
         setState(() => tab = index);
@@ -289,7 +290,16 @@ class _ShellState extends State<Shell> {
           scale: selected ? 1.08 : .96,
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOutBack,
-          child: Icon(selected ? activeIcon : icon, color: ink.withValues(alpha: selected ? 1 : .62), size: 22),
+          child: Stack(clipBehavior: Clip.none, children: [
+            Icon(selected ? activeIcon : icon, color: ink.withValues(alpha: selected ? 1 : .62), size: 22),
+            if (index == 1 && unreadMessages > 0)
+              Positioned(right: -10, top: -8, child: Container(
+                constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(color: const Color(0xFFD94343), borderRadius: BorderRadius.circular(10), border: Border.all(color: white, width: 1.4)),
+                child: Text(unreadMessages > 99 ? '99+' : '$unreadMessages', textAlign: TextAlign.center, style: const TextStyle(color: white, fontSize: 8, fontWeight: FontWeight.w900)),
+              )),
+          ]),
         ),
         const SizedBox(height: 4),
         AnimatedDefaultTextStyle(
@@ -753,95 +763,65 @@ class MyTasks extends StatefulWidget {
  @override State<MyTasks> createState()=>_MyTasksState();
 }
 class _MyTasksState extends State<MyTasks> {
- List<DooraTask> tasks=[]; List<Map<String,dynamic>> offers=[]; bool busy=false; String? error,offersError; int segment=0;
- @override void initState(){super.initState();load();}
- @override void didUpdateWidget(covariant MyTasks old){super.didUpdateWidget(old);if(old.refresh!=widget.refresh||old.user!=widget.user)load();}
- Future<void> load() async {
-  if(widget.user==null){if(mounted)setState(() { tasks=[]; offers=[]; busy=false; });return;}
-  setState(()=>busy=true);error=null;offersError=null;
-  final id=widget.user?['id']?.toString()??'';
+ List<DooraTask> tasks=[]; List<Map<String,dynamic>> incoming=[],sent=[];
+ bool busy=true,responding=false; String? error; Timer? _poll;
+ @override void initState(){super.initState();load();_poll=Timer.periodic(const Duration(seconds:15),(_)=>load(silent:true));}
+ @override void didUpdateWidget(covariant MyTasks old){super.didUpdateWidget(old);if(old.refresh!=widget.refresh||old.user?['id']!=widget.user?['id'])load();}
+ @override void dispose(){_poll?.cancel();super.dispose();}
+ Future<void> load({bool silent=false}) async {
+  if(widget.user==null){if(mounted)setState(()=>{tasks=[],incoming=[],sent=[],busy=false});return;}
+  if(!silent&&mounted)setState(()=>busy=true);
   try {
-   final sent=await DooraApi.instance.getMyOffers();
-   if(mounted)setState(()=>offers=sent);
-  } catch(e) {
-   if(mounted)setState(()=>offersError=DooraApi.instance.errorMessage(e));
-  }
-  try {
-   final rows=await DooraApi.instance.getMyTasks();
-   if(mounted)setState(()=>tasks=rows.map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList());
-  } catch(e) {
-   if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));
-  }
-  if(mounted)setState(()=>busy=false);
+   final results=await Future.wait([DooraApi.instance.getMyTasks(),DooraApi.instance.getMyIncomingOffers(),DooraApi.instance.getMyOffers()]);
+   final id=widget.user?['id']?.toString()??'';
+   final nextTasks=(results[0] as List<Map<String,dynamic>>).map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList();
+   if(mounted)setState(()=>{tasks=nextTasks,incoming=results[1] as List<Map<String,dynamic>>,sent=results[2] as List<Map<String,dynamic>>,error=null,busy=false});
+  } catch(e){if(mounted)setState(()=>{error=DooraApi.instance.errorMessage(e),busy=false});}
  }
- Widget offerSection(){
-  if(offersError!=null)return EmptyState(title:'Tekliflerin yüklenemedi',message:offersError!,action:'Tekrar dene',onTap:load);
-  if(offers.isEmpty)return const EmptyState(title:'Henüz teklif vermedin',message:'İlgini çeken bir ilanda “Ben yaparım” diyerek teklifini iletebilirsin.');
-  return Column(children:offers.map((o)=>offerHistoryCard(o)).toList());
+ int get pendingCount=>incoming.where((o)=>(o['status']?.toString()??'pending')=='pending').length;
+ Future<void> respond(Map<String,dynamic> offer,String action) async {
+  final id=offer['id']?.toString()??''; if(id.isEmpty||responding)return;
+  final accept=action=='accept';
+  final confirmed=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
+   backgroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(20)),
+   title:Text(accept?'Teklifi kabul et?':'Teklifi reddet?',style:const TextStyle(color:ink,fontWeight:FontWeight.w900)),
+   content:Text(accept?'Bu teklifi kabul ettiğinde aynı ilana gelen diğer bekleyen teklifler reddedilecek.':'Bu teklif sahibine olumsuz yanıt gönderilecek.',style:const TextStyle(color:muted,fontSize:13)),
+   actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Vazgeç')),FilledButton(onPressed:()=>Navigator.pop(ctx,true),style:FilledButton.styleFrom(backgroundColor:accept?darkGreen:const Color(0xFFB94C48)),child:Text(accept?'Kabul et':'Reddet'))],
+  ));
+  if(confirmed!=true)return; setState(()=>responding=true);
+  try{await DooraApi.instance.respondToOffer(offerId:id,action:action);toast(context,accept?'Teklif kabul edildi.':'Teklif reddedildi.');await load(silent:true);}
+  catch(e){if(mounted)toast(context,DooraApi.instance.errorMessage(e));}
+  finally{if(mounted)setState(()=>responding=false);}
  }
- void openReview(String taskId){
-  showModalBottomSheet(context:context,isScrollControlled:true,backgroundColor:Colors.transparent,builder:(_)=>ReviewComposer(taskId:taskId,onDone:load));
- }
- Widget myTaskCard(DooraTask task)=>Column(children:[
-  TaskCard(task:task,onTap:()=>openTask(context,task,widget.user,widget.onLogin,load)),
-  if(task.status=='completed')Padding(padding:const EdgeInsets.only(top:6,bottom:5),child:Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:()=>openReview(task.id),icon:const Icon(Icons.star_outline_rounded,size:16),label:const Text('İşi değerlendir'),style:TextButton.styleFrom(foregroundColor:darkGreen)))),
- ]);
-
- Widget offerHistoryCard(Map<String,dynamic> offer){
-  final status=offer['status']?.toString()??'pending';
-  final label=status=='accepted'?'Kabul edildi':status=='rejected'?'Reddedildi':status=='withdrawn'?'Geri çekildi':'Yanıt bekliyor';
-  final color=status=='accepted'?darkGreen:status=='rejected'?const Color(0xFFB45A55):const Color(0xFF9B742D);
-  final amount=num.tryParse(offer['amount']?.toString()??'0')??0;
-  final formatted=amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'),(m)=>'.');
-  return Container(margin:const EdgeInsets.only(bottom:9),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(17),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-   Row(children:[Expanded(child:Text(offer['task_title']?.toString()??'İlan',maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:12,fontWeight:FontWeight.w900))),Container(padding:const EdgeInsets.symmetric(horizontal:8,vertical:5),decoration:BoxDecoration(color:color.withValues(alpha:.09),borderRadius:BorderRadius.circular(20)),child:Text(label,style:TextStyle(color:color,fontSize:8,fontWeight:FontWeight.w800)))]),
-   const SizedBox(height:8),Row(children:[const Icon(Icons.person_outline,color:muted,size:14),const SizedBox(width:4),Expanded(child:Text(offer['owner_name']?.toString()??'İlan sahibi',style:const TextStyle(color:muted,fontSize:9))),Text('$formatted ₺',style:const TextStyle(color:darkGreen,fontSize:14,fontWeight:FontWeight.w900))]),
-   if((offer['message']?.toString()??'').isNotEmpty)Padding(padding:const EdgeInsets.only(top:8),child:Text(offer['message'].toString(),style:const TextStyle(color:muted,fontSize:9,height:1.4))),
-   if(offer['task_status']=='completed'&&status=='accepted')Align(alignment:Alignment.centerRight,child:TextButton.icon(onPressed:()=>openReview(offer['task_id']?.toString()??''),icon:const Icon(Icons.star_outline_rounded,size:15),label:const Text('İşi değerlendir'),style:TextButton.styleFrom(foregroundColor:darkGreen))),
+ String money(dynamic value){final n=num.tryParse(value?.toString()??'0')??0;return n.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'),(m)=>'.')+' ₺';}
+ Widget incomingCard(Map<String,dynamic> o){
+  final status=o['status']?.toString()??'pending',pending=status=='pending',accepted=status=='accepted';
+  final provider=o['provider_name']?.toString()??'DOORA üyesi';
+  return Container(margin:const EdgeInsets.only(bottom:10),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(18),border:Border.all(color:pending?const Color(0xFFDCE7D9):line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+   Row(children:[Expanded(child:Text(o['task_title']?.toString()??'İlanın',maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:12,fontWeight:FontWeight.w900))),Container(padding:const EdgeInsets.symmetric(horizontal:8,vertical:5),decoration:BoxDecoration(color:pending?const Color(0xFFFFF3DE):accepted?mint:soft,borderRadius:BorderRadius.circular(20)),child:Text(pending?'Yanıt bekliyor':accepted?'Kabul edildi':'Reddedildi',style:TextStyle(color:pending?const Color(0xFF986B24):accepted?darkGreen:muted,fontSize:8,fontWeight:FontWeight.w800)))]),
+   const SizedBox(height:11),Row(children:[_TaskAvatar(name:provider,url:o['provider_avatar']?.toString()??'',radius:22),const SizedBox(width:9),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Flexible(child:Text(provider,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w800))),if(o['provider_verified']==true)const Padding(padding:EdgeInsets.only(left:4),child:Icon(Icons.verified_rounded,color:darkGreen,size:13))]),Text(o['district']?.toString()??'DOORA üyesi',style:const TextStyle(color:muted,fontSize:9))])),Text(money(o['amount']),style:const TextStyle(color:darkGreen,fontSize:17,fontWeight:FontWeight.w900))]),
+   if((o['message']?.toString()??'').trim().isNotEmpty)Padding(padding:const EdgeInsets.only(top:10),child:Text('“${o['message']}”',maxLines:3,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:10,height:1.4))),
+   if(pending)Padding(padding:const EdgeInsets.only(top:12),child:Row(children:[Expanded(child:OutlinedButton(onPressed:responding?null:()=>respond(o,'reject'),style:OutlinedButton.styleFrom(foregroundColor:const Color(0xFFB94C48),side:const BorderSide(color:Color(0xFFE9D8D5)),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(11))),child:const Text('Reddet',style:TextStyle(fontSize:11,fontWeight:FontWeight.w800)))),const SizedBox(width:8),Expanded(child:FilledButton(onPressed:responding?null:()=>respond(o,'accept'),style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(11))),child:const Text('Kabul et',style:TextStyle(fontSize:11,fontWeight:FontWeight.w800))))])),
   ]));
  }
- @override Widget build(BuildContext c)=>SafeArea(child:RefreshIndicator(color:green,onRefresh:load,child:ListView(padding:const EdgeInsets.fromLTRB(18,18,18,112),children:[
-  Row(children:[
-   const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-    Text('İşlerim',style:TextStyle(color:ink,fontSize:25,fontWeight:FontWeight.w900,letterSpacing:-.8)),
-    SizedBox(height:4),Text('İlanlarını ve tekliflerini tek yerden yönet.',style:TextStyle(color:muted,fontSize:10)),
-   ])),
-   IconButton(onPressed:busy?null:load,icon:const Icon(Icons.refresh_rounded,color:darkGreen)),
-  ]),
-  const SizedBox(height:14),
-  Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(
-   gradient:const LinearGradient(colors:[Color(0xFF648B65),Color(0xFF456B4A)],begin:Alignment.topLeft,end:Alignment.bottomRight),
-   borderRadius:BorderRadius.circular(20)),
-   child:Row(children:[
-    Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-     const Text('DOORA iş panelin',style:TextStyle(color:white,fontSize:9,fontWeight:FontWeight.w700)),
-     const SizedBox(height:5),
-     Text(widget.user==null?'İşlerini takip etmeye başla':'Her şey kontrol altında.',style:const TextStyle(color:white,fontSize:16,fontWeight:FontWeight.w900)),
-     const SizedBox(height:4),
-     const Text('İlanlarını ve teklif süreçlerini kolayca takip et.',style:TextStyle(color:Colors.white70,fontSize:9)),
-    ])),
-    Container(width:58,height:58,decoration:BoxDecoration(color:Colors.white.withValues(alpha:.18),borderRadius:BorderRadius.circular(17)),
-     child:const Icon(PhosphorIconsRegular.briefcase,color:white,size:27)),
-   ]),
-  ),
-  const SizedBox(height:15),
-  Row(children:[
-   Expanded(child:_taskMetric('Paylaştığın ilan',tasks.length.toString(),PhosphorIconsRegular.briefcase)),
-   const SizedBox(width:8),
-   Expanded(child:_taskMetric('Verdiğin teklif',offers.length.toString(),PhosphorIconsRegular.chatCircle)),
-  ]),
-  const SizedBox(height:17),
-  Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFECEFE7),borderRadius:BorderRadius.circular(14)),child:Row(children:[
-   Expanded(child:GestureDetector(onTap:()=>setState(()=>segment=0),child:AnimatedContainer(duration:const Duration(milliseconds:160),padding:const EdgeInsets.symmetric(vertical:12),decoration:BoxDecoration(color:segment==0?white:Colors.transparent,borderRadius:BorderRadius.circular(11),boxShadow:segment==0?[BoxShadow(color:ink.withValues(alpha:.05),blurRadius:8,offset:const Offset(0,2))]:[]),child:Text('Paylaştıklarım  ${tasks.length}',textAlign:TextAlign.center,style:TextStyle(color:segment==0?darkGreen:muted,fontSize:9,fontWeight:FontWeight.w900))))),
-   Expanded(child:GestureDetector(onTap:()=>setState(()=>segment=1),child:AnimatedContainer(duration:const Duration(milliseconds:160),padding:const EdgeInsets.symmetric(vertical:12),decoration:BoxDecoration(color:segment==1?white:Colors.transparent,borderRadius:BorderRadius.circular(11),boxShadow:segment==1?[BoxShadow(color:ink.withValues(alpha:.05),blurRadius:8,offset:const Offset(0,2))]:[]),child:Text('Teklif verdiklerim  ${offers.length}',textAlign:TextAlign.center,style:TextStyle(color:segment==1?darkGreen:muted,fontSize:9,fontWeight:FontWeight.w900))))),
-  ])),
-  const SizedBox(height:14),
-  if(widget.user==null)EmptyState(title:'Hesabına giriş yap',message:'İşlerini ve tekliflerini takip etmek için giriş yap.',action:'Giriş yap',onTap:widget.onLogin)
+ Widget taskRow(DooraTask t)=>Container(margin:const EdgeInsets.only(bottom:9),padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(16),border:Border.all(color:line)),child:Row(children:[
+  ClipRRect(borderRadius:BorderRadius.circular(11),child:SizedBox(width:48,height:48,child:t.imageUrls.isNotEmpty?taskImage(t.imageUrls.first,width:48,height:48):Container(color:soft,child:const Icon(PhosphorIconsRegular.briefcase,color:darkGreen,size:20)))),
+  const SizedBox(width:10),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(t.title,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w900)),const SizedBox(height:4),Text('${t.location} · ${money(t.budget)}',maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:9)),const SizedBox(height:4),Text('${incoming.where((o)=>o['task_id']?.toString()==t.id&&o['status']=='pending').length} bekleyen teklif',style:const TextStyle(color:darkGreen,fontSize:9,fontWeight:FontWeight.w800))])),
+  IconButton(onPressed:()=>openTask(context,t,widget.user,widget.onLogin,()=>load(silent:true)),icon:const Icon(Icons.chevron_right_rounded,color:muted)),
+ ]));
+ @override Widget build(BuildContext c)=>SafeArea(child:RefreshIndicator(color:darkGreen,onRefresh:load,child:ListView(padding:const EdgeInsets.fromLTRB(18,18,18,112),children:[
+  Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('İşlerim',style:TextStyle(color:ink,fontSize:25,fontWeight:FontWeight.w900,letterSpacing:-.8)),SizedBox(height:4),Text('İşlerinin ve tekliflerinin merkezi.',style:TextStyle(color:muted,fontSize:10))])),IconButton(onPressed:busy?null:load,icon:const Icon(Icons.refresh_rounded,color:darkGreen))]),
+  if(widget.user==null)EmptyState(title:'Hesabına giriş yap',message:'İlanlarını ve gelen teklifleri takip etmek için giriş yap.',action:'Giriş yap',onTap:widget.onLogin)
   else if(busy)const Skeletons()
-  else if(segment==1)offerSection()
   else if(error!=null)EmptyState(title:'İşlerin yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)
-  else if(tasks.isEmpty)EmptyState(title:'Henüz ilan paylaşmadın',message:'İlk ilanını oluştur, yakınındaki kişilerden teklif almaya başla.',action:'İlan oluştur',onTap:widget.onCreate)
-  else ...tasks.map((t)=>Padding(padding:const EdgeInsets.only(bottom:10),child:myTaskCard(t))),
+  else ...[
+   Row(children:[const Expanded(child:Text('Gelen teklifler',style:TextStyle(color:ink,fontSize:16,fontWeight:FontWeight.w900))),if(pendingCount>0)Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:5),decoration:BoxDecoration(color:const Color(0xFFFFE9E7),borderRadius:BorderRadius.circular(20)),child:Text('$pendingCount bekliyor',style:const TextStyle(color:Color(0xFFB93636),fontSize:9,fontWeight:FontWeight.w900)))]),
+   const SizedBox(height:10),
+   if(incoming.isEmpty)Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(17),border:Border.all(color:line)),child:Row(children:[Container(width:40,height:40,decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(13)),child:const Icon(PhosphorIconsRegular.inbox,color:darkGreen,size:20)),const SizedBox(width:11),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Henüz teklif yok',style:TextStyle(color:ink,fontSize:12,fontWeight:FontWeight.w800)),SizedBox(height:3),Text('İlanlarına teklif geldikçe burada göreceksin.',style:TextStyle(color:muted,fontSize:10))]))])) else ...incoming.map(incomingCard),
+   const SizedBox(height:16),Row(children:[const Expanded(child:Text('İlanlarım',style:TextStyle(color:ink,fontSize:16,fontWeight:FontWeight.w900))),Text('${tasks.length} ilan',style:const TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700))]),const SizedBox(height:9),
+   if(tasks.isEmpty)Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(16),border:Border.all(color:line)),child:Column(children:[const Text('Henüz ilan oluşturmadın.',style:TextStyle(color:muted,fontSize:11)),const SizedBox(height:9),TextButton(onPressed:widget.onCreate,child:const Text('İlk ilanını oluştur',style:TextStyle(color:darkGreen,fontWeight:FontWeight.w800)))])) else ...tasks.map(taskRow),
+   if(sent.isNotEmpty)...[const SizedBox(height:14),ExpansionTile(tilePadding:EdgeInsets.zero,childrenPadding:EdgeInsets.zero,title:Text('Verdiğim teklifler (${sent.length})',style:const TextStyle(color:muted,fontSize:12,fontWeight:FontWeight.w800)),children:sent.take(20).map((o)=>Padding(padding:const EdgeInsets.only(bottom:8),child:Text('${o['task_title']??'İlan'} · ${money(o['amount'])} · ${o['status']??'pending'}',style:const TextStyle(color:muted,fontSize:10)))).toList())],
+  ],
  ])));
 }
 
@@ -1028,6 +1008,7 @@ class _ProfileState extends State<Profile> {
     ])),
    ],
    const SizedBox(height:12),
+   if(widget.user!=null)_ProfileItem(icon:PhosphorIconsRegular.bookmarkSimple,title:'Kaydedilenler',subtitle:'Daha sonra bakmak için sakladığın ilanlar',tap:()=>Navigator.push(c,dooraRoute(builder:(_)=>Saved(user:widget.user,onLogin:widget.onLogin)))),
    if(widget.user!=null)_ProfileItem(icon:PhosphorIconsRegular.images,title:'Hizmet portföyüm',subtitle:'Yaptığın işleri fotoğraflarla sergile',tap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>ProviderProfilePage(userId:widget.user?['id']?.toString()??'',fallbackName:name,currentUserId:widget.user?['id']?.toString())))),
    _ProfileItem(icon:PhosphorIconsRegular.lightbulb,title:'Nasıl çalışır?',subtitle:'DOORA’yı 3 adımda keşfet',tap:()=>showModalBottomSheet(context:c,showDragHandle:true,backgroundColor:white,builder:(_)=>const HowSheet())),
    _ProfileItem(icon:PhosphorIconsRegular.shieldCheck,title:'Güvenli kullanım',subtitle:'Güvenli işlem önerileri',tap:()=>toast(c,'Doğrulama kodlarını kimseyle paylaşma.')),
