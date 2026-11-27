@@ -123,7 +123,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Row(mainAxisAlignment:MainAxisAlignment.center,children:List.generate(slides.length,(i)=>AnimatedContainer(duration:const Duration(milliseconds:220),margin:const EdgeInsets.symmetric(horizontal:4),width:i==page?23:6,height:6,decoration:BoxDecoration(color:i==page?darkGreen:const Color(0xFFD7DDD3),borderRadius:BorderRadius.circular(8))))),
   const SizedBox(height:22),SizedBox(width:double.infinity,height:54,child:FilledButton(onPressed:()=>page==slides.length-1?widget.onFinish():controller.nextPage(duration:const Duration(milliseconds:360),curve:Curves.easeOutCubic),style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(17)),elevation:0),child:Text(page==slides.length-1?'DOORA’ya başla':'Devam et',style:const TextStyle(fontSize:13,fontWeight:FontWeight.w800)))),
  ]))));
- }
 }
 
 class Shell extends StatefulWidget{const Shell({super.key,required this.user,required this.onLogin,required this.onLogout,required this.onUser});final Map<String,dynamic>? user;final VoidCallback onLogin,onLogout;final ValueChanged<Map<String,dynamic>?> onUser;@override State<Shell> createState()=>_ShellState();}
@@ -826,7 +825,7 @@ class _ProfileState extends State<Profile> {
  }
  Future<void> loadMyListings()async{
   if(widget.user==null)return;
-  if(mounted)setState(()=>loadingListings=true);
+  if(mounted)setState(()=>{loadingListings=true;listingsError=null;});
   try{final rows=await DooraApi.instance.getMyTasks();final id=widget.user?['id']?.toString()??'';if(mounted)setState(()=>myListings=rows.map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList());}
   catch(e){if(mounted)setState(()=>listingsError=DooraApi.instance.errorMessage(e));}
   finally{if(mounted)setState(()=>loadingListings=false);}
