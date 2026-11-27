@@ -47,7 +47,7 @@ class DooraTask {
     final values = raw is List ? raw : <dynamic>[];
     final urls = values.map((v) => v is Map
       ? (v['url'] ?? v['image_url'] ?? v['imageUrl'] ?? v['src'] ?? '').toString()
-      : v.toString()).where((v) => v.startsWith('http') || v.startsWith('/')).toList();
+      : v.toString()).where((v) => v.startsWith('http') || v.startsWith('/') || v.startsWith('data:image/')).toList();
     final single = (json['image_url'] ?? json['imageUrl'] ?? json['photo_url'] ?? json['cover_image'] ?? '').toString();
     if (single.isNotEmpty && !urls.contains(single)) urls.insert(0, single);
     return urls;

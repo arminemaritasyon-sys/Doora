@@ -78,14 +78,16 @@ export async function POST(request: NextRequest) {
     VALUES (${user.id},${title},${description},${category},${budget},${city},${district})
     RETURNING id,title,description,category,budget,district AS location,status,created_at
   `;
+  const savedImages: { url: string }[] = [];
   for (const imageData of images) {
-    await db`INSERT INTO public.task_images(task_id, image_data) VALUES (${task.id}, ${imageData})`;
+    const [imageRow] = await db`INSERT INTO public.task_images(task_id, image_data) VALUES (${task.id}, ${imageData}) RETURNING id`;
+    savedImages.push({ url: `/api/tasks/image?id=${imageRow.id}` });
   }
   await createNotification({ userId: user.id, preference: "task_updates", type: "task_created", title: "İlanın yayınlandı", body: title, href: `/ilan/${task.id}` });
   try {
     await sendDooraEmail({ to:user.email, userId:user.id, template:"task_created", subject:"İlanın DOORA'da yayında", html:`<h2>Merhaba ${escapeHtml(user.name || "DOORA üyesi")},</h2><p><strong>${escapeHtml(title)}</strong> ilanını aldık. İlanın DOORA'da yayınlandı.</p><p>Teklif geldikçe seni bilgilendireceğiz.</p>` });
   } catch (error) { console.error("[mail] Delivery failed; marketplace action remains successful:", error); }
-  return NextResponse.json({ task: { ...task, city, images: [], time: "Yeni ilan", owner: user.name || "Sen", offers: 0 } }, { status: 201 });
+  return NextResponse.json({ task: { ...task, city, images: savedImages, time: "Yeni ilan", owner: user.name || "Sen", offers: 0 } }, { status: 201 });
 }
 
 function escapeHtml(value: string) {
