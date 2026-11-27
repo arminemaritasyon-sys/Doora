@@ -410,8 +410,8 @@ class _DiscoverState extends State<Discover>{
   const SizedBox(height:22),
   Row(crossAxisAlignment:CrossAxisAlignment.center,children:[
    const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-    Text('Günlük işlerin,',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),
-    Text('yakınında çözülür.',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),
+    Text('İşin varsa,',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),
+    Text('DOORA var.',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w700,letterSpacing:-1.15,height:1.12)),
    ])),
    const SizedBox(width:5),
    SizedBox(width:88,height:82,child:CustomPaint(painter:_DiscoverHeroLineArt())),
@@ -848,22 +848,26 @@ class MyTasks extends StatefulWidget {
  @override State<MyTasks> createState()=>_MyTasksState();
 }
 class _MyTasksState extends State<MyTasks> {
- List<DooraTask> tasks=[]; List<Map<String,dynamic>> incoming=[],acceptedJobs=[];
+ List<DooraTask> tasks=[]; List<Map<String,dynamic>> incoming=[],outgoing=[],acceptedJobs=[];
  bool busy=true,responding=false; String? error; Timer? _poll;
  @override void initState(){super.initState();load();_poll=Timer.periodic(const Duration(seconds:15),(_)=>load(silent:true));}
  @override void didUpdateWidget(covariant MyTasks old){super.didUpdateWidget(old);if(old.refresh!=widget.refresh||old.user?['id']!=widget.user?['id'])load();}
  @override void dispose(){_poll?.cancel();super.dispose();}
  Future<void> load({bool silent=false}) async {
-  if(widget.user==null){if(mounted)setState(() { tasks=[]; incoming=[]; acceptedJobs=[]; busy=false; });return;}
+  if(widget.user==null){if(mounted)setState(() { tasks=[]; incoming=[]; outgoing=[]; acceptedJobs=[]; busy=false; });return;}
   if(!silent&&mounted)setState(()=>busy=true);
   try {
-   final results=await Future.wait<List<Map<String,dynamic>>>([DooraApi.instance.getMyTasks(),DooraApi.instance.getMyIncomingOffers(),DooraApi.instance.getMyAcceptedJobs()]);
+   final results=await Future.wait<List<Map<String,dynamic>>>([
+    DooraApi.instance.getMyTasks(),
+    DooraApi.instance.getMyIncomingOffers(),
+    DooraApi.instance.getMyAcceptedJobs(),
+    DooraApi.instance.getMyOffers(),
+   ]);
    final id=widget.user?['id']?.toString()??'';
    final nextTasks=results[0].map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList();
-   final ownTaskIds=nextTasks.map((t)=>t.id).toSet();
-   // Defensive client-side ownership filter: never show offers for another user's listing.
-   final ownIncoming=results[1].where((o)=>ownTaskIds.contains(o['task_id']?.toString())).toList();
-   if(mounted)setState(() { tasks=nextTasks; incoming=ownIncoming; acceptedJobs=results[2]; error=null; busy=false; });
+   // The API already scopes incoming offers to listings owned by this account.
+   // Do not filter them against the first 100 task rows: that hid valid offers.
+   if(mounted)setState(() { tasks=nextTasks; incoming=results[1]; acceptedJobs=results[2]; outgoing=results[3]; error=null; busy=false; });
   } catch(e){if(mounted)setState(() { error=DooraApi.instance.errorMessage(e); busy=false; });}
  }
  int get pendingCount=>incoming.where((o)=>(o['status']?.toString()??'pending')=='pending').length;
@@ -921,6 +925,19 @@ class _MyTasksState extends State<MyTasks> {
   controller.dispose();if(reason==null||reason.trim().length<5){if(reason!=null)toast(context,'Lütfen sorunu en az 5 karakterle açıkla.');return;}await runWorkflow(taskId,'not_done',reason:reason);
  }
  String money(dynamic value){final n=num.tryParse(value?.toString()??'0')??0;return n.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'),(m)=>'.')+' ₺';}
+ Widget outgoingCard(Map<String,dynamic> o){
+  final status=o['status']?.toString()??'pending';
+  final label=status=='pending'?'Yanıt bekliyor':status=='accepted'?'Kabul edildi':status=='rejected'?'Reddedildi':status=='withdrawn'?'Geri çekildi':status;
+  final statusColor=status=='pending'?const Color(0xFF986B24):status=='accepted'?darkGreen:status=='rejected'?const Color(0xFFB94C48):muted;
+  final statusBg=status=='pending'?const Color(0xFFFFF3DE):status=='accepted'?mint:status=='rejected'?const Color(0xFFFFE9E7):soft;
+  return Container(margin:const EdgeInsets.only(bottom:10),padding:const EdgeInsets.all(14),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(17),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+   Row(children:[Expanded(child:Text(o['task_title']?.toString()??'Teklif verdiğin ilan',maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:ink,fontSize:12,fontWeight:FontWeight.w900))),Container(padding:const EdgeInsets.symmetric(horizontal:8,vertical:5),decoration:BoxDecoration(color:statusBg,borderRadius:BorderRadius.circular(18)),child:Text(label,style:TextStyle(color:statusColor,fontSize:8,fontWeight:FontWeight.w800)))]),
+   const SizedBox(height:8),
+   Row(children:[Expanded(child:Text('${o['owner_name']?.toString()??'İlan sahibi'} · ${o['district']?.toString()??''}',maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:10))),Text(money(o['amount']),style:const TextStyle(color:darkGreen,fontSize:16,fontWeight:FontWeight.w900))]),
+   if((o['message']?.toString()??'').trim().isNotEmpty)Padding(padding:const EdgeInsets.only(top:8),child:Text('“${o['message']}”',maxLines:2,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:10,height:1.4))),
+   if(status=='rejected'&&(o['rejection_reason']?.toString()??'').trim().isNotEmpty)Padding(padding:const EdgeInsets.only(top:7),child:Text('Yanıt: ${o['rejection_reason']}',style:const TextStyle(color:const Color(0xFFB94C48),fontSize:9,fontWeight:FontWeight.w700))),
+  ]));
+ }
  Widget incomingCard(Map<String,dynamic> o){
   final status=o['status']?.toString()??'pending',pending=status=='pending',accepted=status=='accepted';
   final taskStatus=o['task_status']?.toString()??'open';
@@ -960,7 +977,11 @@ class _MyTasksState extends State<MyTasks> {
   else if(busy)const Skeletons()
   else if(error!=null)EmptyState(title:'İşlerin yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)
   else ...[
-   Row(children:[const Expanded(child:Text('Gelen teklifler',style:TextStyle(color:ink,fontSize:16,fontWeight:FontWeight.w900))),if(pendingCount>0)Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:5),decoration:BoxDecoration(color:const Color(0xFFFFE9E7),borderRadius:BorderRadius.circular(20)),child:Text('$pendingCount bekliyor',style:const TextStyle(color:Color(0xFFB93636),fontSize:9,fontWeight:FontWeight.w900)))]),
+   Row(children:[const Expanded(child:Text('Verdiğim teklifler',style:TextStyle(color:ink,fontSize:16,fontWeight:FontWeight.w900))),Text('${outgoing.length} teklif',style:const TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700))]),
+   const SizedBox(height:10),
+   if(outgoing.isEmpty)Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(17),border:Border.all(color:line)),child:const Row(children:[Icon(Icons.send_outlined,color:darkGreen,size:19),SizedBox(width:10),Expanded(child:Text('Henüz bir ilana teklif vermedin.',style:TextStyle(color:muted,fontSize:10)))])) else ...outgoing.map(outgoingCard),
+   const SizedBox(height:17),
+   Row(children:[const Expanded(child:Text('İlanlarıma gelen teklifler',style:TextStyle(color:ink,fontSize:16,fontWeight:FontWeight.w900))),if(pendingCount>0)Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:5),decoration:BoxDecoration(color:const Color(0xFFFFE9E7),borderRadius:BorderRadius.circular(20)),child:Text('$pendingCount bekliyor',style:const TextStyle(color:Color(0xFFB93636),fontSize:9,fontWeight:FontWeight.w900)))]),
    const SizedBox(height:10),
    if(incoming.isEmpty)Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(17),border:Border.all(color:line)),child:Row(children:[Container(width:40,height:40,decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(13)),child:const Icon(Icons.inbox_outlined,color:darkGreen,size:20)),const SizedBox(width:11),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Henüz teklif yok',style:TextStyle(color:ink,fontSize:12,fontWeight:FontWeight.w800)),SizedBox(height:3),Text('İlanlarına teklif geldikçe burada göreceksin.',style:TextStyle(color:muted,fontSize:10))]))])) else ...incoming.map(incomingCard),
    const SizedBox(height:16),Row(children:[const Expanded(child:Text('İlanlarım',style:TextStyle(color:ink,fontSize:16,fontWeight:FontWeight.w900))),Text('${tasks.length} ilan',style:const TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700))]),const SizedBox(height:9),
