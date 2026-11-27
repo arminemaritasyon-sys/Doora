@@ -32,11 +32,15 @@ jobs:
           import re
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           source = manifest.read_text()
-          permission = '    <uses-permission android:name="android.permission.INTERNET" />\\n'
+          permission = '    <uses-permission android:name="android.permission.INTERNET" />' + chr(10)
           if 'android.permission.INTERNET' not in source:
-              source = re.sub(r'(<manifest[^>]*>\\s*)', r'\\1' + permission, source, count=1)
+              source = re.sub(r'(<manifest[^>]*>\\s*)', lambda match: match.group(1) + permission, source, count=1)
               manifest.write_text(source)
-          print('Release manifest includes INTERNET permission:', 'android.permission.INTERNET' in manifest.read_text())
+          import xml.etree.ElementTree as ET
+          ET.parse(manifest)
+          final_source = manifest.read_text()
+          assert 'android.permission.INTERNET' in final_source, 'INTERNET permission missing from release manifest'
+          print('Release manifest is valid XML and includes INTERNET permission')
           PY
       - name: Install dependencies
         working-directory: mobile
