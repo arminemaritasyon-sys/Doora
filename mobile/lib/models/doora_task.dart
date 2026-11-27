@@ -31,7 +31,7 @@ class DooraTask {
     description: json['description']?.toString() ?? '',
     category: json['category']?.toString() ?? 'Diğer',
     budget: _number(json['budget']),
-    location: json['location']?.toString() ?? json['district']?.toString() ?? '',
+    location: [json['location']?.toString() ?? json['district']?.toString() ?? '', json['city']?.toString() ?? ''].where((v) => v.trim().isNotEmpty).toSet().join(', '),
     time: json['time']?.toString() ?? 'Yeni ilan',
     owner: json['owner']?.toString() ?? 'DOORA üyesi',
     offers: _number(json['offers']).toInt(),
