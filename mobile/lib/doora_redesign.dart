@@ -13,6 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'models/doora_task.dart';
 import 'services/api_client.dart';
 import 'services/auth_service.dart';
+import 'services/push_notifications.dart';
 import 'provider_profile.dart';
 import 'messages.dart';
 
@@ -72,12 +73,13 @@ class _DooraAppState extends State<DooraApp>{
   try { restored = await DooraAuth.instance.restore(); } catch (_) {}
   try { introSeen = await const FlutterSecureStorage().read(key:'doora_onboarding_v1'); } catch (_) {}
   if(mounted)setState((){user=restored;onboardingDone=introSeen=='yes';loading=false;});
+  if(restored?['id']!=null) await DooraPushNotifications.initialize(restored!['id'].toString());
  }
  Future<void> _finishOnboarding() async {
   try { await const FlutterSecureStorage().write(key:'doora_onboarding_v1',value:'yes'); } catch (_) {}
   if(mounted)setState(()=>onboardingDone=true);
  }
- Future<void> login()async{final navigator=dooraNavigatorKey.currentState;if(navigator==null)return;final u=await navigator.push<Map<String,dynamic>>(dooraRoute(builder:(_)=>const AuthPage()));if(u!=null&&mounted)setState(()=>user=u);}
+ Future<void> login()async{final navigator=dooraNavigatorKey.currentState;if(navigator==null)return;final u=await navigator.push<Map<String,dynamic>>(dooraRoute(builder:(_)=>const AuthPage()));if(u!=null&&mounted){setState(()=>user=u);await DooraPushNotifications.initialize(u['id']?.toString()??'');}}
  Future<void> logout()async{
   final navContext=dooraNavigatorKey.currentContext;if(navContext==null)return;
   final confirmed=await showDialog<bool>(context:navContext,builder:(dialogContext)=>AlertDialog(
@@ -90,7 +92,7 @@ class _DooraAppState extends State<DooraApp>{
     ],
   ));
   if(confirmed!=true)return;
-  try{await DooraAuth.instance.signOut();}
+  try{await DooraPushNotifications.dispose();await DooraAuth.instance.signOut();}
   catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(DooraApi.instance.errorMessage(e))));}
   finally{if(mounted)setState(()=>user=null);}
 }
