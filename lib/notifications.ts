@@ -54,7 +54,7 @@ async function sendPush(userId: string, notificationId: string, input: Notificat
     if (!devices.length) return;
     const accessToken = await firebaseAccessToken(account);
     const endpoint = "https://fcm.googleapis.com/v1/projects/" + account.project_id + "/messages:send";
-    await Promise.all(devices.map(async (device: { token: string }) => {
+    await Promise.all(devices.map(async (device) => {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { authorization: "Bearer " + accessToken, "content-type": "application/json" },
