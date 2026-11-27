@@ -1421,28 +1421,28 @@ class _NotificationsState extends State<Notifications> {
   return Padding(
    padding:const EdgeInsets.only(bottom:9),
    child:Material(
-    color:white,borderRadius:BorderRadius.circular(17),
+    color:white,borderRadius:BorderRadius.circular(19),
     child:InkWell(
      onTap:()=>markRead(n),borderRadius:BorderRadius.circular(17),
      child:Container(
-      padding:const EdgeInsets.all(14),
+      padding:const EdgeInsets.all(16),
       decoration:BoxDecoration(
        borderRadius:BorderRadius.circular(17),
        border:Border.all(color:read?line:const Color(0xFFD8E3CE)),
        boxShadow:read?[]:[BoxShadow(color:darkGreen.withValues(alpha:.035),blurRadius:12,offset:const Offset(0,3))],
       ),
       child:Row(crossAxisAlignment:CrossAxisAlignment.start,children:[
-       Container(width:40,height:40,decoration:BoxDecoration(color:read?soft:mint,borderRadius:BorderRadius.circular(13)),child:Icon(iconFor(type),color:ink,size:19)),
+       Container(width:44,height:44,decoration:BoxDecoration(color:read?soft:mint,borderRadius:BorderRadius.circular(13)),child:Icon(iconFor(type),color:ink,size:19)),
        const SizedBox(width:11),
        Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         Row(children:[
-         Expanded(child:Text(n['title']?.toString()??'Bildirim',style:TextStyle(color:ink,fontSize:11,fontWeight:read?FontWeight.w700:FontWeight.w900))),
+         Expanded(child:Text(n['title']?.toString()??'Bildirim',style:TextStyle(color:ink,fontSize:14,fontWeight:read?FontWeight.w700:FontWeight.w900))),
          if(!read)Container(width:7,height:7,decoration:const BoxDecoration(color:Color(0xFFE34B55),shape:BoxShape.circle)),
         ]),
         const SizedBox(height:4),
-        Text(n['message']?.toString()??'',style:const TextStyle(color:muted,fontSize:10,height:1.45)),
+        Text(n['message']?.toString()??'',style:const TextStyle(color:muted,fontSize:12,height:1.5)),
         const SizedBox(height:7),
-        Text(dateLabel(n['created_at']),style:const TextStyle(color:muted,fontSize:8,fontWeight:FontWeight.w700)),
+        Text(dateLabel(n['created_at']),style:const TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700)),
        ])),
       ]),
      ),
@@ -1459,17 +1459,17 @@ class _NotificationsState extends State<Notifications> {
      Container(width:42,height:42,decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsRegular.bell,color:ink,size:21)),
      const SizedBox(width:12),
      Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-      const Text('Bildirimlerin',style:TextStyle(color:ink,fontSize:21,fontWeight:FontWeight.w700,letterSpacing:-.6)),
+      const Text('Bildirimlerin',style:TextStyle(color:ink,fontSize:24,fontWeight:FontWeight.w800,letterSpacing:-.6)),
       const SizedBox(height:3),
-      Text(unread==0?'Her şey güncel.':'$unread okunmamış bildirimin var.',style:const TextStyle(color:muted,fontSize:11)),
+      Text(unread==0?'Her şey güncel.':'$unread okunmamış bildirimin var.',style:const TextStyle(color:muted,fontSize:12)),
      ])),
      if(unread>0)TextButton(onPressed:markAll,child:const Text('Tümünü oku',style:TextStyle(color:darkGreen,fontSize:10,fontWeight:FontWeight.w700))),
     ]),
    ),
    const SizedBox(height:19),
    Row(children:[
-    const Expanded(child:Text('Son bildirimler',style:TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w900))),
-    if(unread>0)TextButton(onPressed:markingAll?null:markAll,child:Text(markingAll?'İşleniyor…':'Tümünü okundu işaretle',style:const TextStyle(color:darkGreen,fontSize:9,fontWeight:FontWeight.w800))),
+    const Expanded(child:Text('Son bildirimler',style:TextStyle(color:ink,fontSize:16,fontWeight:FontWeight.w800))),
+    if(unread>0)TextButton(onPressed:markingAll?null:markAll,child:Text(markingAll?'İşleniyor…':'Tümünü okundu işaretle',style:const TextStyle(color:darkGreen,fontSize:10,fontWeight:FontWeight.w800))),
    ]),
   ];
   if(items.isEmpty) {
