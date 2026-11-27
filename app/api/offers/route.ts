@@ -5,9 +5,11 @@ export async function GET(request: NextRequest) {
   const incoming = request.nextUrl.searchParams.get("incoming") === "1";
   try {
     if (incoming) {
+      // Only offers sent to listings owned by the signed-in user belong in this inbox.
       const offers = await db`
-        SELECT o.id, o.task_id, o.user_id, o.amount, o.message, o.status, o.created_at,
+        SELECT o.id, o.task_id, o.user_id, o.amount, o.message, o.status, o.rejection_reason, o.created_at,
           t.title AS task_title, t.district, t.budget AS task_budget, t.status AS task_status,
+          t.work_started_at, t.completion_requested_at,
           COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS provider_name,
           p.avatar_url AS provider_avatar,
           COALESCE(p.is_verified, false) AS provider_verified
@@ -17,6 +19,25 @@ export async function GET(request: NextRequest) {
         LEFT JOIN neon_auth.user u ON u.id::text = o.user_id
         WHERE t.owner_id = ${user.id}
         ORDER BY CASE WHEN o.status = 'pending' THEN 0 ELSE 1 END, o.created_at DESC
+        LIMIT 100
+      `;
+      return NextResponse.json({ offers });
+    }
+    if (request.nextUrl.searchParams.get("assigned") === "1") {
+      // Accepted offers are shown separately as jobs the current user has been hired to do.
+      const offers = await db`
+        SELECT o.id, o.task_id, o.user_id, o.amount, o.message, o.status, o.created_at,
+          t.title AS task_title, t.district, t.budget AS task_budget, t.status AS task_status,
+          t.work_started_at, t.completion_requested_at, t.owner_id,
+          COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'İlan sahibi') AS owner_name,
+          p.avatar_url AS owner_avatar
+        FROM public.offers o
+        JOIN public.tasks t ON t.id = o.task_id
+        LEFT JOIN public.user_profiles p ON p.user_id = t.owner_id
+        LEFT JOIN neon_auth.user u ON u.id::text = t.owner_id
+        WHERE o.user_id = ${user.id} AND o.status = 'accepted'
+          AND t.status IN ('assigned','completed','disputed')
+        ORDER BY t.updated_at DESC
         LIMIT 100
       `;
       return NextResponse.json({ offers });
