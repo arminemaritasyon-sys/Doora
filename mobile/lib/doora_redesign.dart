@@ -207,7 +207,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
 class Shell extends StatefulWidget{const Shell({super.key,required this.user,required this.onLogin,required this.onLogout,required this.onUser});final Map<String,dynamic>? user;final VoidCallback onLogin,onLogout;final ValueChanged<Map<String,dynamic>?> onUser;@override State<Shell> createState()=>_ShellState();}
 class _ShellState extends State<Shell> {
-  int tab = 0, refresh = 0, unreadMessages = 0;
+  int tab = 0, refresh = 0, unreadMessages = 0, pendingOffers = 0;
   Timer? _messageBadgeTimer;
   @override void initState() {
     super.initState();
@@ -221,12 +221,22 @@ class _ShellState extends State<Shell> {
   @override void dispose() { _messageBadgeTimer?.cancel(); super.dispose(); }
   Future<void> _refreshMessageBadge() async {
     if (widget.user == null) {
-      if (mounted && unreadMessages != 0) setState(() => unreadMessages = 0);
+      if (mounted && (unreadMessages != 0 || pendingOffers != 0)) {
+        setState(() { unreadMessages = 0; pendingOffers = 0; });
+      }
       return;
     }
     try {
-      final count = await DooraApi.instance.getUnreadMessageCount();
-      if (mounted && count != unreadMessages) setState(() => unreadMessages = count);
+      final results = await Future.wait<dynamic>([
+        DooraApi.instance.getUnreadMessageCount(),
+        DooraApi.instance.getMyIncomingOffers(),
+      ]);
+      final count = results[0] as int;
+      final pending = (results[1] as List<Map<String,dynamic>>)
+          .where((offer) => (offer['status']?.toString() ?? 'pending') == 'pending').length;
+      if (mounted && (count != unreadMessages || pending != pendingOffers)) {
+        setState(() { unreadMessages = count; pendingOffers = pending; });
+      }
     } catch (_) {}
   }
   Future<void> create() async {
@@ -318,6 +328,11 @@ class _ShellState extends State<Shell> {
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                 decoration: BoxDecoration(color: const Color(0xFFD94343), borderRadius: BorderRadius.circular(10), border: Border.all(color: white, width: 1.4)),
                 child: Text(unreadMessages > 99 ? '99+' : '$unreadMessages', textAlign: TextAlign.center, style: const TextStyle(color: white, fontSize: 8, fontWeight: FontWeight.w900)),
+              )),
+            if (index == 2 && pendingOffers > 0)
+              Positioned(right: -5, top: -5, child: Container(
+                width: 10, height: 10,
+                decoration: BoxDecoration(color: const Color(0xFFD94343), shape: BoxShape.circle, border: Border.all(color: white, width: 1.5)),
               )),
           ]),
         ),
