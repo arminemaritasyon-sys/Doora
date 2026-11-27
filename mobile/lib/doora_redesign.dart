@@ -109,7 +109,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   (icon:PhosphorIconsRegular.compass,eyebrow:'YAKININDA',title:'İhtiyacın olan iş,\nhemen yakınında.',body:'Günlük işlerini bulunduğun bölgede keşfet.'),
   (icon:PhosphorIconsRegular.handshake,eyebrow:'DOĞRU TEKLİF',title:'Teklifleri karşılaştır.\nİçin rahat etsin.',body:'Hizmet verenleri incele, sana uygun olanı seç.'),
   (icon:PhosphorIconsRegular.shieldCheck,eyebrow:'GÜVENLİ İŞ AKIŞI',title:'Her adımda\nkontrol sende.',body:'İşin durumunu takip et, tamamlandığında değerlendir.'),
-  (icon:PhosphorIconsRegular.sparkle,eyebrow:'SEN DE KATIL',title:'Bir işin mi var?\nİlanını oluştur.',body:'İhtiyacını paylaş veya hizmetlerini sergile.'),
+  (icon:PhosphorIconsRegular.lightbulb,eyebrow:'SEN DE KATIL',title:'Bir işin mi var?\nİlanını oluştur.',body:'İhtiyacını paylaş veya hizmetlerini sergile.'),
  ];
  @override void dispose(){controller.dispose();super.dispose();}
  @override Widget build(BuildContext context)=>Scaffold(backgroundColor:bg,body:SafeArea(child:Padding(padding:const EdgeInsets.fromLTRB(24,18,24,20),child:Column(children:[
