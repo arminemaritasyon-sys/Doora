@@ -577,7 +577,7 @@ class _MyTasksState extends State<MyTasks> {
   ]),
   const SizedBox(height:14),
   Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(
-   gradient:const LinearGradient(colors:[Color(0xFF263B2B),Color(0xFF405B43)],begin:Alignment.topLeft,end:Alignment.bottomRight),
+   gradient:const LinearGradient(colors:[Color(0xFF514139),Color(0xFF9A705B)],begin:Alignment.topLeft,end:Alignment.bottomRight),
    borderRadius:BorderRadius.circular(20)),
    child:Row(children:[
     Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
