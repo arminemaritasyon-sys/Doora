@@ -15,7 +15,7 @@ import 'services/auth_service.dart';
 import 'provider_profile.dart';
 import 'messages.dart';
 
-const bg=Color(0xFFF5F7F1), white=Color(0xFFFFFEFC), ink=Color(0xFF171D18), muted=Color(0xFF434D44), line=Color(0xFFE0E7DD), green=Color(0xFFD5E4D0), darkGreen=Color(0xFF648B65), mint=Color(0xFFE4EDE0), soft=Color(0xFFEDF2E9);
+const bg=Color(0xFFF6F6F2), white=Color(0xFFFFFEFC), ink=Color(0xFF171D18), muted=Color(0xFF434D44), line=Color(0xFFE0E7DD), green=Color(0xFFD5E4D0), darkGreen=Color(0xFF648B65), mint=Color(0xFFE4EDE0), soft=Color(0xFFEDF2E9);
 const districts=['Muratpaşa','Konyaaltı','Kepez','Aksu','Döşemealtı'];
 const provinces=['Adana','Adıyaman','Afyonkarahisar','Ağrı','Amasya','Ankara','Antalya','Artvin','Aydın','Balıkesir','Bilecik','Bingöl','Bitlis','Bolu','Burdur','Bursa','Çanakkale','Çankırı','Çorum','Denizli','Diyarbakır','Edirne','Elazığ','Erzincan','Erzurum','Eskişehir','Gaziantep','Giresun','Gümüşhane','Hakkâri','Hatay','Iğdır','Isparta','İstanbul','İzmir','Kahramanmaraş','Karabük','Karaman','Kars','Kastamonu','Kayseri','Kırıkkale','Kırklareli','Kırşehir','Kilis','Kocaeli','Konya','Kütahya','Malatya','Manisa','Mardin','Mersin','Muğla','Muş','Nevşehir','Niğde','Ordu','Osmaniye','Rize','Sakarya','Samsun','Siirt','Sinop','Sivas','Şanlıurfa','Şırnak','Tekirdağ','Tokat','Trabzon','Tunceli','Uşak','Van','Yalova','Yozgat','Zonguldak'];
 const categories=['Alışveriş','Teslimat','Ev işleri','Taşıma','Tamir','Diğer'];
@@ -1198,14 +1198,14 @@ class _AuthPageState extends State<AuthPage>{
   body:SafeArea(child:Center(child:ConstrainedBox(
    constraints:const BoxConstraints(maxWidth:480),
    child:ListView(shrinkWrap:true,physics:const ClampingScrollPhysics(),padding:const EdgeInsets.fromLTRB(22,12,22,30),children:[
-    Padding(padding:const EdgeInsets.fromLTRB(3,8,3,10),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    Padding(padding:const EdgeInsets.fromLTRB(8,14,8,12),child:Column(crossAxisAlignment:CrossAxisAlignment.center,children:[
      Text(verify?'HESAP GÜVENLİĞİ':signup?'DOORA’YA KATIL':'DOORA ÜYELİĞİ',style:const TextStyle(color:darkGreen,fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1.8)),
      const SizedBox(height:12),
-     Text(verify?'E-posta adresini doğrula':signup?'İyi iş, doğru insanla başlar.':'Tekrar hoş geldin.',
-      style:const TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w600,letterSpacing:-1.1,height:1.12)),
+     Text(verify?'E-posta adresini doğrula':signup?'İyi iş, doğru insanla başlar.':'Tekrar hoş geldin.',textAlign:TextAlign.center,
+      style:const TextStyle(color:ink,fontSize:29,fontWeight:FontWeight.w700,letterSpacing:-1.2,height:1.12)),
      const SizedBox(height:8),
-     Text(verify?'E-postana gönderdiğimiz 6 haneli kodu gir.':'İşlerini kolayca hallet, doğru kişilerle buluş.',
-      style:const TextStyle(color:muted,fontSize:12,height:1.45)),
+     Text(verify?'E-postana gönderdiğimiz 6 haneli kodu gir.':'İşlerini kolayca hallet, doğru kişilerle buluş.',textAlign:TextAlign.center,
+      style:const TextStyle(color:muted,fontSize:12,height:1.5)),
     ])),
     const SizedBox(height:18),
     if(!verify)Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFECEFE7),borderRadius:BorderRadius.circular(14)),child:Row(children:[
@@ -1213,7 +1213,7 @@ class _AuthPageState extends State<AuthPage>{
      Expanded(child:_modeButton('Kayıt ol',true)),
     ])),
     const SizedBox(height:14),
-    Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(20),border:Border.all(color:line)),
+    Container(padding:const EdgeInsets.all(21),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(23),border:Border.all(color:line),boxShadow:[BoxShadow(color:ink.withValues(alpha:.035),blurRadius:24,offset:const Offset(0,9))]),
      child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
       if(signup&&!verify) ...[
        const Text('Seni tanıyalım',style:TextStyle(color:ink,fontSize:13,fontWeight:FontWeight.w900)),
