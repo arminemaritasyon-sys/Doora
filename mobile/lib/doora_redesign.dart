@@ -979,7 +979,8 @@ class _ProfileState extends State<Profile> {
   try{await DooraApi.instance.promoteTask(task.id,key);await Future.wait([loadWallet(),loadMyListings()]);if(mounted)toast(context,'İlanın 24 saatliğine öne çıkarıldı.');}
   catch(e){if(mounted)toast(context,DooraApi.instance.errorMessage(e));}
  }
-\n Future<void> loadWallet()async{
+
+ Future<void> loadWallet()async{
   if(widget.user==null)return;setState(()=>loadingWallet=true);walletError=null;
   try{final data=await DooraApi.instance.getWallet();if(mounted)setState(()=>wallet=data);}
   catch(e){if(mounted)setState(()=>walletError=DooraApi.instance.errorMessage(e));}
