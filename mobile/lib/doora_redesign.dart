@@ -542,7 +542,7 @@ class MapPainter extends CustomPainter {
 
 class OfferSheet extends StatefulWidget{const OfferSheet({super.key,required this.task,this.onSent});final DooraTask task;final VoidCallback? onSent;@override State<OfferSheet> createState()=>_OfferSheetState();}
 class _OfferSheetState extends State<OfferSheet>{late final amount=TextEditingController(text:widget.task.budget.toStringAsFixed(0));final message=TextEditingController();bool busy=false;String? error;@override void dispose(){amount.dispose();message.dispose();super.dispose();}Future<void> send()async{final n=num.tryParse(amount.text.replaceAll('.','').replaceAll(',','.'));if(n==null||n<=0){setState(()=>error='Geçerli bir tutar gir.');return;}setState(()=>busy=true);try{await DooraApi.instance.createOffer(taskId:widget.task.id,amount:n,message:message.text);widget.onSent?.call();if(mounted){Navigator.pop(context);toast(context,'Teklifin iletildi.');}}catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}finally{if(mounted)setState(()=>busy=false);}}
- @override Widget build(BuildContext c)=>Padding(padding:EdgeInsets.only(bottom:MediaQuery.of(c).viewInsets.bottom),child:Container(padding:const EdgeInsets.fromLTRB(18,10,18,20),decoration:const BoxDecoration(color:white,borderRadius:BorderRadius.vertical(top:Radius.circular(25))),child:SafeArea(top:false,child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[Center(child:Container(width:36,height:4,decoration:BoxDecoration(color:line,borderRadius:BorderRadius.circular(4)))),Row(children:[const Expanded(child:Text('Teklif ver',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w900))),IconButton(onPressed:()=>Navigator.pop(c),icon:const Icon(Icons.close,color:muted))]),TextField(controller:amount,keyboardType:TextInputType.number,decoration:const InputDecoration(hintText:'Teklif tutarı',suffixText:'₺')),const SizedBox(height:9),Wrap(spacing:7,children:[for(final f in [.9,1.0,1.1])ActionChip(label:Text((widget.task.budget*f).round().toString()+' ₺'),onPressed:()=>setState(()=>amount.text=(widget.task.budget*f).round().toString()),backgroundColor:soft,side:const BorderSide(color:line))]),const SizedBox(height:9),TextField(controller:message,maxLines:2,decoration:const InputDecoration(hintText:'Kısa mesaj (isteğe bağlı)')),if(error!=null)Text(error!,style:const TextStyle(color:Colors.red,fontSize:10)),const SizedBox(height:12),SizedBox(width:double.infinity,child:FilledButton(onPressed:busy?null:send,style:FilledButton.styleFrom(backgroundColor:green,foregroundColor:white,padding:const EdgeInsets.symmetric(vertical:14)),child:Text(busy?'Gönderiliyor…':'Teklif Gönder')))]))));}
+ @override Widget build(BuildContext c)=>Padding(padding:EdgeInsets.only(bottom:MediaQuery.of(c).viewInsets.bottom),child:Container(padding:const EdgeInsets.fromLTRB(18,10,18,20),decoration:const BoxDecoration(color:white,borderRadius:BorderRadius.vertical(top:Radius.circular(25))),child:SafeArea(top:false,child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[Center(child:Container(width:36,height:4,decoration:BoxDecoration(color:line,borderRadius:BorderRadius.circular(4)))),Row(children:[const Expanded(child:Text('Teklif ver',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w900))),IconButton(onPressed:()=>Navigator.pop(c),icon:const Icon(Icons.close,color:muted))]),TextField(controller:amount,keyboardType:TextInputType.number,decoration:const InputDecoration(hintText:'Teklif tutarı',suffixText:'₺')),const SizedBox(height:9),Wrap(spacing:7,children:[for(final f in [.9,1.0,1.1])ActionChip(label:Text((widget.task.budget*f).round().toString()+' ₺'),onPressed:()=>setState(()=>amount.text=(widget.task.budget*f).round().toString()),backgroundColor:soft,side:const BorderSide(color:line))]),const SizedBox(height:9),TextField(controller:message,maxLines:2,decoration:const InputDecoration(hintText:'Kısa mesaj (isteğe bağlı)')),if(error!=null)Text(error!,style:const TextStyle(color:Colors.red,fontSize:10)),const SizedBox(height:12),SizedBox(width:double.infinity,child:FilledButton(onPressed:busy?null:send,style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,padding:const EdgeInsets.symmetric(vertical:14),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14))),child:Text(busy?'Gönderiliyor…':'Teklif Gönder')))]))));}
 
 class CreatePage extends StatefulWidget {
  const CreatePage({super.key,required this.onDone});
@@ -550,9 +550,9 @@ class CreatePage extends StatefulWidget {
  @override State<CreatePage> createState()=>_CreatePageState();
 }
 class _CreatePageState extends State<CreatePage> {
- final title=TextEditingController(),desc=TextEditingController(),budget=TextEditingController(text:'450'),districtController=TextEditingController(text:'Muratpaşa');
+ final title=TextEditingController(),desc=TextEditingController(),budget=TextEditingController(text:'450'),districtController=TextEditingController();
  final List<XFile> images=[];
- String category='Alışveriş',district='Muratpaşa',city='Antalya';
+ String category='Alışveriş',district='',city='Antalya';
  double slider=450; bool busy=false; String? error;
  @override void dispose(){title.dispose();desc.dispose();budget.dispose();districtController.dispose();super.dispose();}
  Future<void> pickImages() async {
@@ -563,7 +563,7 @@ class _CreatePageState extends State<CreatePage> {
  }
  Future<void> submit() async {
   final n=num.tryParse(budget.text.replaceAll('.','').replaceAll(',','.'));
-  if(title.text.trim().length<5||desc.text.trim().length<10||n==null||n<=0){setState(()=>error='Başlık, açıklama ve bütçeyi kontrol et.');return;}
+  if(title.text.trim().length<5||desc.text.trim().length<10||district.trim().length<2||n==null||n<=0){setState(()=>error='Başlık, açıklama, ilçe ve bütçeyi kontrol et.');return;}
   setState(()=>busy=true);error=null;
   try {
    final encoded=<String>[];
@@ -572,7 +572,7 @@ class _CreatePageState extends State<CreatePage> {
     if(bytes.length>650000)throw StateError('Fotoğraflardan biri çok büyük. Lütfen daha küçük görsel seç.');
     final ext=image.name.toLowerCase();
     final mime=ext.endsWith('.png')?'image/png':ext.endsWith('.webp')?'image/webp':'image/jpeg';
-    encoded.add('data:$mime;base64,\u0024{base64Encode(bytes)}');
+    encoded.add('data:$mime;base64,' + base64Encode(bytes));
    }
    await DooraApi.instance.createTask(title:title.text,description:desc.text,category:category,budget:n,district:district,city:city,images:encoded);
    widget.onDone();
