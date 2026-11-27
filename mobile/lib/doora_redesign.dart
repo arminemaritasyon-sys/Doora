@@ -409,7 +409,8 @@ class _DiscoverState extends State<Discover>{
   Row(children:[const DooraWordmark(),const Spacer(),Stack(clipBehavior:Clip.none,children:[roundAction(PhosphorIconsRegular.bell,openNotifications),if(unreadCount>0)Positioned(right:-4,top:-4,child:Container(constraints:const BoxConstraints(minWidth:19,minHeight:19),padding:const EdgeInsets.symmetric(horizontal:5),decoration:BoxDecoration(color:const Color(0xFFE34B55),borderRadius:BorderRadius.circular(12),border:Border.all(color:bg,width:1.5)),child:Center(child:Text(unreadCount>99?'99+':'$unreadCount',style:const TextStyle(color:white,fontSize:9,fontWeight:FontWeight.w900)))))] )]),
   const SizedBox(height:22),const Text('Günlük işlerin,',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),const Text('yakınında çözülür.',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),const SizedBox(height:15),
  ]))),
- SliverPersistentHeader(pinned:true,delegate:_DiscoverStickyHeader(height:112,child:Padding(padding:const EdgeInsets.fromLTRB(20,3,20,8),child:Column(mainAxisSize:MainAxisSize.min,children:[searchView(),const SizedBox(height:9),categoriesView()])))),
+ SliverToBoxAdapter(child:Padding(padding:const EdgeInsets.fromLTRB(20,0,20,4),child:categoriesView())),
+ SliverPersistentHeader(pinned:true,delegate:_DiscoverStickyHeader(height:64,child:Padding(padding:const EdgeInsets.fromLTRB(20,5,20,8),child:searchView()))),
  SliverToBoxAdapter(child:Padding(padding:const EdgeInsets.fromLTRB(20,17,20,112),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
   Row(children:[const Expanded(child:Text('Yakınındaki işler',style:TextStyle(color:ink,fontSize:18,fontWeight:FontWeight.w600,letterSpacing:-.45))),GestureDetector(onTap:()=>Navigator.push(context,dooraRoute(builder:(_)=>AllTasksPage(user:widget.user,onLogin:widget.onLogin))),child:const Row(children:[Text('Tümünü gör',style:TextStyle(color:darkGreen,fontSize:11,fontWeight:FontWeight.w600)),SizedBox(width:4),Icon(Icons.arrow_forward,size:14,color:darkGreen)]))]),
   const SizedBox(height:11),if(busy)const Skeletons()else if(error!=null)EmptyState(title:'İlanlar yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)else if(tasks.isEmpty)EmptyState(title:'Henüz ilan yok',message:'Bu bölgede listelenecek bir iş bulamadık. İlk ilanı sen oluşturabilirsin.',action:'İlan oluştur',onTap:widget.onCreate)else ...List.generate(tasks.length,(index){final task=tasks[index];return Padding(key:ValueKey(task.id),padding:const EdgeInsets.only(bottom:12),child:taskCard(c,task)).animate(delay:Duration(milliseconds:(index>8?8:index)*55)).fadeIn(duration:const Duration(milliseconds:360),curve:Curves.easeOutCubic).slideY(begin:.08,end:0,duration:const Duration(milliseconds:360),curve:Curves.easeOutCubic);}),
@@ -419,33 +420,33 @@ class _DiscoverState extends State<Discover>{
  Widget roundAction(IconData icon,VoidCallback tap)=>Material(color:const Color(0xFFF4F2EE),shape:const CircleBorder(),child:InkWell(onTap:tap,customBorder:const CircleBorder(),child:SizedBox(width:48,height:48,child:Icon(icon,color:ink,size:22))));
  Widget dot()=>Container(width:8,height:8,decoration:const BoxDecoration(color:Color(0xFFAAA9A4),shape:BoxShape.circle));
  Widget categoriesView()=>SizedBox(
-  height:104,
+  height:48,
   child:ListView.separated(
    scrollDirection:Axis.horizontal,
    physics:const BouncingScrollPhysics(),
-   padding:const EdgeInsets.symmetric(horizontal:2,vertical:3),
+   padding:const EdgeInsets.symmetric(horizontal:2,vertical:2),
    itemCount:labels.length,
-   separatorBuilder:(_,__)=>const SizedBox(width:12),
+   separatorBuilder:(_,__)=>const SizedBox(width:8),
    itemBuilder:(context,i){
     final active=category==labels[i];
-    return SizedBox(width:72,child:TactileTap(
+    return TactileTap(
      onTap:(){setState(()=>category=labels[i]);load();},
-     child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[
-      AnimatedContainer(
-       duration:const Duration(milliseconds:190),
-       width:54,height:54,
-       decoration:BoxDecoration(
-        color:active?darkGreen:white,
-        borderRadius:BorderRadius.circular(19),
-        border:Border.all(color:active?darkGreen:const Color(0xFFE9E7DF)),
-        boxShadow:active?[BoxShadow(color:darkGreen.withValues(alpha:.18),blurRadius:14,offset:const Offset(0,5))]:[],
-       ),
-       child:Icon(icons[i],color:active?white:const Color(0xFF6E675F),size:23),
+     child:AnimatedContainer(
+      duration:const Duration(milliseconds:190),
+      padding:const EdgeInsets.symmetric(horizontal:13,vertical:9),
+      decoration:BoxDecoration(
+       color:active?darkGreen:white,
+       borderRadius:BorderRadius.circular(17),
+       border:Border.all(color:active?darkGreen:const Color(0xFFE9E7DF)),
+       boxShadow:active?[BoxShadow(color:darkGreen.withValues(alpha:.13),blurRadius:12,offset:const Offset(0,4))]:[],
       ),
-      const SizedBox(height:8),
-      Text(labels[i],maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(color:ink,fontSize:10,fontWeight:active?FontWeight.w900:FontWeight.w700)),
-     ]),
-    ));
+      child:Row(mainAxisSize:MainAxisSize.min,children:[
+       Icon(icons[i],color:active?white:const Color(0xFF6E675F),size:17),
+       const SizedBox(width:7),
+       Text(labels[i],maxLines:1,style:TextStyle(color:active?white:ink,fontSize:11,fontWeight:active?FontWeight.w800:FontWeight.w700)),
+      ]),
+     ),
+    );
    },
   ),
  );
