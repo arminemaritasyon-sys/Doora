@@ -5,6 +5,7 @@ on:
     branches:
       - mobile/flutter-foundation
       - backend/task-images-profile
+      - backend/edit-listing-images
     paths:
       - "app/api/**"
       - "app/admin/**"
