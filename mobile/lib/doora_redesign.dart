@@ -94,7 +94,7 @@ class _DooraAppState extends State<DooraApp>{
   catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(DooraApi.instance.errorMessage(e))));}
   finally{if(mounted)setState(()=>user=null);}
 }
- @override Widget build(BuildContext c)=>MaterialApp(navigatorKey:dooraNavigatorKey,title:'DOORA',debugShowCheckedModeBanner:false,themeMode: ThemeMode.system,
+ @override Widget build(BuildContext c)=>MaterialApp(navigatorKey:dooraNavigatorKey,title:'DOORA',debugShowCheckedModeBanner:false,themeMode: ThemeMode.light,
   theme: ThemeData(useMaterial3:true,brightness:Brightness.light,scaffoldBackgroundColor:bg,colorScheme:ColorScheme.fromSeed(seedColor:darkGreen,brightness:Brightness.light),textTheme:GoogleFonts.plusJakartaSansTextTheme(),appBarTheme:const AppBarTheme(backgroundColor:white,foregroundColor:ink,elevation:0)),
   darkTheme: ThemeData(useMaterial3:true,brightness:Brightness.dark,scaffoldBackgroundColor:const Color(0xFF111713),colorScheme:ColorScheme.fromSeed(seedColor:const Color(0xFF9BB8A2),brightness:Brightness.dark),textTheme:GoogleFonts.plusJakartaSansTextTheme(ThemeData.dark().textTheme),appBarTheme:const AppBarTheme(backgroundColor:Color(0xFF171F19),foregroundColor:Color(0xFFF3F4EF),elevation:0)),
   home:loading?const Scaffold(body:Center(child:CircularProgressIndicator(color:green))):!onboardingDone?OnboardingPage(onFinish:_finishOnboarding):Shell(user:user,onLogin:login,onLogout:logout,onUser:(u)=>setState(()=>user=u)));
@@ -1061,16 +1061,16 @@ class Saved extends StatefulWidget {
 class _SavedState extends State<Saved> {
  List<DooraTask> tasks=[]; bool busy=true; String? error;
  @override void initState(){super.initState();load();}
- @override void didUpdateWidget(covariant Saved old){super.didUpdateWidget(old);if(old.user!=widget.user)load();}
+ @override void didUpdateWidget(covariant Saved old){super.didUpdateWidget(old);if(old.user?['id']!=widget.user?['id'])load();}
  Future<void> load() async {
   if(widget.user==null){if(mounted)setState(()=>busy=false);return;}
-  if(mounted)setState(() {busy=true;error=null;});
+  if(mounted)setState((){busy=true;error=null;});
   try{
    final rows=await DooraApi.instance.getSavedTasks();
    final parsed=rows.map(DooraTask.fromJson).where((task)=>task.id.isNotEmpty).toList();
    if(parsed.isEmpty){
     final ids=await DooraApi.instance.getSavedTaskIds();
-    if(ids.isNotEmpty)throw StateError('Kaydedilen ilanların ayrıntıları sunucudan gelmedi. Lütfen biraz sonra yeniden dene.');
+    if(ids.isNotEmpty)throw StateError('Kaydedilen ilanların ayrıntıları şu anda alınamıyor.');
    }
    if(mounted)setState(()=>tasks=parsed);
   }catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}
@@ -1081,21 +1081,49 @@ class _SavedState extends State<Saved> {
   try{await DooraApi.instance.toggleSavedTask(t.id);}
   catch(e){if(mounted){setState(()=>tasks=old);toast(context,DooraApi.instance.errorMessage(e));}}
  }
- @override Widget build(BuildContext c)=>SafeArea(child:RefreshIndicator(color:darkGreen,onRefresh:load,child:ListView(padding:const EdgeInsets.fromLTRB(18,18,18,112),children:[
-  Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Kaydedilenler',style:TextStyle(color:ink,fontSize:24,fontWeight:FontWeight.w900,letterSpacing:-.7)),SizedBox(height:4),Text('Beğendiğin işleri burada sakla.',style:TextStyle(color:muted,fontSize:11))])),Container(width:42,height:42,decoration:BoxDecoration(color:const Color(0xFFE2E9DE),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsRegular.bookmarkSimple,color:ink,size:22))]),
-  const SizedBox(height:17),
-  Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFFE8F1E6),Color(0xFFDDEBDD)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(21),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.12),blurRadius:18,offset:const Offset(0,8))]),child:Row(children:[Container(width:43,height:43,decoration:BoxDecoration(color:white.withValues(alpha:.13),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsFill.bookmarkSimple,color:ink,size:21)),const SizedBox(width:13),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(tasks.length.toString(),style:const TextStyle(color:ink,fontSize:23,fontWeight:FontWeight.w900)),const Text('Kaydettiğin ilan',style:TextStyle(color:ink,fontSize:11,fontWeight:FontWeight.w700))])),const Text('Sonra devam et.  →',style:TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w800))])),
-  const SizedBox(height:20),
-  Row(children:[const Expanded(child:Text('Senin listen',style:TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w900))),Text(tasks.length==1?'1 ilan':'${tasks.length} ilan',style:const TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700))]),
-  const SizedBox(height:11),
-  if(widget.user==null)EmptyState(title:'İlanları kaydet',message:'Kaydettiklerini görmek için giriş yap.',action:'Giriş yap',onTap:widget.onLogin)
-  else if(busy)const Skeletons()
-  else if(error!=null)EmptyState(title:'Listen yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)
-  else if(tasks.isEmpty)Container(padding:const EdgeInsets.symmetric(vertical:28,horizontal:20),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(19),border:Border.all(color:line)),child:Column(children:[Container(width:58,height:58,decoration:const BoxDecoration(color:mint,shape:BoxShape.circle),child:const Icon(PhosphorIconsRegular.bookmarkSimple,color:darkGreen,size:25)),const SizedBox(height:12),const Text('Listen henüz boş',style:TextStyle(color:ink,fontSize:14,fontWeight:FontWeight.w900)),const SizedBox(height:5),const Text('İlgini çeken bir ilanın kalp simgesine dokun. Daha sonra buradan kolayca ulaşabilirsin.',textAlign:TextAlign.center,style:TextStyle(color:muted,fontSize:10,height:1.5))])
-  )
-  else ...tasks.map((t)=>Padding(padding:const EdgeInsets.only(bottom:10),child:Dismissible(key:ValueKey(t.id),direction:DismissDirection.endToStart,background:Container(alignment:Alignment.centerRight,padding:const EdgeInsets.only(right:20),decoration:BoxDecoration(color:const Color(0xFFFFE9E7),borderRadius:BorderRadius.circular(18)),child:const Icon(Icons.delete_outline,color:Colors.red)),onDismissed:(_)=>remove(t),child:TaskCard(task:t,saved:true,onSave:()=>remove(t),onTap:()=>openTask(c,t,widget.user,widget.onLogin,load))))),
- ])));
+ @override Widget build(BuildContext c)=>SafeArea(child:RefreshIndicator(
+  color:darkGreen,onRefresh:load,backgroundColor:white,
+  child:ListView(padding:const EdgeInsets.fromLTRB(20,20,20,116),children:[
+   Row(children:[
+    const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+     Text('Kaydedilenler',style:TextStyle(color:ink,fontSize:25,fontWeight:FontWeight.w800,letterSpacing:-.9)),
+     SizedBox(height:4),Text('Daha sonra incelemek istediklerin.',style:TextStyle(color:muted,fontSize:12)),
+    ])),
+    Container(width:42,height:42,decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(15)),child:const Icon(PhosphorIconsRegular.bookmarkSimple,color:darkGreen,size:21)),
+   ]),
+   const SizedBox(height:22),
+   Row(children:[
+    const Expanded(child:Text('Listen',style:TextStyle(color:ink,fontSize:16,fontWeight:FontWeight.w800))),
+    Text('${tasks.length} ilan',style:const TextStyle(color:muted,fontSize:11,fontWeight:FontWeight.w700)),
+   ]),
+   const SizedBox(height:12),
+   if(widget.user==null)EmptyState(title:'İlanları kaydet',message:'Kaydettiklerini görmek için giriş yap.',action:'Giriş yap',onTap:widget.onLogin)
+   else if(busy)const Skeletons()
+   else if(error!=null)EmptyState(title:'Listen yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)
+   else if(tasks.isEmpty)Container(
+    padding:const EdgeInsets.symmetric(vertical:34,horizontal:22),
+    decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(20),border:Border.all(color:line)),
+    child:Column(children:[
+     Container(width:54,height:54,decoration:const BoxDecoration(color:soft,shape:BoxShape.circle),child:const Icon(PhosphorIconsRegular.bookmarkSimple,color:darkGreen,size:23)),
+     const SizedBox(height:13),
+     const Text('Henüz bir ilan kaydetmedin',style:TextStyle(color:ink,fontSize:14,fontWeight:FontWeight.w800)),
+     const SizedBox(height:5),
+     const Text('Beğendiğin ilanları kaydet; ihtiyaç duyduğunda kolayca bul.',textAlign:TextAlign.center,style:TextStyle(color:muted,fontSize:11,height:1.5)),
+    ]),
+   )
+   else ...tasks.map((t)=>Padding(
+    padding:const EdgeInsets.only(bottom:11),
+    child:Dismissible(
+     key:ValueKey(t.id),direction:DismissDirection.endToStart,
+     background:Container(alignment:Alignment.centerRight,padding:const EdgeInsets.only(right:20),decoration:BoxDecoration(color:const Color(0xFFFFE9E7),borderRadius:BorderRadius.circular(18)),child:const Icon(Icons.delete_outline,color:Colors.red)),
+     onDismissed:(_)=>remove(t),
+     child:TaskCard(task:t,saved:true,onSave:()=>remove(t),onTap:()=>openTask(c,t,widget.user,widget.onLogin,load)),
+    ),
+   )),
+  ]),
+ ));
 }
+
 class Profile extends StatefulWidget {
  const Profile({super.key,required this.user,required this.onLogin,required this.onLogout});
  final Map<String,dynamic>? user; final VoidCallback onLogin,onLogout;
