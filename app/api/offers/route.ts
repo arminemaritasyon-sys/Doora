@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ offers });
     }
     const offers = await db`
-      SELECT o.id, o.task_id, o.amount, o.message, o.status, o.created_at,
+      SELECT o.id, o.task_id, o.amount, o.message, o.status, o.rejection_reason, o.created_at,
         t.title AS task_title, t.district, t.budget AS task_budget, t.status AS task_status,
         COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS owner_name,
         p.avatar_url AS owner_avatar
