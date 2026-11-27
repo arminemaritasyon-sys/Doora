@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -7,9 +8,13 @@ class DooraApi {
   DooraApi._() {
     _dio = Dio(BaseOptions(
       baseUrl: 'https://doora.arminemaritasyon.workers.dev',
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 20),
-      headers: {'Accept': 'application/json'},
+      connectTimeout: const Duration(seconds: 25),
+      receiveTimeout: const Duration(seconds: 30),
+      sendTimeout: const Duration(seconds: 25),
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'DOORA-Mobile/2.1.0 (Flutter Android)',
+      },
     ));
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
@@ -103,8 +108,25 @@ class DooraApi {
     }
   }
 
+  Future<Response<dynamic>> _getWithRetry(
+    String path, {Map<String, dynamic>? queryParameters}
+  ) async {
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await _dio.get(path, queryParameters: queryParameters);
+      } on DioException catch (error) {
+        final retryable = error.type == DioExceptionType.connectionTimeout ||
+            error.type == DioExceptionType.receiveTimeout ||
+            error.type == DioExceptionType.connectionError;
+        if (!retryable || attempt == 1) rethrow;
+        await Future<void>.delayed(const Duration(milliseconds: 650));
+      }
+    }
+    throw StateError('DOORA sunucusuna ulaşılamadı.');
+  }
+
   Future<List<Map<String, dynamic>>> getTasks({String? query, String? category}) async {
-    final response = await _dio.get('/api/tasks', queryParameters: {
+    final response = await _getWithRetry('/api/tasks', queryParameters: {
       if (query != null && query.trim().isNotEmpty) 'q': query.trim(),
       if (category != null && category != 'Tümü') 'category': category,
     });
@@ -121,7 +143,7 @@ class DooraApi {
   }
 
   Future<List<Map<String, dynamic>>> getNearbyTasks() async {
-    final response = await _dio.get('/api/tasks/nearby');
+    final response = await _getWithRetry('/api/tasks/nearby');
     final rows = _asMap(response.data)['tasks'];
     if (rows is! List) return [];
     return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
@@ -398,10 +420,15 @@ class DooraApi {
       if (error.response?.statusCode == 404) return 'Aradığın kayıt bulunamadı.';
       if (error.response?.statusCode == 429) return 'Çok fazla istek gönderdin. Biraz bekleyip tekrar dene.';
       if (message.isNotEmpty && !normalized.contains('internal_server_error')) return message;
-      if (error.type == DioExceptionType.connectionTimeout ||
-          error.type == DioExceptionType.receiveTimeout ||
-          error.type == DioExceptionType.connectionError) {
-        return 'DOORA sunucusuna bağlanılamadı. İnternet bağlantını kontrol et.';
+      if (error.type == DioExceptionType.connectionTimeout) {
+        return 'DOORA sunucusuna bağlantı zaman aşımına uğradı. İnternetini kontrol edip tekrar dene.';
+      }
+      if (error.type == DioExceptionType.receiveTimeout) {
+        return 'DOORA sunucusu yanıt vermekte gecikiyor. Biraz sonra tekrar dene.';
+      }
+      if (error.type == DioExceptionType.connectionError ||
+          error.error is SocketException) {
+        return 'DOORA sunucusuna ulaşılamıyor. İnternet bağlantını kontrol et; sorun sürerse sunucu adresi veya yayın durumu kontrol edilmeli.';
       }
     }
     return 'İşlem tamamlanamadı. Bilgilerini kontrol edip tekrar dene.';
