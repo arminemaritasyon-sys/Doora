@@ -5,6 +5,7 @@ import 'api_client.dart';
 
 class DooraPushNotifications {
   DooraPushNotifications._();
+
   static void Function(RemoteMessage message)? onForegroundMessage;
   static void Function(RemoteMessage message)? onNotificationOpened;
   static String? _activeToken;
@@ -25,18 +26,19 @@ class DooraPushNotifications {
           projectId: _projectId,
         ));
       }
-      final permission = await FirebaseMessaging.instance.requestPermission(
+      final messaging = FirebaseMessaging.instance;
+      final permission = await messaging.requestPermission(
         alert: true, badge: true, sound: true, provisional: false,
       );
       if (permission.authorizationStatus == AuthorizationStatus.denied) return;
-      final token = await FirebaseMessaging.instance.getToken();
+      final token = await messaging.getToken();
       if (token != null && token.isNotEmpty) {
         _activeToken = token;
         await DooraApi.instance.registerPushToken(
           token, platform: Platform.isIOS ? 'ios' : 'android',
         );
       }
-      FirebaseMessaging.instance.onTokenRefresh.listen((next) async {
+      messaging.onTokenRefresh.listen((next) async {
         _activeToken = next;
         try {
           await DooraApi.instance.registerPushToken(
@@ -44,16 +46,12 @@ class DooraPushNotifications {
           );
         } catch (_) {}
       });
-      FirebaseMessaging.onMessage.listen(
-        (message) => onForegroundMessage?.call(message),
-      );
-      FirebaseMessaging.onMessageOpenedApp.listen(
-        (message) => onNotificationOpened?.call(message),
-      );
-      final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+      FirebaseMessaging.onMessage.listen((message) => onForegroundMessage?.call(message));
+      FirebaseMessaging.onMessageOpenedApp.listen((message) => onNotificationOpened?.call(message));
+      final initialMessage = await messaging.getInitialMessage();
       if (initialMessage != null) onNotificationOpened?.call(initialMessage);
     } catch (error) {
-      // Keep sign-in usable if push permission or Firebase setup is unavailable.
+      // Missing Firebase project configuration must not block sign-in or app startup.
     }
   }
 
