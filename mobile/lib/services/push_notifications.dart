@@ -1,13 +1,11 @@
 import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'api_client.dart';
 
 class DooraPushNotifications {
   DooraPushNotifications._();
-  static final FlutterLocalNotificationsPlugin _local = FlutterLocalNotificationsPlugin();
-  static bool _ready = false;
+  static void Function(RemoteMessage message)? onForegroundMessage;
   static String? _activeToken;
 
   static const String _apiKey = String.fromEnvironment('FIREBASE_API_KEY');
@@ -27,16 +25,6 @@ class DooraPushNotifications {
           projectId: _projectId,
         ));
       }
-      const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-      await _local.initialize(const InitializationSettings(android: android));
-      const channel = AndroidNotificationChannel(
-        'doora_updates',
-        'DOORA bildirimleri',
-        description: 'Mesajlar, teklifler ve hesap hareketleri',
-        importance: Importance.max,
-      );
-      await _local.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(channel);
       final permission = await FirebaseMessaging.instance.requestPermission(
         alert: true, badge: true, sound: true, provisional: false,
       );
@@ -52,27 +40,8 @@ class DooraPushNotifications {
           await DooraApi.instance.registerPushToken(next, platform: Platform.isIOS ? 'ios' : 'android');
         } catch (_) {}
       });
-      FirebaseMessaging.onMessage.listen((message) async {
-        final notification = message.notification;
-        if (notification == null) return;
-        await _local.show(
-          notification.hashCode,
-          notification.title ?? 'DOORA',
-          notification.body ?? '',
-          const NotificationDetails(
-            android: AndroidNotificationDetails(
-              'doora_updates',
-              'DOORA bildirimleri',
-              channelDescription: 'Mesajlar, teklifler ve hesap hareketleri',
-              importance: Importance.max,
-              priority: Priority.high,
-              icon: '@mipmap/ic_launcher',
-            ),
-          ),
-          payload: message.data['href']?.toString(),
-        );
-      });
-      _ready = true;
+      FirebaseMessaging.onMessage.listen((message) => onForegroundMessage?.call(message));
+
     } catch (_) {
       // Push is optional until the Firebase project keys are configured.
     }
@@ -81,7 +50,6 @@ class DooraPushNotifications {
   static Future<void> dispose() async {
     final token = _activeToken;
     _activeToken = null;
-    _ready = false;
     if (token != null) {
       try { await DooraApi.instance.unregisterPushToken(token); } catch (_) {}
     }
