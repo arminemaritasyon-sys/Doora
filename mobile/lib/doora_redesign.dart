@@ -66,7 +66,24 @@ class _TactileTapState extends State<TactileTap> {
 class DooraApp extends StatefulWidget{const DooraApp({super.key});@override State<DooraApp> createState()=>_DooraAppState();}
 class _DooraAppState extends State<DooraApp>{
  Map<String,dynamic>? user;bool loading=true;
- @override void initState(){super.initState();_initialize();}
+ @override void initState(){
+  super.initState();
+  DooraPushNotifications.onForegroundMessage=(message){
+   final context=dooraNavigatorKey.currentContext;
+   final notification=message.notification;
+   if(context!=null&&notification!=null){
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+     content:Text('${notification.title ?? 'DOORA'}\\n${notification.body ?? ''}'),
+     behavior:SnackBarBehavior.floating,backgroundColor:darkGreen,
+    ));
+   }
+  };
+  DooraPushNotifications.onNotificationOpened=(message){
+   final navigator=dooraNavigatorKey.currentState;
+   if(navigator!=null)navigator.push(dooraRoute(builder:(_)=>const Notifications()));
+  };
+  _initialize();
+ }
  bool onboardingDone=false;
  Future<void> _initialize() async {
   Map<String,dynamic>? restored; String? introSeen;
