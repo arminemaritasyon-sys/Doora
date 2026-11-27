@@ -789,14 +789,14 @@ class _MyTasksState extends State<MyTasks> {
  @override void didUpdateWidget(covariant MyTasks old){super.didUpdateWidget(old);if(old.refresh!=widget.refresh||old.user?['id']!=widget.user?['id'])load();}
  @override void dispose(){_poll?.cancel();super.dispose();}
  Future<void> load({bool silent=false}) async {
-  if(widget.user==null){if(mounted)setState(()=>{tasks=[],incoming=[],sent=[],busy=false});return;}
+  if(widget.user==null){if(mounted)setState(() { tasks=[]; incoming=[]; sent=[]; busy=false; });return;}
   if(!silent&&mounted)setState(()=>busy=true);
   try {
-   final results=await Future.wait([DooraApi.instance.getMyTasks(),DooraApi.instance.getMyIncomingOffers(),DooraApi.instance.getMyOffers()]);
+   final results=await Future.wait<List<Map<String,dynamic>>>([DooraApi.instance.getMyTasks(),DooraApi.instance.getMyIncomingOffers(),DooraApi.instance.getMyOffers()]);
    final id=widget.user?['id']?.toString()??'';
    final nextTasks=(results[0] as List<Map<String,dynamic>>).map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList();
-   if(mounted)setState(()=>{tasks=nextTasks,incoming=results[1] as List<Map<String,dynamic>>,sent=results[2] as List<Map<String,dynamic>>,error=null,busy=false});
-  } catch(e){if(mounted)setState(()=>{error=DooraApi.instance.errorMessage(e),busy=false});}
+   if(mounted)setState(() { tasks=nextTasks; incoming=results[1]; sent=results[2]; error=null; busy=false; });
+  } catch(e){if(mounted)setState(() { error=DooraApi.instance.errorMessage(e); busy=false; });}
  }
  int get pendingCount=>incoming.where((o)=>(o['status']?.toString()??'pending')=='pending').length;
  Future<void> respond(Map<String,dynamic> offer,String action) async {
@@ -844,11 +844,6 @@ class _MyTasksState extends State<MyTasks> {
   ],
  ])));
 }
-
-Widget _taskMetric(String label,String value,IconData icon)=>Container(
- padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(15),border:Border.all(color:line)),
- child:Row(children:[Container(width:34,height:34,decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(11)),child:Icon(icon,color:darkGreen,size:17)),const SizedBox(width:9),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(value,style:const TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w900)),Text(label,style:const TextStyle(color:muted,fontSize:8,fontWeight:FontWeight.w700))]))]),
-);
 
 class Saved extends StatefulWidget {
  const Saved({super.key,required this.user,required this.onLogin});
