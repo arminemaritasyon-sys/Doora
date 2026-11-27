@@ -11,7 +11,7 @@ const _muted = Color(0xFF586357);
 const _line = Color(0xFFE7ECE5);
 const _paper = Color(0xFFF7F9F5);
 const _green = Color(0xFF9DB99A);
-const _forest = Color(0xFF86A989);
+const _forest = Color(0xFF648B65);
 
 class ProviderProfilePage extends StatefulWidget {
   const ProviderProfilePage({
@@ -176,6 +176,14 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     ));
   }
 
+  ImageProvider? _avatarProvider(String raw) {
+    if (raw.isEmpty) return null;
+    if (raw.startsWith('data:image/')) {
+      try { return MemoryImage(base64Decode(raw.substring(raw.indexOf(',') + 1))); } catch (_) { return null; }
+    }
+    return NetworkImage(DooraApi.instance.absoluteUrl(raw));
+  }
+
   Widget _portfolioCard(Map<String, dynamic> item) {
     final raw = item['imageData']?.toString() ?? item['image_data']?.toString() ?? '';
     final encoded = raw.contains(',') ? raw.substring(raw.indexOf(',') + 1) : raw;
@@ -271,9 +279,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                           CircleAvatar(
                             radius: 39,
                             backgroundColor: const Color(0xFFEDF1E9),
-                            backgroundImage: avatar.isNotEmpty
-                                ? NetworkImage(DooraApi.instance.absoluteUrl(avatar))
-                                : null,
+                            backgroundImage: _avatarProvider(avatar),
                             child: avatar.isEmpty
                                 ? Text(name.isEmpty ? 'D' : name.characters.first.toUpperCase(),
                                     style: const TextStyle(color: _forest, fontSize: 25, fontWeight: FontWeight.w900))
