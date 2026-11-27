@@ -423,6 +423,14 @@ class DooraApi {
       total + (int.tryParse(row['unread_count']?.toString() ?? '') ?? 0));
   }
 
+  Future<void> registerPushToken(String token, {String platform = 'android'}) async {
+    await _dio.post('/api/notifications/devices', data: {'token': token, 'platform': platform});
+  }
+
+  Future<void> unregisterPushToken(String token) async {
+    await _dio.delete('/api/notifications/devices', data: {'token': token});
+  }
+
   Future<List<Map<String, dynamic>>> getNotifications() async {
     final response = await _dio.get('/api/notifications');
     final rows = _asMap(response.data)['notifications'];
