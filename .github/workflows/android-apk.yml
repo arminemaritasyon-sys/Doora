@@ -32,9 +32,9 @@ jobs:
           import re
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           source = manifest.read_text()
-          permission = '    <uses-permission android:name="android.permission.INTERNET" />\n'
+          permission = '    <uses-permission android:name="android.permission.INTERNET" />\\n'
           if 'android.permission.INTERNET' not in source:
-              source = re.sub(r'(<manifest[^>]*>\s*)', r'\1' + permission, source, count=1)
+              source = re.sub(r'(<manifest[^>]*>\\s*)', r'\\1' + permission, source, count=1)
               manifest.write_text(source)
           print('Release manifest includes INTERNET permission:', 'android.permission.INTERNET' in manifest.read_text())
           PY
@@ -47,27 +47,6 @@ jobs:
       - name: Build release APK
         working-directory: mobile
         run: flutter build apk --release
-      - name: Run app in Android emulator and capture home screen
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          target: google_apis
-          arch: x86_64
-          profile: pixel_6
-          disable-animations: true
-          script: |
-            adb install mobile/build/app/outputs/flutter-apk/app-release.apk
-            adb shell am start -n com.doora.doora_mobile/.MainActivity
-            sleep 20
-            adb shell screencap -p /sdcard/doora-home.png
-            adb pull /sdcard/doora-home.png mobile/doora-home-emulator.png
-      - name: Upload emulator screenshot
-        uses: actions/upload-artifact@v4
-        with:
-          name: doora-emulator-screenshot
-          path: mobile/doora-home-emulator.png
-          if-no-files-found: error
-          retention-days: 14
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
@@ -75,17 +54,3 @@ jobs:
           path: mobile/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 14
-
-# Rebuild for the redesigned native DOORA client.
-
-# Rebuild after account screen compile fix.
-
-# Build the refreshed native marketplace experience.
-
-# Rebuild after correcting icon widget compatibility.
-
-# Validate latest native UI and saved/nearby task changes.
-
-# Rebuild with the latest marketplace actions and visual refinements.
-
-# Fresh APK rebuild requested 2026-11-22.
