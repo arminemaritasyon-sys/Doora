@@ -104,7 +104,8 @@ class OnboardingPage extends StatefulWidget {
  @override State<OnboardingPage> createState()=>_OnboardingPageState();
 }
 class _OnboardingPageState extends State<OnboardingPage> {
- final PageController controller=PageController(); int page=0;
+ final PageController controller=PageController();
+ int page=0;
  final slides=<({String title,String body,String image})>[
   (title:'İhtiyacını Kolayca Paylaş',body:'Tadilat, temizlik veya taşıma için saniyeler içinde ilan oluştur.',image:'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1100&q=85'),
   (title:'En Uygun Teklifleri Karşılaştır',body:'Onaylı uzmanların fiyat tekliflerini ve yıldız puanlarını tek yerde incele.',image:'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1100&q=85'),
@@ -112,16 +113,96 @@ class _OnboardingPageState extends State<OnboardingPage> {
   (title:'İstersen Sen de Hizmet Ver',body:'Yeteneklerini kazanca dönüştür, sana uygun iş ilanlarına teklif ver.',image:'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1100&q=85'),
  ];
  @override void dispose(){controller.dispose();super.dispose();}
- @override Widget build(BuildContext context)=>Scaffold(backgroundColor:bg,body:SafeArea(child:Padding(padding:const EdgeInsets.fromLTRB(24,18,24,20),child:Column(children:[
-  Row(children:[const DooraWordmark(),const Spacer(),TextButton(onPressed:widget.onFinish,child:const Text('Atla',style:TextStyle(color:muted,fontSize:12,fontWeight:FontWeight.w700)))]),
-  Expanded(child:PageView.builder(controller:controller,itemCount:slides.length,onPageChanged:(v)=>setState(()=>page=v),itemBuilder:(context,index){final slide=slides[index];return Padding(padding:const EdgeInsets.symmetric(horizontal:2),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[
-   Container(width:double.infinity,height:MediaQuery.of(context).size.height*.39,constraints:const BoxConstraints(maxHeight:330,minHeight:230),decoration:BoxDecoration(color:const Color(0xFFE2EBE0),borderRadius:BorderRadius.only(topLeft:Radius.circular(92),topRight:Radius.circular(36),bottomLeft:Radius.circular(38),bottomRight:Radius.circular(92)),border:Border.all(color:const Color(0xFFC9D8C8),width:8)),clipBehavior:Clip.antiAlias,child:Padding(padding:const EdgeInsets.all(10),child:ClipRRect(borderRadius:BorderRadius.only(topLeft:Radius.circular(82),topRight:Radius.circular(28),bottomLeft:Radius.circular(30),bottomRight:Radius.circular(82)),child:Image.network(slide.image,fit:BoxFit.cover,width:double.infinity,errorBuilder:(_,__,___)=>Container(color:mint,child:const Icon(PhosphorIconsRegular.houseLine,color:darkGreen,size:70))))),
-   const SizedBox(height:27),Text(slide.title,textAlign:TextAlign.center,style:const TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w800,letterSpacing:-1.1,height:1.15)),
-   const SizedBox(height:11),Padding(padding:const EdgeInsets.symmetric(horizontal:10),child:Text(slide.body,textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:13,height:1.55))),
-  ]));})),
-  Row(mainAxisAlignment:MainAxisAlignment.center,children:List.generate(slides.length,(i)=>AnimatedContainer(duration:const Duration(milliseconds:220),margin:const EdgeInsets.symmetric(horizontal:4),width:i==page?23:6,height:6,decoration:BoxDecoration(color:i==page?darkGreen:const Color(0xFFD7DDD3),borderRadius:BorderRadius.circular(8))))),
-  const SizedBox(height:22),SizedBox(width:double.infinity,height:54,child:FilledButton(onPressed:()=>page==slides.length-1?widget.onFinish():controller.nextPage(duration:const Duration(milliseconds:360),curve:Curves.easeOutCubic),style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(17)),elevation:0),child:Text(page==slides.length-1?'Hemen Başla  →':'Devam Et  →',style:const TextStyle(fontSize:14,fontWeight:FontWeight.w800)))),
- ]))));
+ @override Widget build(BuildContext context)=>Scaffold(
+  backgroundColor:bg,
+  body:SafeArea(
+   child:Padding(
+    padding:const EdgeInsets.fromLTRB(24,18,24,20),
+    child:Column(children:[
+     Row(children:[
+      const DooraWordmark(),
+      const Spacer(),
+      TextButton(onPressed:widget.onFinish,child:const Text('Atla',style:TextStyle(color:muted,fontSize:12,fontWeight:FontWeight.w700))),
+     ]),
+     Expanded(
+      child:PageView.builder(
+       controller:controller,
+       itemCount:slides.length,
+       onPageChanged:(v)=>setState(()=>page=v),
+       itemBuilder:(context,index){
+        final slide=slides[index];
+        return Padding(
+         padding:const EdgeInsets.symmetric(horizontal:2),
+         child:Column(
+          mainAxisAlignment:MainAxisAlignment.center,
+          children:[
+           Container(
+            width:double.infinity,
+            height:MediaQuery.of(context).size.height*.39,
+            constraints:const BoxConstraints(maxHeight:330,minHeight:230),
+            clipBehavior:Clip.antiAlias,
+            decoration:BoxDecoration(
+             color:const Color(0xFFE2EBE0),
+             borderRadius:const BorderRadius.only(
+              topLeft:Radius.circular(92),topRight:Radius.circular(36),
+              bottomLeft:Radius.circular(38),bottomRight:Radius.circular(92),
+             ),
+             border:Border.all(color:const Color(0xFFC9D8C8),width:8),
+            ),
+            child:Padding(
+             padding:const EdgeInsets.all(10),
+             child:ClipRRect(
+              borderRadius:const BorderRadius.only(
+               topLeft:Radius.circular(82),topRight:Radius.circular(28),
+               bottomLeft:Radius.circular(30),bottomRight:Radius.circular(82),
+              ),
+              child:Image.network(
+               slide.image,
+               fit:BoxFit.cover,
+               width:double.infinity,
+               errorBuilder:(_,__,___)=>Container(
+                color:mint,
+                child:const Icon(PhosphorIconsRegular.houseLine,color:darkGreen,size:70),
+               ),
+              ),
+             ),
+            ),
+           ),
+           const SizedBox(height:27),
+           Text(slide.title,textAlign:TextAlign.center,style:const TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w800,letterSpacing:-1.1,height:1.15)),
+           const SizedBox(height:11),
+           Padding(
+            padding:const EdgeInsets.symmetric(horizontal:10),
+            child:Text(slide.body,textAlign:TextAlign.center,style:const TextStyle(color:muted,fontSize:13,height:1.55)),
+           ),
+          ],
+         ),
+        );
+       },
+      ),
+     ),
+     Row(
+      mainAxisAlignment:MainAxisAlignment.center,
+      children:List.generate(slides.length,(i)=>AnimatedContainer(
+       duration:const Duration(milliseconds:220),
+       margin:const EdgeInsets.symmetric(horizontal:4),
+       width:i==page?23:6,height:6,
+       decoration:BoxDecoration(color:i==page?darkGreen:const Color(0xFFD7DDD3),borderRadius:BorderRadius.circular(8)),
+      )),
+     ),
+     const SizedBox(height:22),
+     SizedBox(
+      width:double.infinity,height:54,
+      child:FilledButton(
+       onPressed:()=>page==slides.length-1?widget.onFinish():controller.nextPage(duration:const Duration(milliseconds:360),curve:Curves.easeOutCubic),
+       style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(27)),elevation:0),
+       child:Text(page==slides.length-1?'Hemen Başla  →':'Devam Et  →',style:const TextStyle(fontSize:14,fontWeight:FontWeight.w800)),
+      ),
+     ),
+    ]),
+   ),
+  ),
+ );
 }
 
 class Shell extends StatefulWidget{const Shell({super.key,required this.user,required this.onLogin,required this.onLogout,required this.onUser});final Map<String,dynamic>? user;final VoidCallback onLogin,onLogout;final ValueChanged<Map<String,dynamic>?> onUser;@override State<Shell> createState()=>_ShellState();}
