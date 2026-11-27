@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       SELECT t.id, t.owner_id, t.title, t.description, t.category, t.budget, t.city,
         t.district AS location,
         COALESCE(to_char(t.scheduled_at, 'DD.MM.YYYY HH24:MI'), 'Yeni ilan') AS time,
-        t.created_at, t.status,
+        t.created_at, t.status, t.featured_until,
         COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS owner,
         CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || floor(extract(epoch from p.updated_at)*1000)::bigint::text END AS owner_avatar,
         (SELECT count(*)::int FROM public.offers o WHERE o.task_id=t.id) AS offers,
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         AND (${district}::text IS NULL OR t.district ILIKE ${district ? `%${district}%` : null})
         AND (${city}::text IS NULL OR t.city ILIKE ${city ? `%${city}%` : null})
         AND (${search}::text IS NULL OR (t.title || ' ' || t.description || ' ' || t.district) ILIKE ${search ? `%${search}%` : null})
-      ORDER BY t.created_at DESC
+      ORDER BY (t.featured_until > now()) DESC, t.created_at DESC
       LIMIT 100
     `;
     return NextResponse.json({ tasks: rows });
