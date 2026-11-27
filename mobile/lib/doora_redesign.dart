@@ -82,6 +82,17 @@ class _DooraAppState extends State<DooraApp>{
    final navigator=dooraNavigatorKey.currentState;
    if(navigator!=null)navigator.push(dooraRoute(builder:(_)=>const Notifications()));
   };
+  DooraPushNotifications.onStatus=(status){
+   final context=dooraNavigatorKey.currentContext;
+   if(context!=null){
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+     content:Text(status),
+     behavior:SnackBarBehavior.floating,
+     backgroundColor:status.startsWith('Bildirimler hazır')?darkGreen:const Color(0xFF8B4B28),
+     duration:const Duration(seconds:5),
+    ));
+   }
+  };
   _initialize();
  }
  bool onboardingDone=false;
