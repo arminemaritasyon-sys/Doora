@@ -25,7 +25,7 @@ jobs:
       - name: Generate Android platform project
         working-directory: mobile
         run: flutter create --platforms=android --org com.doora --project-name doora_mobile .
-      - name: Ensure release APK has internet permission
+      - name: Ensure Android notification permissions
         working-directory: mobile
         run: |
           python3 - <<'PY'
@@ -33,16 +33,17 @@ jobs:
           import re
           manifest = Path('android/app/src/main/AndroidManifest.xml')
           source = manifest.read_text()
-          permission = '    <uses-permission android:name="android.permission.INTERNET" />' + chr(10)
-          if 'android.permission.INTERNET' not in source:
-              source = re.sub(r'(<manifest[^>]*>\s*)', lambda match: match.group(1) + permission, source, count=1)
-              manifest.write_text(source)
+          permissions = ['android.permission.INTERNET', 'android.permission.POST_NOTIFICATIONS', 'android.permission.VIBRATE']
+          for name in permissions:
+              if name not in source:
+                  permission = f'    <uses-permission android:name="{name}" />' + chr(10)
+                  source = re.sub(r'(<manifest[^>]*>\\s*)', lambda match: match.group(1) + permission, source, count=1)
+          manifest.write_text(source)
           import xml.etree.ElementTree as ET
           ET.parse(manifest)
           final_source = manifest.read_text()
-          assert 'android.permission.INTERNET' in final_source, 'INTERNET permission missing from release manifest'
-          assert 'android.permission.POST_NOTIFICATIONS' in final_source, 'POST_NOTIFICATIONS permission missing from release manifest'
-          print('Release manifest is valid XML and includes INTERNET permission')
+          assert all(name in final_source for name in permissions), 'Android notification permissions missing'
+          print('Android manifest is valid and includes notification permissions')
           PY
       - name: Install dependencies
         working-directory: mobile
