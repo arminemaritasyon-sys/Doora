@@ -12,7 +12,7 @@ import 'services/auth_service.dart';
 import 'provider_profile.dart';
 import 'messages.dart';
 
-const bg=Color(0xFFF7F5F1), white=Color(0xFFFFFEFC), ink=Color(0xFF24221F), muted=Color(0xFF858078), line=Color(0xFFEAE6DF), green=Color(0xFFF0EAE3), darkGreen=Color(0xFFB4775D), mint=Color(0xFFF0EAE3), soft=Color(0xFFF1EDE7);
+const bg=Color(0xFFF7F9F5), white=Color(0xFFFFFEFC), ink=Color(0xFF252B25), muted=Color(0xFF818A80), line=Color(0xFFE7ECE5), green=Color(0xFFE7F0E5), darkGreen=Color(0xFF86A989), mint=Color(0xFFEDF4EB), soft=Color(0xFFF2F6F0);
 const districts=['Muratpaşa','Konyaaltı','Kepez','Aksu','Döşemealtı'];
 const categories=['Alışveriş','Teslimat','Ev işleri','Taşıma','Tamir','Diğer'];
 IconData catIcon(String c){switch(c){case 'Alışveriş':return PhosphorIconsRegular.shoppingBag;case 'Teslimat':return PhosphorIconsRegular.truck;case 'Ev işleri':return PhosphorIconsRegular.broom;case 'Taşıma':return PhosphorIconsRegular.package;case 'Tamir':return PhosphorIconsRegular.wrench;default:return PhosphorIconsRegular.squaresFour;}}
@@ -229,7 +229,7 @@ class _DiscoverState extends State<Discover>{
  void openMessages(){if(widget.user==null){widget.onLogin();return;}Navigator.push(context,MaterialPageRoute(builder:(_)=>MessagesInboxPage(currentUserId:widget.user?['id']?.toString()??''))).then((_)=>refreshBadges());}
  void openNotifications(){if(widget.user==null){widget.onLogin();return;}Navigator.push(context,MaterialPageRoute(builder:(_)=>const Notifications()));}
  @override Widget build(BuildContext c)=>SafeArea(bottom:false,child:RefreshIndicator(color:darkGreen,onRefresh:load,child:ListView(physics:const AlwaysScrollableScrollPhysics(),padding:const EdgeInsets.fromLTRB(20,8,20,112),children:[
-  Row(children:[const DooraWordmark(),const Spacer(),Stack(clipBehavior:Clip.none,children:[roundAction(PhosphorIconsRegular.bell,openNotifications),if(unreadCount>0)const Positioned(right:1,top:1,child:CircleAvatar(radius:4,backgroundColor:Color(0xFFB4775D)))] )]),
+  Row(children:[const DooraWordmark(),const Spacer(),Stack(clipBehavior:Clip.none,children:[roundAction(PhosphorIconsRegular.bell,openNotifications),if(unreadCount>0)Positioned(right:-4,top:-4,child:Container(minWidth:19,height:19,padding:const EdgeInsets.symmetric(horizontal:5),decoration:BoxDecoration(color:const Color(0xFFE34B55),borderRadius:BorderRadius.circular(12),border:Border.all(color:bg,width:1.5)),child:Center(child:Text(unreadCount>99?'99+':'$unreadCount',style:const TextStyle(color:white,fontSize:9,fontWeight:FontWeight.w900)))))] )]),
   const SizedBox(height:22),
   const Text('Günlük işlerin,',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),
   const Text('yakınında çözülür.',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),
@@ -343,9 +343,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
  }
  Widget filterChip(String label,{bool selected=false,VoidCallback? onTap,IconData? icon})=>Padding(
   padding:const EdgeInsets.only(right:7),
-  child:Material(color:selected?const Color(0xFFE9DED5):white,borderRadius:BorderRadius.circular(18),child:InkWell(onTap:onTap,borderRadius:BorderRadius.circular(18),child:Container(
+  child:Material(color:selected?const Color(0xFFE8F1E6):white,borderRadius:BorderRadius.circular(18),child:InkWell(onTap:onTap,borderRadius:BorderRadius.circular(18),child:Container(
    padding:const EdgeInsets.symmetric(horizontal:12,vertical:8),
-   decoration:BoxDecoration(borderRadius:BorderRadius.circular(18),border:Border.all(color:selected?const Color(0xFFE1CFC2):line)),
+   decoration:BoxDecoration(borderRadius:BorderRadius.circular(18),border:Border.all(color:selected?const Color(0xFFD7E5D5):line)),
    child:Row(mainAxisSize:MainAxisSize.min,children:[if(icon!=null)Padding(padding:const EdgeInsets.only(right:5),child:Icon(icon,size:13,color:selected?darkGreen:muted)),Text(label,style:TextStyle(color:selected?darkGreen:const Color(0xFF625D56),fontSize:10,fontWeight:selected?FontWeight.w700:FontWeight.w500))]),
   ))));
  void chooseDistrict(){showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(sheet)=>DistrictSheet(value:district,onSelect:(v){setState(()=>district=v);load();}));}
@@ -398,6 +398,10 @@ class TaskCard extends StatelessWidget {
    padding:const EdgeInsets.all(15),
    decoration:BoxDecoration(borderRadius:BorderRadius.circular(18),border:Border.all(color:line),boxShadow:[BoxShadow(color:ink.withValues(alpha:.035),blurRadius:14,offset:const Offset(0,4))]),
    child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    if(task.imageUrls.isNotEmpty) ...[
+     ClipRRect(borderRadius:BorderRadius.circular(14),child:AspectRatio(aspectRatio:2.15,child:Image.network(DooraApi.instance.absoluteUrl(task.imageUrls.first),width:double.infinity,fit:BoxFit.cover,errorBuilder:(_,__,___)=>const SizedBox.shrink()))),
+     const SizedBox(height:12),
+    ],
     Row(children:[
      Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:5),decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(20)),child:Text(task.category,style:const TextStyle(color:darkGreen,fontSize:9,fontWeight:FontWeight.w800))),
      const Spacer(),
@@ -421,7 +425,7 @@ class TaskCard extends StatelessWidget {
      ])
     ]),
     const SizedBox(height:10),
-    SizedBox(width:double.infinity,height:39,child:FilledButton(onPressed:onOffer??onTap,style:FilledButton.styleFrom(backgroundColor:onOffer==null?soft:darkGreen,foregroundColor:onOffer==null?darkGreen:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(11))),child:Text(onOffer==null?'İlanı incele':'Ben yaparım',style:const TextStyle(fontSize:10,fontWeight:FontWeight.w800))))
+    SizedBox(width:double.infinity,height:39,child:FilledButton(onPressed:onOffer??onTap,style:FilledButton.styleFrom(backgroundColor:onOffer==null?soft:darkGreen,foregroundColor:onOffer==null?darkGreen:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(11))),child:Text(onOffer==null?'İlanı incele':'Teklif ver',style:const TextStyle(fontSize:10,fontWeight:FontWeight.w800))))
    ])
   ))
  );
@@ -437,7 +441,9 @@ class TaskDetail extends StatelessWidget {
    backgroundColor:white,
    body:CustomScrollView(slivers:[
     SliverToBoxAdapter(child:SizedBox(height:270,child:Stack(fit:StackFit.expand,children:[
-     const MapPanel(),
+     if(task.imageUrls.isNotEmpty)
+      PageView.builder(itemCount:task.imageUrls.length,itemBuilder:(context,index)=>Image.network(DooraApi.instance.absoluteUrl(task.imageUrls[index]),fit:BoxFit.cover,width:double.infinity,errorBuilder:(_,__,___)=>const MapPanel()))
+     else const MapPanel(),
      Positioned(left:17,top:MediaQuery.of(c).padding.top+8,child:circle(Icons.arrow_back,()=>Navigator.pop(c))),
      Positioned(right:17,top:MediaQuery.of(c).padding.top+8,child:circle(Icons.share_outlined,()=>toast(c,'Paylaşım yakında.'))),
      const Align(alignment:Alignment.bottomCenter,child:SizedBox(height:24,child:ColoredBox(color:white))),
@@ -454,7 +460,7 @@ class TaskDetail extends StatelessWidget {
    ]),
    bottomNavigationBar:SafeArea(top:false,child:Container(padding:const EdgeInsets.all(14),decoration:const BoxDecoration(color:white,border:Border(top:BorderSide(color:line))),child:Row(children:[
     Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('İlan bütçesi',style:TextStyle(color:muted,fontSize:9)),Text(task.formattedBudget,style:const TextStyle(color:ink,fontSize:16,fontWeight:FontWeight.w900))]),
-    const SizedBox(width:15),Expanded(child:FilledButton(onPressed:own?null:(){if(user==null){onLogin();return;}showModalBottomSheet(context:c,isScrollControlled:true,backgroundColor:Colors.transparent,builder:(_)=>OfferSheet(task:task,onSent:onChanged));},style:FilledButton.styleFrom(backgroundColor:green,foregroundColor:white),child:Text(own?'Kendi ilanına teklif veremezsin':'Ben yaparım'))),
+    const SizedBox(width:15),Expanded(child:FilledButton(onPressed:own?null:(){if(user==null){onLogin();return;}showModalBottomSheet(context:c,isScrollControlled:true,backgroundColor:Colors.transparent,builder:(_)=>OfferSheet(task:task,onSent:onChanged));},style:FilledButton.styleFrom(backgroundColor:green,foregroundColor:white),child:Text(own?'Kendi ilanına teklif veremezsin':'Teklif gönder'))),
    ]))),
   );
  }
@@ -486,7 +492,7 @@ class _CreatePageState extends State<CreatePage>{final title=TextEditingControll
    appBar:AppBar(backgroundColor:bg,scrolledUnderElevation:0,title:const Text('İlan oluştur',style:TextStyle(fontSize:16,fontWeight:FontWeight.w900,color:ink)),leading:IconButton(onPressed:()=>Navigator.pop(c),icon:const Icon(Icons.arrow_back_ios_new,size:17,color:ink))),
    bottomNavigationBar:SafeArea(top:false,child:Padding(padding:const EdgeInsets.fromLTRB(18,8,18,14),child:SizedBox(height:52,child:FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(16)),elevation:0),child:Row(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(busy?Icons.hourglass_top_rounded:Icons.arrow_upward_rounded,size:18),const SizedBox(width:9),Text(busy?'Yayınlanıyor…':'İlanı yayınla',style:const TextStyle(fontSize:13,fontWeight:FontWeight.w800))]))))),
    body:SafeArea(child:ListView(padding:const EdgeInsets.fromLTRB(18,8,18,22),children:[
-    Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFFF2EAE3),Color(0xFFF7F8F5)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(22),border:Border.all(color:line)),child:Row(children:[Container(width:46,height:46,decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(15)),child:const Icon(Icons.auto_awesome_outlined,color:darkGreen,size:23)),const SizedBox(width:13),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('İhtiyacını paylaş.',style:TextStyle(color:ink,fontSize:20,fontWeight:FontWeight.w900,letterSpacing:-.5)),SizedBox(height:4),Text('Yakınındaki kişilerden teklif al, işini kolayca çözüme kavuştur.',style:TextStyle(color:muted,fontSize:10,height:1.45))]))])),
+    Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFFEDF4EB),Color(0xFFF7F8F5)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(22),border:Border.all(color:line)),child:Row(children:[Container(width:46,height:46,decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(15)),child:const Icon(Icons.auto_awesome_outlined,color:darkGreen,size:23)),const SizedBox(width:13),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('İhtiyacını paylaş.',style:TextStyle(color:ink,fontSize:20,fontWeight:FontWeight.w900,letterSpacing:-.5)),SizedBox(height:4),Text('Yakınındaki kişilerden teklif al, işini kolayca çözüme kavuştur.',style:TextStyle(color:muted,fontSize:10,height:1.45))]))])),
     const SizedBox(height:20),
     Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(20),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
      const FormLabel('Hangi konuda yardıma ihtiyacın var?'),const SizedBox(height:12),
@@ -507,7 +513,7 @@ class _CreatePageState extends State<CreatePage>{final title=TextEditingControll
      const SizedBox(height:14),const FormLabel('İşin yapılacağı ilçe'),const SizedBox(height:6),DropdownButtonFormField<String>(value:district,decoration:const InputDecoration(prefixIcon:Icon(Icons.location_on_outlined,size:18)),items:districts.map((d)=>DropdownMenuItem(value:d,child:Text(d))).toList(),onChanged:(v)=>setState(()=>district=v??district)),
     ])),
     const SizedBox(height:12),
-    Container(padding:const EdgeInsets.all(15),decoration:BoxDecoration(color:const Color(0xFFF2EAE3),borderRadius:BorderRadius.circular(17)),child:Row(children:[const Icon(Icons.lightbulb_outline_rounded,color:darkGreen,size:20),const SizedBox(width:10),const Expanded(child:Text('Açık ve anlaşılır bir açıklama, doğru teklifleri daha hızlı almanı sağlar.',style:TextStyle(color:darkGreen,fontSize:10,height:1.45,fontWeight:FontWeight.w600)))])),
+    Container(padding:const EdgeInsets.all(15),decoration:BoxDecoration(color:const Color(0xFFEDF4EB),borderRadius:BorderRadius.circular(17)),child:Row(children:[const Icon(Icons.lightbulb_outline_rounded,color:darkGreen,size:20),const SizedBox(width:10),const Expanded(child:Text('Açık ve anlaşılır bir açıklama, doğru teklifleri daha hızlı almanı sağlar.',style:TextStyle(color:darkGreen,fontSize:10,height:1.45,fontWeight:FontWeight.w600)))])),
     if(error!=null)Padding(padding:const EdgeInsets.only(top:12),child:Text(error!,style:const TextStyle(color:Colors.red,fontSize:11,fontWeight:FontWeight.w600))),
    ]))
   );
@@ -577,7 +583,7 @@ class _MyTasksState extends State<MyTasks> {
   ]),
   const SizedBox(height:14),
   Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(
-   gradient:const LinearGradient(colors:[Color(0xFF514139),Color(0xFF9A705B)],begin:Alignment.topLeft,end:Alignment.bottomRight),
+   gradient:const LinearGradient(colors:[Color(0xFFE8F1E6),Color(0xFFDDEBDD)],begin:Alignment.topLeft,end:Alignment.bottomRight),
    borderRadius:BorderRadius.circular(20)),
    child:Row(children:[
     Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
@@ -641,7 +647,7 @@ class _SavedState extends State<Saved> {
  @override Widget build(BuildContext c)=>SafeArea(child:RefreshIndicator(color:darkGreen,onRefresh:load,child:ListView(padding:const EdgeInsets.fromLTRB(18,18,18,112),children:[
   Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Kaydedilenler',style:TextStyle(color:ink,fontSize:24,fontWeight:FontWeight.w900,letterSpacing:-.7)),SizedBox(height:4),Text('Beğendiğin işleri burada sakla.',style:TextStyle(color:muted,fontSize:11))])),Container(width:42,height:42,decoration:BoxDecoration(color:const Color(0xFFF0EAE3),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsRegular.bookmarkSimple,color:darkGreen,size:22))]),
   const SizedBox(height:17),
-  Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF514139),Color(0xFF9A705B)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(21),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.12),blurRadius:18,offset:const Offset(0,8))]),child:Row(children:[Container(width:43,height:43,decoration:BoxDecoration(color:white.withValues(alpha:.13),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsFill.bookmarkSimple,color:white,size:21)),const SizedBox(width:13),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(tasks.length.toString(),style:const TextStyle(color:white,fontSize:23,fontWeight:FontWeight.w900)),const Text('Kaydettiğin ilan',style:TextStyle(color:Colors.white70,fontSize:10,fontWeight:FontWeight.w600))])),const Text('Sonra devam et.  →',style:TextStyle(color:Colors.white70,fontSize:9,fontWeight:FontWeight.w700))])),
+  Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFFE8F1E6),Color(0xFFDDEBDD)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(21),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.12),blurRadius:18,offset:const Offset(0,8))]),child:Row(children:[Container(width:43,height:43,decoration:BoxDecoration(color:white.withValues(alpha:.13),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsFill.bookmarkSimple,color:white,size:21)),const SizedBox(width:13),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(tasks.length.toString(),style:const TextStyle(color:white,fontSize:23,fontWeight:FontWeight.w900)),const Text('Kaydettiğin ilan',style:TextStyle(color:Colors.white70,fontSize:10,fontWeight:FontWeight.w600))])),const Text('Sonra devam et.  →',style:TextStyle(color:Colors.white70,fontSize:9,fontWeight:FontWeight.w700))])),
   const SizedBox(height:20),
   Row(children:[const Expanded(child:Text('Senin listen',style:TextStyle(color:ink,fontSize:15,fontWeight:FontWeight.w900))),Text(tasks.length==1?'1 ilan':'${tasks.length} ilan',style:const TextStyle(color:muted,fontSize:10,fontWeight:FontWeight.w700))]),
   const SizedBox(height:11),
@@ -873,7 +879,7 @@ class _NotificationsState extends State<Notifications> {
        Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         Row(children:[
          Expanded(child:Text(n['title']?.toString()??'Bildirim',style:TextStyle(color:ink,fontSize:11,fontWeight:read?FontWeight.w700:FontWeight.w900))),
-         if(!read)Container(width:7,height:7,decoration:const BoxDecoration(color:Color(0xFFB4775D),shape:BoxShape.circle)),
+         if(!read)Container(width:7,height:7,decoration:const BoxDecoration(color:Color(0xFFE34B55),shape:BoxShape.circle)),
         ]),
         const SizedBox(height:4),
         Text(n['message']?.toString()??'',style:const TextStyle(color:muted,fontSize:10,height:1.45)),
@@ -889,18 +895,17 @@ class _NotificationsState extends State<Notifications> {
  @override Widget build(BuildContext c) {
   final unread=items.where((n)=>n['read_at']==null).length;
   final children=<Widget>[
-   Container(
-    padding:const EdgeInsets.all(18),
-    decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF514139),Color(0xFF9A705B)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(21)),
+   Padding(
+    padding:const EdgeInsets.fromLTRB(2,8,2,2),
     child:Row(children:[
-     Container(width:44,height:44,decoration:BoxDecoration(color:white.withValues(alpha:.14),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsFill.bell,color:white,size:22)),
-     const SizedBox(width:13),
+     Container(width:42,height:42,decoration:BoxDecoration(color:mint,borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsRegular.bell,color:darkGreen,size:21)),
+     const SizedBox(width:12),
      Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-      const Text('Her şeyden haberin olsun.',style:TextStyle(color:white,fontSize:15,fontWeight:FontWeight.w900)),
-      const SizedBox(height:4),
-      Text(unread==0?'Şu an okunmamış bildirimin yok.':'$unread okunmamış bildirimin var.',style:const TextStyle(color:Colors.white70,fontSize:10)),
+      const Text('Bildirimlerin',style:TextStyle(color:ink,fontSize:21,fontWeight:FontWeight.w700,letterSpacing:-.6)),
+      const SizedBox(height:3),
+      Text(unread==0?'Her şey güncel.':'$unread okunmamış bildirimin var.',style:const TextStyle(color:muted,fontSize:11)),
      ])),
-     if(unread>0)Text('$unread',style:const TextStyle(color:white,fontSize:24,fontWeight:FontWeight.w900)),
+     if(unread>0)TextButton(onPressed:markAll,child:const Text('Tümünü oku',style:TextStyle(color:darkGreen,fontSize:10,fontWeight:FontWeight.w700))),
     ]),
    ),
    const SizedBox(height:19),
@@ -986,7 +991,7 @@ class _AuthPageState extends State<AuthPage>{
    constraints:const BoxConstraints(maxWidth:480),
    child:ListView(padding:const EdgeInsets.fromLTRB(22,12,22,30),children:[
     Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(
-     color:const Color(0xFFF2EAE3),borderRadius:BorderRadius.circular(20),border:Border.all(color:const Color(0xFFE9DCD2))),
+     color:const Color(0xFFEDF4EB),borderRadius:BorderRadius.circular(20),border:Border.all(color:const Color(0xFFE9DCD2))),
      child:Row(children:[
       Container(width:46,height:46,decoration:BoxDecoration(color:darkGreen,borderRadius:BorderRadius.circular(15)),
        child:const Center(child:Text('d',style:TextStyle(color:white,fontSize:29,fontWeight:FontWeight.w900)))),
