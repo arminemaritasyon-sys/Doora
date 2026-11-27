@@ -14,7 +14,7 @@ import 'services/auth_service.dart';
 import 'provider_profile.dart';
 import 'messages.dart';
 
-const bg=Color(0xFFF5F7F1), white=Color(0xFFFFFEFC), ink=Color(0xFF171D18), muted=Color(0xFF59645A), line=Color(0xFFE0E7DD), green=Color(0xFFD5E4D0), darkGreen=Color(0xFF648B65), mint=Color(0xFFE4EDE0), soft=Color(0xFFEDF2E9);
+const bg=Color(0xFFF5F7F1), white=Color(0xFFFFFEFC), ink=Color(0xFF171D18), muted=Color(0xFF434D44), line=Color(0xFFE0E7DD), green=Color(0xFFD5E4D0), darkGreen=Color(0xFF648B65), mint=Color(0xFFE4EDE0), soft=Color(0xFFEDF2E9);
 const districts=['Muratpaşa','Konyaaltı','Kepez','Aksu','Döşemealtı'];
 const provinces=['Adana','Adıyaman','Afyonkarahisar','Ağrı','Amasya','Ankara','Antalya','Artvin','Aydın','Balıkesir','Bilecik','Bingöl','Bitlis','Bolu','Burdur','Bursa','Çanakkale','Çankırı','Çorum','Denizli','Diyarbakır','Edirne','Elazığ','Erzincan','Erzurum','Eskişehir','Gaziantep','Giresun','Gümüşhane','Hakkâri','Hatay','Iğdır','Isparta','İstanbul','İzmir','Kahramanmaraş','Karabük','Karaman','Kars','Kastamonu','Kayseri','Kırıkkale','Kırklareli','Kırşehir','Kilis','Kocaeli','Konya','Kütahya','Malatya','Manisa','Mardin','Mersin','Muğla','Muş','Nevşehir','Niğde','Ordu','Osmaniye','Rize','Sakarya','Samsun','Siirt','Sinop','Sivas','Şanlıurfa','Şırnak','Tekirdağ','Tokat','Trabzon','Tunceli','Uşak','Van','Yalova','Yozgat','Zonguldak'];
 const categories=['Alışveriş','Teslimat','Ev işleri','Taşıma','Tamir','Diğer'];
@@ -282,7 +282,7 @@ class _DiscoverState extends State<Discover>{
    },
   ),
  );
- Widget searchView()=>Container(height:49,padding:const EdgeInsets.symmetric(horizontal:17),decoration:BoxDecoration(color:const Color(0xFFF8F6F2),borderRadius:BorderRadius.circular(24),border:Border.all(color:white,width:1.2),boxShadow:[BoxShadow(color:ink.withValues(alpha:.055),blurRadius:19,offset:const Offset(0,7))]),child:Row(children:[const Icon(Icons.search,color:Color(0xFF8C776B),size:24),const SizedBox(width:13),Expanded(child:TextField(controller:search,onChanged:(_){searchDebounce?.cancel();searchDebounce=Timer(const Duration(milliseconds:320),load);},onSubmitted:(_)=>load(),textInputAction:TextInputAction.search,decoration:const InputDecoration(border:InputBorder.none,hintText:'İlan, hizmet veya kelime ara',hintStyle:TextStyle(color:Color(0xFF96938D),fontSize:15)))),IconButton(onPressed:()=>showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(_)=>ProvinceSheet(value:district,onSelect:(v){setState(()=>district=v);load();})),icon:const Icon(Icons.tune,color:ink,size:22))]));
+ Widget searchView()=>Container(height:49,padding:const EdgeInsets.symmetric(horizontal:17),decoration:BoxDecoration(color:const Color(0xFFF8F6F2),borderRadius:BorderRadius.circular(24),border:Border.all(color:white,width:1.2),boxShadow:[BoxShadow(color:ink.withValues(alpha:.055),blurRadius:19,offset:const Offset(0,7))]),child:Row(children:[const Icon(Icons.search,color:ink,size:24),const SizedBox(width:13),Expanded(child:TextField(controller:search,onChanged:(_){searchDebounce?.cancel();searchDebounce=Timer(const Duration(milliseconds:320),load);},onSubmitted:(_)=>load(),textInputAction:TextInputAction.search,decoration:const InputDecoration(border:InputBorder.none,hintText:'İlan, hizmet veya kelime ara',hintStyle:TextStyle(color:Color(0xFF59635A),fontSize:15)))),IconButton(onPressed:()=>showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(_)=>ProvinceSheet(value:district,onSelect:(v){setState(()=>district=v);load();})),icon:const Icon(Icons.tune,color:ink,size:22))]));
  Widget sortSheet()=>SafeArea(child:Padding(padding:const EdgeInsets.all(20),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Sıralama',style:TextStyle(color:ink,fontSize:18,fontWeight:FontWeight.w800)),...['En yeni','En düşük bütçe','En yüksek bütçe'].map((v)=>ListTile(title:Text(v),trailing:v==sort?const Icon(Icons.check,color:darkGreen):null,onTap:(){Navigator.pop(context);setState(()=>sort=v);load();})),ListTile(title:const Text('Filtreler'),leading:const Icon(Icons.tune,color:darkGreen),onTap:(){Navigator.pop(context);budgetFilter();})])));
  Future<void> openOffer(DooraTask task) async {
   if(widget.user==null){widget.onLogin();return;}
@@ -416,7 +416,8 @@ class _ProvinceSheetState extends State<ProvinceSheet> {
  @override void dispose(){search.dispose();super.dispose();}
  @override Widget build(BuildContext c){
   final q=search.text.toLowerCase();
-  final filtered=provinces.where((p)=>p.toLowerCase().contains(q)).toList();
+  final normalizedQ=q.replaceAll('i\u0307','i');
+  final filtered=provinces.where((p)=>p.replaceAll('İ','i').toLowerCase().replaceAll('i\u0307','i').contains(normalizedQ)).toList();
   return SafeArea(child:Padding(padding:EdgeInsets.fromLTRB(18,4,18,MediaQuery.of(c).viewInsets.bottom+12),child:SizedBox(height:MediaQuery.of(c).size.height*.72,child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
    const Text('İl seç',style:TextStyle(color:ink,fontSize:18,fontWeight:FontWeight.w900)),
    const SizedBox(height:12),
