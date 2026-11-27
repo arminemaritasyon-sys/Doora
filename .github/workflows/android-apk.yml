@@ -43,8 +43,36 @@ jobs:
           ET.parse(manifest)
           final_source = manifest.read_text()
           assert all(name in final_source for name in permissions), 'Android notification permissions missing'
-          print('Android manifest is valid and includes notification permissions')
-          PY
+          metadata = '''        <meta-data
+              android:name="com.google.firebase.messaging.default_notification_channel_id"
+              android:value="doora_updates" />'''
+          if 'com.google.firebase.messaging.default_notification_channel_id' not in final_source:
+              final_source = final_source.replace('</application>', metadata + chr(10) + '    </application>')
+              manifest.write_text(final_source)
+          activity = Path('android/app/src/main/kotlin/com/doora/doora_mobile/MainActivity.kt')
+          activity_source = activity.read_text()
+          activity_source = activity_source.replace(
+              'import io.flutter.embedding.android.FlutterActivity',
+              'import android.app.NotificationChannel\\nimport android.app.NotificationManager\\nimport android.content.Context\\nimport android.os.Build\\nimport io.flutter.embedding.android.FlutterActivity'
+          )
+          activity_source = activity_source.replace(
+              'class MainActivity : FlutterActivity()',
+              '''class MainActivity : FlutterActivity() {
+              override fun onCreate(savedInstanceState: android.os.Bundle?) {
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                      val channel = NotificationChannel("doora_updates", "DOORA bildirimleri", NotificationManager.IMPORTANCE_HIGH).apply {
+                          description = "Mesajlar, teklifler ve hesap hareketleri"
+                          enableVibration(true)
+                      }
+                      val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                      manager.createNotificationChannel(channel)
+                  }
+                  super.onCreate(savedInstanceState)
+              }
+          }'''
+          )
+          activity.write_text(activity_source)
+          print('Android manifest and high-importance notification channel configured')
       - name: Install dependencies
         working-directory: mobile
         run: flutter pub get
