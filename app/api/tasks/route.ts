@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     if (mine && !currentUser) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });
     const category = params.get("category") || null;
     const district = params.get("district") || null;
+    const city = params.get("city") || null;
     const rows = await db`
       SELECT t.id, t.owner_id, t.title, t.description, t.category, t.budget, t.city,
         t.district AS location,
@@ -23,7 +24,8 @@ export async function GET(request: NextRequest) {
         t.created_at, t.status,
         COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS owner,
         CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || floor(extract(epoch from p.updated_at)*1000)::bigint::text END AS owner_avatar,
-        (SELECT count(*)::int FROM public.offers o WHERE o.task_id=t.id) AS offers
+        (SELECT count(*)::int FROM public.offers o WHERE o.task_id=t.id) AS offers,
+        COALESCE((SELECT json_agg(json_build_object('url','/api/tasks/image?id=' || ti.id::text) ORDER BY ti.created_at) FROM public.task_images ti WHERE ti.task_id=t.id), '[]'::json) AS images
       FROM public.tasks t
       LEFT JOIN public.user_profiles p ON p.user_id = t.owner_id
       LEFT JOIN neon_auth.user u ON u.id::text = t.owner_id
@@ -33,6 +35,7 @@ export async function GET(request: NextRequest) {
         )
         AND (${category}::text IS NULL OR t.category = ${category})
         AND (${district}::text IS NULL OR t.district ILIKE ${district ? `%${district}%` : null})
+        AND (${city}::text IS NULL OR t.city ILIKE ${city ? `%${city}%` : null})
         AND (${search}::text IS NULL OR (t.title || ' ' || t.description || ' ' || t.district) ILIKE ${search ? `%${search}%` : null})
       ORDER BY t.created_at DESC
       LIMIT 100
@@ -50,6 +53,8 @@ const taskSchema = z.object({
   category: z.string().trim().min(2).max(60),
   budget: z.coerce.number().positive().max(10000000),
   district: z.string().trim().min(2).max(100),
+  city: z.string().trim().min(2).max(100).default("Antalya"),
+  images: z.array(z.string().max(900000)).max(4).default([]),
 });
 
 export async function POST(request: NextRequest) {
@@ -57,7 +62,10 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "İlan oluşturmak için giriş yapmalısın." }, { status: 401 });
   const parsed = taskSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "İlan bilgilerini kontrol et." }, { status: 400 });
-  const { title, description, category, budget, district } = parsed.data;
+  const { title, description, category, budget, district, city, images } = parsed.data;
+  for (const image of images) {
+    if (!/^data:image\/(jpeg|png|webp);base64,/.test(image)) return NextResponse.json({ error: "Yalnızca JPG, PNG veya WEBP görsel ekleyebilirsin." }, { status: 400 });
+  }
   await db`
     INSERT INTO public.user_profiles (user_id, display_name)
     VALUES (${user.id}, ${user.name || null})
@@ -66,15 +74,18 @@ export async function POST(request: NextRequest) {
       updated_at = now()
   `;
   const [task] = await db`
-    INSERT INTO public.tasks (owner_id,title,description,category,budget,district)
-    VALUES (${user.id},${title},${description},${category},${budget},${district})
+    INSERT INTO public.tasks (owner_id,title,description,category,budget,city,district)
+    VALUES (${user.id},${title},${description},${category},${budget},${city},${district})
     RETURNING id,title,description,category,budget,district AS location,status,created_at
   `;
+  for (const imageData of images) {
+    await db`INSERT INTO public.task_images(task_id, image_data) VALUES (${task.id}, ${imageData})`;
+  }
   await createNotification({ userId: user.id, preference: "task_updates", type: "task_created", title: "İlanın yayınlandı", body: title, href: `/ilan/${task.id}` });
   try {
     await sendDooraEmail({ to:user.email, userId:user.id, template:"task_created", subject:"İlanın DOORA'da yayında", html:`<h2>Merhaba ${escapeHtml(user.name || "DOORA üyesi")},</h2><p><strong>${escapeHtml(title)}</strong> ilanını aldık. İlanın DOORA'da yayınlandı.</p><p>Teklif geldikçe seni bilgilendireceğiz.</p>` });
   } catch (error) { console.error("[mail] Delivery failed; marketplace action remains successful:", error); }
-  return NextResponse.json({ task: { ...task, time: "Yeni ilan", owner: user.name || "Sen", offers: 0 } }, { status: 201 });
+  return NextResponse.json({ task: { ...task, city, images: [], time: "Yeni ilan", owner: user.name || "Sen", offers: 0 } }, { status: 201 });
 }
 
 function escapeHtml(value: string) {
