@@ -58,7 +58,7 @@ class _ShellState extends State<Shell>{int tab=0,refresh=0;Future<void> create()
     AnimatedDefaultTextStyle(duration:const Duration(milliseconds:200),style:TextStyle(color:tab==index?darkGreen:const Color(0xFF171B17).withValues(alpha:.68),fontSize:9,fontWeight:tab==index?FontWeight.w900:FontWeight.w600),child:Text(label)),
    ]),
   ),
- )));
+ ));
  }
 }
 
