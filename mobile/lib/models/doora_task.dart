@@ -13,11 +13,14 @@ class DooraTask {
     this.status = 'open',
     this.ownerAvatar = '',
     this.imageUrls = const [],
+    this.distanceKm = -1,
+    this.providerRating = -1,
   });
 
   final String id, ownerId, title, description, category, location, time, owner;
   final String status, ownerAvatar;
   final List<String> imageUrls;
+  final num distanceKm, providerRating;
   final num budget;
   final int offers;
 
@@ -35,6 +38,8 @@ class DooraTask {
     status: json['status']?.toString() ?? 'open',
     ownerAvatar: json['owner_avatar']?.toString() ?? '',
     imageUrls: _images(json),
+    distanceKm: _number(json['distance_km'] ?? json['distanceKm']),
+    providerRating: _number(json['provider_rating'] ?? json['providerRating'] ?? json['rating']),
   );
 
   static List<String> _images(Map<String, dynamic> json) {
