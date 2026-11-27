@@ -367,6 +367,14 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                             border: Border.all(color: _line),
                           ),
                           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            if (task['images'] is List && (task['images'] as List).isNotEmpty) ...[
+                              ClipRRect(borderRadius: BorderRadius.circular(12),child: AspectRatio(aspectRatio: 2.2,child: Image.network(
+                                DooraApi.instance.absoluteUrl(((task['images'] as List).first is Map ? ((task['images'] as List).first as Map)['url'] : (task['images'] as List).first).toString()),
+                                fit: BoxFit.cover,width: double.infinity,
+                                errorBuilder: (_,__,___) => const ColoredBox(color: Color(0xFFE4EDE0),child: SizedBox(height:110,child: Center(child: Icon(Icons.image_outlined,color: _forest,size:28)))),
+                              ))),
+                              const SizedBox(height:10),
+                            ],
                             Row(children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),

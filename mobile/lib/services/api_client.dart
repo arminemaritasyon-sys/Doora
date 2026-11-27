@@ -143,6 +143,17 @@ class DooraApi {
     return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
+  Future<Map<String, dynamic>> manageTask(String taskId, {required String action, String? title, String? description, num? budget, List<String> images = const []}) async {
+    final response = await _dio.patch('/api/tasks/$taskId/manage', data: {
+      'action': action,
+      if (title != null) 'title': title.trim(),
+      if (description != null) 'description': description.trim(),
+      if (budget != null) 'budget': budget,
+      if (images.isNotEmpty) 'images': images,
+    });
+    return _asMap(_asMap(response.data)['task']);
+  }
+
   Future<List<Map<String, dynamic>>> getNearbyTasks() async {
     final response = await _getWithRetry('/api/tasks/nearby');
     final rows = _asMap(response.data)['tasks'];

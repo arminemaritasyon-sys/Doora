@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - mobile/flutter-foundation
+      - mobile/doora-ux-fixes
     paths:
       - "mobile/**"
       - ".github/workflows/android-apk.yml"
