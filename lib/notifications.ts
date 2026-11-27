@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 export type NotificationPreference = "task_updates" | "offer_updates" | "wallet_updates" | "product_updates";
 type NotificationInput = {
@@ -47,8 +48,16 @@ async function firebaseAccessToken(serviceAccount: { client_email: string; priva
 
 async function sendPush(userId: string, notificationId: string, input: NotificationInput) {
   try {
-    const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-    if (!raw) { console.error("[notifications] FIREBASE_SERVICE_ACCOUNT_JSON is missing"); return; }
+    let raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+    if (!raw) {
+      try {
+        const runtimeEnv = getCloudflareContext().env as { FIREBASE_SERVICE_ACCOUNT_JSON?: string };
+        raw = runtimeEnv.FIREBASE_SERVICE_ACCOUNT_JSON;
+      } catch {
+        // Outside the Cloudflare request runtime, fall back to process.env only.
+      }
+    }
+    if (!raw) { console.error("[notifications] FIREBASE_SERVICE_ACCOUNT_JSON is missing from Worker bindings"); return; }
     const account = JSON.parse(raw) as { project_id: string; client_email: string; private_key: string; token_uri?: string };
     const devices = await db`SELECT token FROM public.user_notification_devices WHERE user_id = ${userId}`;
     if (!devices.length) { console.error("[notifications] no registered devices for recipient"); return; }
