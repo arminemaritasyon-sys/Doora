@@ -209,7 +209,6 @@ class _DiscoverState extends State<Discover>{
  String district='Tüm Türkiye',category='Tümü',sort='En yeni'; double minBudget=0,maxBudget=50000; bool busy=true; String? error;
  static const labels=['Tümü','Ulaşım','Tadilat','Temizlik','Taşıma','Diğer'];
  static const icons=[PhosphorIconsRegular.squaresFour,PhosphorIconsRegular.car,PhosphorIconsRegular.paintRoller,PhosphorIconsRegular.broom,PhosphorIconsRegular.package,PhosphorIconsRegular.dotsThree];
- static const taskUrl='https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=600&q=85';
  @override void initState(){super.initState();load();badgeTimer=Timer.periodic(const Duration(seconds:12),(_)=>refreshBadges());}
  @override void didUpdateWidget(covariant Discover old){super.didUpdateWidget(old);if(old.refresh!=widget.refresh||old.user!=widget.user)load();}
  @override void dispose(){badgeTimer?.cancel();searchDebounce?.cancel();search.dispose();super.dispose();}
