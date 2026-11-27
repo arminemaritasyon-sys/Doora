@@ -416,8 +416,8 @@ class _ProvinceSheetState extends State<ProvinceSheet> {
  final search=TextEditingController();
  @override void dispose(){search.dispose();super.dispose();}
  @override Widget build(BuildContext c){
-  final q=search.text.toLocaleLowerCase();
-  final filtered=provinces.where((p)=>p.toLocaleLowerCase().contains(q)).toList();
+  final q=search.text.toLowerCase();
+  final filtered=provinces.where((p)=>p.toLowerCase().contains(q)).toList();
   return SafeArea(child:Padding(padding:EdgeInsets.fromLTRB(18,4,18,MediaQuery.of(c).viewInsets.bottom+12),child:SizedBox(height:MediaQuery.of(c).size.height*.72,child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
    const Text('İl seç',style:TextStyle(color:ink,fontSize:18,fontWeight:FontWeight.w900)),
    const SizedBox(height:12),
@@ -550,11 +550,11 @@ class CreatePage extends StatefulWidget {
  @override State<CreatePage> createState()=>_CreatePageState();
 }
 class _CreatePageState extends State<CreatePage> {
- final title=TextEditingController(),desc=TextEditingController(),budget=TextEditingController(text:'450');
+ final title=TextEditingController(),desc=TextEditingController(),budget=TextEditingController(text:'450'),districtController=TextEditingController(text:'Muratpaşa');
  final List<XFile> images=[];
  String category='Alışveriş',district='Muratpaşa',city='Antalya';
  double slider=450; bool busy=false; String? error;
- @override void dispose(){title.dispose();desc.dispose();budget.dispose();super.dispose();}
+ @override void dispose(){title.dispose();desc.dispose();budget.dispose();districtController.dispose();super.dispose();}
  Future<void> pickImages() async {
   if(images.length>=4){toast(context,'En fazla 4 fotoğraf ekleyebilirsin.');return;}
   final picked=await ImagePicker().pickMultiImage(imageQuality:76,maxWidth:1280);
@@ -613,7 +613,7 @@ class _CreatePageState extends State<CreatePage> {
     TextField(controller:budget,keyboardType:TextInputType.number,onChanged:(v){final n=double.tryParse(v);if(n!=null)setState(()=>slider=n.clamp(50,10000).toDouble());},decoration:const InputDecoration(prefixIcon:Icon(Icons.payments_outlined,size:18),suffixText:'₺',hintText:'Bütçe gir')),
     const SizedBox(height:14),const FormLabel('İl'),const SizedBox(height:6),
     InkWell(onTap:chooseCity,borderRadius:BorderRadius.circular(13),child:Container(padding:const EdgeInsets.symmetric(horizontal:14,vertical:15),decoration:BoxDecoration(color:bg,borderRadius:BorderRadius.circular(13),border:Border.all(color:line)),child:Row(children:[const Icon(Icons.location_city_outlined,color:ink,size:18),const SizedBox(width:10),Expanded(child:Text(city,style:const TextStyle(color:ink,fontSize:12,fontWeight:FontWeight.w700))),const Icon(Icons.keyboard_arrow_down,color:ink)]))),
-    const SizedBox(height:12),const FormLabel('İlçe / bölge'),const SizedBox(height:6),TextField(controller:TextEditingController(text:district),onChanged:(v)=>district=v,decoration:const InputDecoration(prefixIcon:Icon(Icons.map_outlined,size:18),hintText:'İlçe veya mahalle')),
+    const SizedBox(height:12),const FormLabel('İlçe / bölge'),const SizedBox(height:6),TextField(controller:districtController,onChanged:(v)=>district=v,decoration:const InputDecoration(prefixIcon:Icon(Icons.map_outlined,size:18),hintText:'İlçe veya mahalle')),
    ])),
    if(error!=null)Padding(padding:const EdgeInsets.only(top:12),child:Text(error!,style:const TextStyle(color:Colors.red,fontSize:11,fontWeight:FontWeight.w700))),
   ]))
