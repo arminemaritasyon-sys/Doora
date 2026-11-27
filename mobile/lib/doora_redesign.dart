@@ -960,7 +960,26 @@ class _ProfileState extends State<Profile> {
    if(mounted)toast(context,'Fotoğraflar ilana eklendi.');
   }catch(e){if(mounted)toast(context,DooraApi.instance.errorMessage(e));}
  }
- Future<void> loadWallet()async{
+ Future<void> promoteListing(DooraTask task) async {
+  if(task.isFeatured){toast(context,'Bu ilan zaten öne çıkarılmış.');return;}
+  await loadWallet();if(!mounted)return;
+  final account=wallet?['account'] is Map?Map<String,dynamic>.from(wallet!['account'] as Map):<String,dynamic>{};
+  final balance=num.tryParse(account['available_balance']?.toString()??'')??0;
+  final accepted=await showModalBottomSheet<bool>(context:context,isScrollControlled:true,backgroundColor:Colors.transparent,builder:(sheet)=>Container(padding:const EdgeInsets.fromLTRB(21,12,21,25),decoration:const BoxDecoration(color:white,borderRadius:BorderRadius.vertical(top:Radius.circular(27))),child:SafeArea(top:false,child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[
+   Center(child:Container(width:38,height:4,decoration:BoxDecoration(color:line,borderRadius:BorderRadius.circular(8)))),const SizedBox(height:18),
+   Row(children:[Container(width:42,height:42,decoration:BoxDecoration(color:const Color(0xFFFFE9C7),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsRegular.rocketLaunch,color:Color(0xFF8A5718),size:22)),const SizedBox(width:11),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('İşin acil mi?',style:TextStyle(color:ink,fontSize:18,fontWeight:FontWeight.w900)),SizedBox(height:3),Text('Daha hızlı teklif almak için ilanını öne çıkar.',style:TextStyle(color:muted,fontSize:11))]))]),
+   const SizedBox(height:16),Container(padding:const EdgeInsets.all(15),decoration:BoxDecoration(color:bg,borderRadius:BorderRadius.circular(17)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('24 SAAT ÖNE ÇIKARMA',style:TextStyle(color:muted,fontSize:9,fontWeight:FontWeight.w900,letterSpacing:.6)),const SizedBox(height:8),const Row(children:[Expanded(child:Text('Ana sayfa ve İşlerim listelerinde öncelikli sırada görün.',style:TextStyle(color:ink,fontSize:12,height:1.4))),Text('25 ₺',style:TextStyle(color:darkGreen,fontSize:22,fontWeight:FontWeight.w900))]),const SizedBox(height:10),Row(children:[const Icon(PhosphorIconsRegular.wallet,color:muted,size:16),const SizedBox(width:6),const Text('Cüzdan bakiyesi',style:TextStyle(color:muted,fontSize:10)),const Spacer(),Text(money(balance),style:const TextStyle(color:ink,fontSize:12,fontWeight:FontWeight.w900))])])),
+   if(balance<25)const Padding(padding:EdgeInsets.only(top:10),child:Text('Bakiyen yetersiz. Önce cüzdanına bakiye yüklemelisin.',style:TextStyle(color:Color(0xFFB94C48),fontSize:10))),
+   const SizedBox(height:15),SizedBox(width:double.infinity,height:49,child:FilledButton(onPressed:balance<25?null:()=>Navigator.pop(sheet,true),style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14))),child:const Text('25 ₺ karşılığında öne çıkar',style:TextStyle(fontSize:12,fontWeight:FontWeight.w900)))),
+  ]))));
+  if(accepted!=true)return;
+  final bytes=List<int>.generate(16,(_)=>Random.secure().nextInt(256));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+  final hex=bytes.map((b)=>b.toRadixString(16).padLeft(2,'0')).join();
+  final key='${hex.substring(0,8)}-${hex.substring(8,12)}-${hex.substring(12,16)}-${hex.substring(16,20)}-${hex.substring(20)}';
+  try{await DooraApi.instance.promoteTask(task.id,key);await Future.wait([loadWallet(),loadMyListings()]);if(mounted)toast(context,'İlanın 24 saatliğine öne çıkarıldı.');}
+  catch(e){if(mounted)toast(context,DooraApi.instance.errorMessage(e));}
+ }
+\n Future<void> loadWallet()async{
   if(widget.user==null)return;setState(()=>loadingWallet=true);walletError=null;
   try{final data=await DooraApi.instance.getWallet();if(mounted)setState(()=>wallet=data);}
   catch(e){if(mounted)setState(()=>walletError=DooraApi.instance.errorMessage(e));}
@@ -1023,7 +1042,7 @@ class _ProfileState extends State<Profile> {
       ])),
      ]),
      const SizedBox(height:10),Row(children:[
-      Expanded(child:OutlinedButton(onPressed:()=>openTask(c,task,widget.user,widget.onLogin,loadMyListings),style:OutlinedButton.styleFrom(foregroundColor:ink,side:const BorderSide(color:line)),child:const Text('İlanı görüntüle',style:TextStyle(fontSize:11,fontWeight:FontWeight.w800)))),
+      Expanded(child:OutlinedButton(onPressed:()=>promoteListing(task),style:OutlinedButton.styleFrom(foregroundColor:darkGreen,side:const BorderSide(color:line)),child:Text(task.isFeatured?'24 saat öne çıktı':'Öne çıkart',style:const TextStyle(fontSize:11,fontWeight:FontWeight.w800)))),
       const SizedBox(width:7),Expanded(child:OutlinedButton(onPressed:()=>editListing(task),style:OutlinedButton.styleFrom(foregroundColor:darkGreen,side:const BorderSide(color:line)),child:const Text('Düzenle',style:TextStyle(fontSize:11,fontWeight:FontWeight.w800)))),
       if(task.imageUrls.length<4)IconButton(onPressed:()=>addListingPhotos(task),tooltip:'Fotoğraf ekle',icon:const Icon(Icons.add_a_photo_outlined,color:ink,size:18)),
       IconButton(onPressed:()=>changeListingStatus(task),tooltip:task.status=='paused'?'Yayınla':'Duraklat',icon:Icon(task.status=='paused'?Icons.play_arrow_rounded:Icons.pause_rounded,color:ink,size:20)),
