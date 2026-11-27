@@ -322,7 +322,8 @@ class _AllTasksPageState extends State<AllTasksPage> {
  List<DooraTask> tasks=[];
  bool busy=true;
  String? error;
- String category='Tümü',district='Tüm Antalya',sort='En yeni';
+ String category='Tümü',district='Tüm Antalya',sort='En yeni',duration='Tümü';
+ double minBudget=0,maxBudget=50000,maxDistance=50,minRating=0;
  static const labels=['Tümü','Ulaşım','Tadilat','Temizlik','Taşıma','Diğer'];
  String apiCategory(String v){switch(v){case 'Ulaşım':return 'Teslimat';case 'Tadilat':return 'Tamir';case 'Temizlik':return 'Ev işleri';default:return v;}}
  @override void initState(){super.initState();load();}
@@ -334,8 +335,14 @@ class _AllTasksPageState extends State<AllTasksPage> {
    final rows=await DooraApi.instance.getTasks(query:search.text,category:apiCategory(category));
    var list=rows.map(DooraTask.fromJson).toList();
    if(district!='Tüm Antalya')list=list.where((t)=>t.location.toLowerCase().contains(district.toLowerCase())).toList();
+   list=list.where((t)=>t.budget>=minBudget&&t.budget<=maxBudget).toList();
+   if(maxDistance<50)list=list.where((t)=>t.distanceKm>=0&&t.distanceKm<=maxDistance).toList();
+   if(minRating>0)list=list.where((t)=>t.providerRating>=minRating).toList();
+   if(duration=='Bugün')list=list.where((t)=>t.time.toLowerCase().contains('bugün')||t.time.toLowerCase().contains('saat')).toList();
+   if(duration=='Bu hafta')list=list.where((t)=>t.time.toLowerCase().contains('gün')||t.time.toLowerCase().contains('hafta')).toList();
    if(sort=='En düşük bütçe')list.sort((a,b)=>a.budget.compareTo(b.budget));
    if(sort=='En yüksek bütçe')list.sort((a,b)=>b.budget.compareTo(a.budget));
+   if(sort=='En yüksek puan')list.sort((a,b)=>b.providerRating.compareTo(a.providerRating));
    if(mounted)setState(()=>tasks=list);
    error=null;
   } catch(e) { if(mounted)error=DooraApi.instance.errorMessage(e); }
@@ -343,13 +350,27 @@ class _AllTasksPageState extends State<AllTasksPage> {
  }
  Widget filterChip(String label,{bool selected=false,VoidCallback? onTap,IconData? icon})=>Padding(
   padding:const EdgeInsets.only(right:7),
-  child:Material(color:selected?const Color(0xFFE8F1E6):white,borderRadius:BorderRadius.circular(18),child:InkWell(onTap:onTap,borderRadius:BorderRadius.circular(18),child:Container(
+  child:Material(color:selected?mint:white,borderRadius:BorderRadius.circular(18),child:InkWell(onTap:onTap,borderRadius:BorderRadius.circular(18),child:Container(
    padding:const EdgeInsets.symmetric(horizontal:12,vertical:8),
    decoration:BoxDecoration(borderRadius:BorderRadius.circular(18),border:Border.all(color:selected?const Color(0xFFD7E5D5):line)),
-   child:Row(mainAxisSize:MainAxisSize.min,children:[if(icon!=null)Padding(padding:const EdgeInsets.only(right:5),child:Icon(icon,size:13,color:selected?darkGreen:muted)),Text(label,style:TextStyle(color:selected?darkGreen:const Color(0xFF625D56),fontSize:10,fontWeight:selected?FontWeight.w700:FontWeight.w500))]),
+   child:Row(mainAxisSize:MainAxisSize.min,children:[if(icon!=null)Padding(padding:const EdgeInsets.only(right:5),child:Icon(icon,size:13,color:selected?darkGreen:muted)),Text(label,style:TextStyle(color:selected?darkGreen:muted,fontSize:10,fontWeight:selected?FontWeight.w700:FontWeight.w500))]),
   ))));
  void chooseDistrict(){showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(sheet)=>DistrictSheet(value:district,onSelect:(v){setState(()=>district=v);load();}));}
- void chooseSort(){showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(sheet)=>SafeArea(child:Column(mainAxisSize:MainAxisSize.min,children:['En yeni','En düşük bütçe','En yüksek bütçe'].map((v)=>ListTile(title:Text(v,style:const TextStyle(color:ink,fontSize:13)),trailing:sort==v?const Icon(Icons.check,color:darkGreen):null,onTap:(){Navigator.pop(sheet);setState(()=>sort=v);load();})).toList())));}
+ void chooseSort(){showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(sheet)=>SafeArea(child:Column(mainAxisSize:MainAxisSize.min,children:['En yeni','En düşük bütçe','En yüksek bütçe','En yüksek puan'].map((v)=>ListTile(title:Text(v,style:const TextStyle(color:ink,fontSize:13)),trailing:sort==v?const Icon(Icons.check,color:darkGreen):null,onTap:(){Navigator.pop(sheet);setState(()=>sort=v);load();})).toList())));}
+ void chooseBudget(){double low=minBudget,high=maxBudget;showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(sheet)=>StatefulBuilder(builder:(ctx,setSheet)=>Padding(padding:const EdgeInsets.fromLTRB(20,8,20,24),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[
+  const Text('Fiyat aralığı',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w700)),
+  const SizedBox(height:12),Text('${low.round()} ₺ – ${high.round()} ₺',style:const TextStyle(color:darkGreen,fontSize:13,fontWeight:FontWeight.w700)),
+  RangeSlider(values:RangeValues(low,high),min:0,max:50000,divisions:100,activeColor:darkGreen,onChanged:(v)=>setSheet((){low=v.start;high=v.end;})),
+  SizedBox(width:double.infinity,child:FilledButton(onPressed:(){setState((){minBudget=low;maxBudget=high;});Navigator.pop(sheet);load();},style:FilledButton.styleFrom(backgroundColor:darkGreen),child:const Text('Uygula'))),
+ ]))));}
+ void chooseDistance(){double value=maxDistance;showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(sheet)=>StatefulBuilder(builder:(ctx,setSheet)=>Padding(padding:const EdgeInsets.fromLTRB(20,8,20,24),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[
+  const Text('En fazla mesafe',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w700)),
+  Text(value>=50?'Tüm mesafeler':'${value.round()} km',style:const TextStyle(color:darkGreen,fontSize:13,fontWeight:FontWeight.w700)),
+  Slider(value:value,min:1,max:50,divisions:49,activeColor:darkGreen,onChanged:(v)=>setSheet(()=>value=v)),
+  SizedBox(width:double.infinity,child:FilledButton(onPressed:(){setState(()=>maxDistance=value);Navigator.pop(sheet);load();},style:FilledButton.styleFrom(backgroundColor:darkGreen),child:const Text('Uygula'))),
+ ]))));}
+ void chooseDuration(){showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(sheet)=>SafeArea(child:Column(mainAxisSize:MainAxisSize.min,children:['Tümü','Bugün','Bu hafta'].map((v)=>ListTile(title:Text(v),trailing:duration==v?const Icon(Icons.check,color:darkGreen):null,onTap:(){Navigator.pop(sheet);setState(()=>duration=v);load();})).toList())));}
+ void chooseRating(){showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(sheet)=>SafeArea(child:Column(mainAxisSize:MainAxisSize.min,children:[const Padding(padding:EdgeInsets.all(16),child:Text('Hizmet veren puanı',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w700))),...['Tüm puanlar','4.0 ve üzeri','4.5 ve üzeri'].asMap().entries.map((e){final v=e.key==0?0.0:e.key==1?4.0:4.5;return ListTile(title:Text(e.value),trailing:minRating==v?const Icon(Icons.check,color:darkGreen):null,onTap:(){Navigator.pop(sheet);setState(()=>minRating=v);load();});})])));}
  @override Widget build(BuildContext context)=>Scaffold(
   backgroundColor:bg,
   body:SafeArea(child:Column(children:[
@@ -359,14 +380,18 @@ class _AllTasksPageState extends State<AllTasksPage> {
     const Expanded(child:Text('Tüm işler',style:TextStyle(color:ink,fontSize:21,fontWeight:FontWeight.w600,letterSpacing:-.7))),
     InkWell(onTap:busy?null:load,customBorder:const CircleBorder(),child:Container(width:38,height:38,decoration:BoxDecoration(color:white,shape:BoxShape.circle,border:Border.all(color:line)),child:const Icon(Icons.refresh_rounded,color:ink,size:18))),
    ])),
-   Padding(padding:const EdgeInsets.fromLTRB(18,4,18,12),child:Container(height:48,padding:const EdgeInsets.symmetric(horizontal:15),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(15),border:Border.all(color:line)),child:Row(children:[const Icon(Icons.search_rounded,color:muted,size:20),const SizedBox(width:10),Expanded(child:TextField(controller:search,onSubmitted:(_)=>load(),textInputAction:TextInputAction.search,decoration:const InputDecoration(border:InputBorder.none,hintText:'İş veya hizmet ara',hintStyle:TextStyle(color:muted,fontSize:12))))]))),
+   Padding(padding:const EdgeInsets.fromLTRB(18,4,18,10),child:Container(height:48,padding:const EdgeInsets.symmetric(horizontal:15),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(15),border:Border.all(color:line)),child:Row(children:[const Icon(Icons.search_rounded,color:muted,size:20),const SizedBox(width:10),Expanded(child:TextField(controller:search,onSubmitted:(_)=>load(),textInputAction:TextInputAction.search,decoration:const InputDecoration(border:InputBorder.none,hintText:'İş veya hizmet ara',hintStyle:TextStyle(color:muted,fontSize:12))))]))),
+   SizedBox(height:38,child:ListView(scrollDirection:Axis.horizontal,padding:const EdgeInsets.symmetric(horizontal:18),children:labels.map((v)=>filterChip(v,selected:category==v,onTap:(){setState(()=>category=v);load();})).toList())),
    SizedBox(height:38,child:ListView(scrollDirection:Axis.horizontal,padding:const EdgeInsets.symmetric(horizontal:18),children:[
-    ...labels.map((v)=>filterChip(v,selected:category==v,onTap:(){setState(()=>category=v);load();})),
-    filterChip(district=='Tüm Antalya'?'Bölge':'Bölge: $district',icon:Icons.location_on_outlined,onTap:chooseDistrict),
-    filterChip(sort=='En yeni'?'Sırala':sort,icon:Icons.swap_vert_rounded,onTap:chooseSort),
+    filterChip(district=='Tüm Antalya'?'Bölge':district,icon:Icons.location_on_outlined,onTap:chooseDistrict,selected:district!='Tüm Antalya'),
+    filterChip(minBudget==0&&maxBudget==50000?'Fiyat':'Fiyat aralığı',icon:Icons.payments_outlined,onTap:chooseBudget,selected:minBudget>0||maxBudget<50000),
+    filterChip(maxDistance>=50?'Mesafe':'≤ ${maxDistance.round()} km',icon:Icons.near_me_outlined,onTap:chooseDistance,selected:maxDistance<50),
+    filterChip(duration=='Tümü'?'Süre':duration,icon:Icons.schedule_outlined,onTap:chooseDuration,selected:duration!='Tümü'),
+    filterChip(minRating==0?'Değerlendirme':'★ ${minRating.toStringAsFixed(1)}+',icon:Icons.star_outline_rounded,onTap:chooseRating,selected:minRating>0),
+    filterChip(sort=='En yeni'?'Sırala':sort,icon:Icons.swap_vert_rounded,onTap:chooseSort,selected:sort!='En yeni'),
    ])),
-   const SizedBox(height:10),
-   Expanded(child:RefreshIndicator(color:darkGreen,onRefresh:load,child:busy?const Skeletons():error!=null?Center(child:Padding(padding:const EdgeInsets.all(22),child:EmptyState(title:'İşler yüklenemedi',message:error!,action:'Tekrar dene',onTap:load))):tasks.isEmpty?const Center(child:EmptyState(title:'Henüz açık iş yok',message:'Yeni işler yayınlandığında burada göreceksin.')):ListView.separated(padding:const EdgeInsets.fromLTRB(18,3,18,28),itemCount:tasks.length,separatorBuilder:(_,__)=>const SizedBox(height:10),itemBuilder:(context,index){final task=tasks[index];return TaskCard(task:task,onTap:()=>openTask(context,task,widget.user,widget.onLogin,load),onOffer:()=>openTask(context,task,widget.user,widget.onLogin,load));}))),
+   const SizedBox(height:8),
+   Expanded(child:RefreshIndicator(color:darkGreen,onRefresh:load,child:busy?const Skeletons():error!=null?Center(child:Padding(padding:const EdgeInsets.all(22),child:EmptyState(title:'İşler yüklenemedi',message:error!,action:'Tekrar dene',onTap:load))):tasks.isEmpty?const Center(child:EmptyState(title:'Sonuç bulunamadı',message:'Filtreleri değiştirerek yeniden deneyebilirsin.')):ListView.separated(padding:const EdgeInsets.fromLTRB(18,3,18,28),itemCount:tasks.length,separatorBuilder:(_,__)=>const SizedBox(height:10),itemBuilder:(context,index){final task=tasks[index];return TaskCard(task:task,onTap:()=>openTask(context,task,widget.user,widget.onLogin,load),onOffer:()=>openTask(context,task,widget.user,widget.onLogin,load));}))),
   ])),
  );
 }
