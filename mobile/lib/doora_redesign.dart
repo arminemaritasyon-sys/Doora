@@ -332,7 +332,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
  List<DooraTask> tasks=[];
  bool busy=true;
  String? error;
- String category='Tümü',district='Tüm Antalya',sort='En yeni',duration='Tümü';
+ String category='Tümü',district='Tüm Türkiye',sort='En yeni',duration='Tümü';
  double minBudget=0,maxBudget=50000,maxDistance=50,minRating=0;
  static const labels=['Tümü','Ulaşım','Tadilat','Temizlik','Taşıma','Diğer'];
  String apiCategory(String v){switch(v){case 'Ulaşım':return 'Teslimat';case 'Tadilat':return 'Tamir';case 'Temizlik':return 'Ev işleri';default:return v;}}
@@ -519,7 +519,7 @@ class TaskDetail extends StatelessWidget {
    ]),
    bottomNavigationBar:SafeArea(top:false,child:Container(padding:const EdgeInsets.all(14),decoration:const BoxDecoration(color:white,border:Border(top:BorderSide(color:line))),child:Row(children:[
     Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('İlan bütçesi',style:TextStyle(color:muted,fontSize:9)),Text(task.formattedBudget,style:const TextStyle(color:ink,fontSize:16,fontWeight:FontWeight.w900))]),
-    const SizedBox(width:15),Expanded(child:FilledButton(onPressed:own?null:(){if(user==null){onLogin();return;}showModalBottomSheet(context:c,isScrollControlled:true,backgroundColor:Colors.transparent,builder:(_)=>OfferSheet(task:task,onSent:onChanged));},style:FilledButton.styleFrom(backgroundColor:green,foregroundColor:white),child:Text(own?'Kendi ilanına teklif veremezsin':'Teklif gönder'))),
+    const SizedBox(width:15),Expanded(child:FilledButton(onPressed:own?null:(){if(user==null){onLogin();return;}showModalBottomSheet(context:c,isScrollControlled:true,backgroundColor:Colors.transparent,builder:(_)=>OfferSheet(task:task,onSent:onChanged));},style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white),child:Text(own?'Kendi ilanına teklif veremezsin':'Teklif gönder'))),
    ]))),
   );
  }
