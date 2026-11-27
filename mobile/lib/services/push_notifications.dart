@@ -6,7 +6,8 @@ import 'api_client.dart';
 class DooraPushNotifications {
   DooraPushNotifications._();
   static void Function(RemoteMessage message)? onForegroundMessage;
-  static void Function(RemoteMessage message)? onNotificationOpened;\n  static void Function(RemoteMessage message)? onNotificationOpened;
+  static void Function(RemoteMessage message)? onNotificationOpened;
+  static void Function(RemoteMessage message)? onNotificationOpened;
   static String? _activeToken;
 
   static const String _apiKey = String.fromEnvironment('FIREBASE_API_KEY');
@@ -44,7 +45,10 @@ class DooraPushNotifications {
       FirebaseMessaging.onMessage.listen((message) => onForegroundMessage?.call(message));
       FirebaseMessaging.onMessageOpenedApp.listen((message) => onNotificationOpened?.call(message));
       final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-      if (initialMessage != null) onNotificationOpened?.call(initialMessage);\n      FirebaseMessaging.onMessageOpenedApp.listen((message) => onNotificationOpened?.call(message));\n      final initialMessage = await FirebaseMessaging.instance.getInitialMessage();\n      if (initialMessage != null) onNotificationOpened?.call(initialMessage);
+      if (initialMessage != null) onNotificationOpened?.call(initialMessage);
+      FirebaseMessaging.onMessageOpenedApp.listen((message) => onNotificationOpened?.call(message));
+      final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+      if (initialMessage != null) onNotificationOpened?.call(initialMessage);
 
     } catch (_) {
       // Push is optional until the Firebase project keys are configured.
