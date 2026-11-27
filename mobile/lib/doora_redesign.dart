@@ -207,12 +207,33 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
 class Shell extends StatefulWidget{const Shell({super.key,required this.user,required this.onLogin,required this.onLogout,required this.onUser});final Map<String,dynamic>? user;final VoidCallback onLogin,onLogout;final ValueChanged<Map<String,dynamic>?> onUser;@override State<Shell> createState()=>_ShellState();}
 class _ShellState extends State<Shell> {
-  int tab = 0, refresh = 0;
+  int tab = 0, refresh = 0, unreadMessages = 0;
+  Timer? _messageBadgeTimer;
+  @override void initState() {
+    super.initState();
+    _refreshMessageBadge();
+    _messageBadgeTimer = Timer.periodic(const Duration(seconds: 12), (_) => _refreshMessageBadge());
+  }
+  @override void didUpdateWidget(covariant Shell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.user?['id'] != widget.user?['id']) _refreshMessageBadge();
+  }
+  @override void dispose() { _messageBadgeTimer?.cancel(); super.dispose(); }
+  Future<void> _refreshMessageBadge() async {
+    if (widget.user == null) {
+      if (mounted && unreadMessages != 0) setState(() => unreadMessages = 0);
+      return;
+    }
+    try {
+      final count = await DooraApi.instance.getUnreadMessageCount();
+      if (mounted && count != unreadMessages) setState(() => unreadMessages = count);
+    } catch (_) {}
+  }
   Future<void> create() async {
     if (widget.user == null) { widget.onLogin(); return; }
     if (!mounted) return;
     Navigator.push(context, dooraRoute(builder: (_) => CreatePage(
-      onDone: () => setState(() { refresh++; tab = 1; }),
+      onDone: () => setState(() { refresh++; tab = 2; }),
     )));
   }
 
@@ -220,7 +241,6 @@ class _ShellState extends State<Shell> {
   Widget build(BuildContext context) {
     final pages = [
       Discover(user: widget.user, onLogin: widget.onLogin, onCreate: create, refresh: refresh),
-      MyTasks(user: widget.user, onLogin: widget.onLogin, onCreate: create, refresh: refresh),
       const SizedBox.shrink(),
       MyTasks(user: widget.user, onLogin: widget.onLogin, onCreate: create, refresh: refresh),
       Profile(user: widget.user, onLogin: widget.onLogin, onLogout: widget.onLogout),
