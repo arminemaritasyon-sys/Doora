@@ -11,6 +11,11 @@ CREATE TABLE IF NOT EXISTS public.task_promotions (
  created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS task_promotions_task_ends_idx ON public.task_promotions(task_id,ends_at DESC);
+
+-- Allow the promotion charge type in the existing wallet transaction constraint.
+ALTER TABLE public.wallet_transactions DROP CONSTRAINT IF EXISTS wallet_transactions_type_check;
+ALTER TABLE public.wallet_transactions ADD CONSTRAINT wallet_transactions_type_check
+ CHECK (type = ANY (ARRAY['test_topup'::text,'escrow_lock'::text,'escrow_release'::text,'escrow_refund'::text,'withdrawal_request'::text,'withdrawal_rejected'::text,'task_promotion'::text]));
 CREATE OR REPLACE FUNCTION public.doora_feature_task(p_user_id text,p_task_id uuid,p_amount numeric,p_key text)
 RETURNS TABLE(featured_until timestamptz,available_balance numeric,already_processed boolean)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
