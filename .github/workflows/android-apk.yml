@@ -53,7 +53,7 @@ jobs:
           activity_source = activity.read_text()
           activity_source = activity_source.replace(
               'import io.flutter.embedding.android.FlutterActivity',
-              'import android.app.NotificationChannel\\nimport android.app.NotificationManager\\nimport android.content.Context\\nimport android.os.Build\\nimport io.flutter.embedding.android.FlutterActivity'
+              'import android.app.NotificationChannel\nimport android.app.NotificationManager\nimport android.content.Context\nimport android.os.Build\nimport io.flutter.embedding.android.FlutterActivity'
           )
           activity_source = activity_source.replace(
               'class MainActivity : FlutterActivity()',
