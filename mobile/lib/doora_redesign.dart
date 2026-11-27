@@ -407,7 +407,16 @@ class _DiscoverState extends State<Discover>{
  @override Widget build(BuildContext c)=>SafeArea(bottom:false,child:RefreshIndicator(color:darkGreen,onRefresh:load,child:CustomScrollView(physics:const AlwaysScrollableScrollPhysics(),slivers:[
  SliverToBoxAdapter(child:Padding(padding:const EdgeInsets.fromLTRB(20,8,20,0),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
   Row(children:[const DooraWordmark(),const Spacer(),Stack(clipBehavior:Clip.none,children:[roundAction(PhosphorIconsRegular.bell,openNotifications),if(unreadCount>0)Positioned(right:-4,top:-4,child:Container(constraints:const BoxConstraints(minWidth:19,minHeight:19),padding:const EdgeInsets.symmetric(horizontal:5),decoration:BoxDecoration(color:const Color(0xFFE34B55),borderRadius:BorderRadius.circular(12),border:Border.all(color:bg,width:1.5)),child:Center(child:Text(unreadCount>99?'99+':'$unreadCount',style:const TextStyle(color:white,fontSize:9,fontWeight:FontWeight.w900)))))] )]),
-  const SizedBox(height:22),const Text('Günlük işlerin,',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),const Text('yakınında çözülür.',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),const SizedBox(height:15),
+  const SizedBox(height:22),
+  Row(crossAxisAlignment:CrossAxisAlignment.center,children:[
+   const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    Text('Günlük işlerin,',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),
+    Text('yakınında çözülür.',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),
+   ])),
+   const SizedBox(width:5),
+   SizedBox(width:88,height:82,child:CustomPaint(painter:_DiscoverHeroLineArt())),
+  ]),
+  const SizedBox(height:15),
  ]))),
  SliverToBoxAdapter(child:Padding(padding:const EdgeInsets.fromLTRB(20,0,20,4),child:categoriesView())),
  SliverPersistentHeader(pinned:true,delegate:_DiscoverStickyHeader(height:64,child:Padding(padding:const EdgeInsets.fromLTRB(20,5,20,8),child:searchView()))),
@@ -488,6 +497,43 @@ class _DiscoverState extends State<Discover>{
  Widget banner()=>Container(height:104,padding:const EdgeInsets.symmetric(horizontal:22,vertical:17),decoration:BoxDecoration(borderRadius:BorderRadius.circular(28),gradient:const LinearGradient(colors:[Color(0xFF302B27),Color(0xFF5B463B),Color(0xFF302B27)],begin:Alignment.topLeft,end:Alignment.bottomRight),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.17),blurRadius:18,offset:const Offset(0,8))]),child:Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.center,children:[Text('DOORA’da',style:TextStyle(color:white,fontSize:20,fontWeight:FontWeight.w400,letterSpacing:-.4)),Text('her şey daha kolay.',style:TextStyle(color:white,fontSize:20,fontWeight:FontWeight.w400,letterSpacing:-.5)),SizedBox(height:5),Text('Hemen keşfet  →',style:TextStyle(color:Color(0xFFD9C8BB),fontSize:11))])),Transform.rotate(angle:-.12,child:Container(width:70,height:70,decoration:BoxDecoration(color:const Color(0xFF2A2521),borderRadius:BorderRadius.circular(19),border:Border.all(color:const Color(0xFF786A5F)),boxShadow:[BoxShadow(color:Colors.black.withValues(alpha:.35),blurRadius:16,offset:const Offset(0,7))]),child:const Center(child:Text('d.',style:TextStyle(color:white,fontSize:45,fontWeight:FontWeight.w400,letterSpacing:-3))))) ]));
  Future<void> budgetFilter()async{var draft=RangeValues(minBudget,maxBudget);final result=await showModalBottomSheet<RangeValues>(context:context,backgroundColor:white,showDragHandle:true,builder:(sheetContext)=>StatefulBuilder(builder:(context,setSheet)=>Padding(padding:const EdgeInsets.fromLTRB(20,8,20,22),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Bütçe aralığı',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w900)),const SizedBox(height:6),Text(draft.start.round().toString()+' ₺ – '+draft.end.round().toString()+' ₺',style:const TextStyle(color:darkGreen,fontSize:13,fontWeight:FontWeight.w800)),RangeSlider(values:draft,min:0,max:50000,divisions:100,activeColor:darkGreen,labels:RangeLabels(draft.start.round().toString(),draft.end.round().toString()),onChanged:(v)=>setSheet(()=>draft=v)),Row(children:[TextButton(onPressed:()=>setSheet(()=>draft=const RangeValues(0,50000)),child:const Text('Sıfırla')),const Spacer(),FilledButton(onPressed:()=>Navigator.pop(sheetContext,draft),style:FilledButton.styleFrom(backgroundColor:darkGreen),child:const Text('Uygula'))])]))));if(result!=null&&mounted){setState((){minBudget=result.start;maxBudget=result.end;});load();}}
 }
+
+class _DiscoverHeroLineArt extends CustomPainter {
+ @override
+ void paint(Canvas canvas, Size size) {
+  final paint=Paint()
+   ..color=const Color(0xFF1E3F35).withValues(alpha:.72)
+   ..style=PaintingStyle.stroke
+   ..strokeWidth=1.45
+   ..strokeCap=StrokeCap.round
+   ..strokeJoin=StrokeJoin.round;
+  final pin=Path()
+   ..moveTo(size.width*.34,size.height*.69)
+   ..cubicTo(size.width*.27,size.height*.57,size.width*.15,size.height*.43,size.width*.15,size.height*.29)
+   ..cubicTo(size.width*.15,size.height*.10,size.width*.29,size.height*.035,size.width*.43,size.height*.035)
+   ..cubicTo(size.width*.59,size.height*.035,size.width*.72,size.height*.16,size.width*.72,size.height*.31)
+   ..cubicTo(size.width*.72,size.height*.43,size.width*.59,size.height*.58,size.width*.49,size.height*.70);
+  canvas.drawPath(pin,paint);
+  canvas.drawCircle(Offset(size.width*.435,size.height*.30),size.width*.105,paint);
+  canvas.drawCircle(Offset(size.width*.65,size.height*.65),size.width*.17,paint);
+  canvas.drawLine(Offset(size.width*.77,size.height*.77),Offset(size.width*.91,size.height*.91),paint);
+  final star=Path()
+   ..moveTo(size.width*.80,size.height*.055)
+   ..lineTo(size.width*.825,size.height*.125)
+   ..lineTo(size.width*.895,size.height*.15)
+   ..lineTo(size.width*.825,size.height*.175)
+   ..lineTo(size.width*.80,size.height*.245)
+   ..lineTo(size.width*.775,size.height*.175)
+   ..lineTo(size.width*.705,size.height*.15)
+   ..lineTo(size.width*.775,size.height*.125)
+   ..close();
+  canvas.drawPath(star,paint);
+  canvas.drawLine(Offset(size.width*.08,size.height*.83),Offset(size.width*.29,size.height*.83),paint..color=const Color(0xFF1E3F35).withValues(alpha:.26)..strokeWidth=1);
+ }
+ @override
+ bool shouldRepaint(covariant _DiscoverHeroLineArt oldDelegate)=>false;
+}
+
 class AllTasksPage extends StatefulWidget {
  const AllTasksPage({super.key,required this.user,required this.onLogin});
  final Map<String,dynamic>? user;
@@ -936,7 +982,7 @@ class _SavedState extends State<Saved> {
  Future<void> load() async {
   if(widget.user==null){if(mounted)setState(()=>busy=false);return;}
   setState(()=>busy=true);error=null;
-  try{final ids=await DooraApi.instance.getSavedTaskIds();final rows=await DooraApi.instance.getTasks();if(mounted)setState(()=>tasks=rows.map(DooraTask.fromJson).where((t)=>ids.contains(t.id)).toList());}
+  try{final rows=await DooraApi.instance.getSavedTasks();if(mounted)setState(()=>tasks=rows.map(DooraTask.fromJson).toList());}
   catch(e){if(mounted)setState(()=>error=DooraApi.instance.errorMessage(e));}
   finally{if(mounted)setState(()=>busy=false);}
  }
