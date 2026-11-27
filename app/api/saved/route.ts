@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ taskIds: [], tasks: [] });
+  if (!user) return NextResponse.json({ error: "Kaydedilen ilanları görmek için giriş yapmalısın." }, { status: 401 });
   try {
     const rows = await db`
       SELECT t.id, t.owner_id, t.title, t.description, t.category, t.budget, t.city,
