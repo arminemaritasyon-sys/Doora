@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
       const [profile] = await db`
         SELECT p.display_name, p.avatar_url, p.district, p.bio,
           COALESCE(p.is_verified, false) AS is_verified,
-          COALESCE(u.name, 'DOORA üyesi') AS account_name
+          COALESCE(u.name, 'DOORA üyesi') AS account_name,
+          COALESCE((SELECT json_agg(json_build_object('id',t.id,'title',t.title,'description',t.description,'category',t.category,'budget',t.budget,'city',t.city,'location',t.district,'time',COALESCE(to_char(t.scheduled_at,'DD.MM.YYYY HH24:MI'),'Yeni ilan'),'owner',COALESCE(NULLIF(p2.display_name,''),NULLIF(u.name,''),'DOORA üyesi'),'owner_id',t.owner_id,'owner_avatar',CASE WHEN p2.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p2.user_id || '&v=' || floor(extract(epoch from p2.updated_at)*1000)::bigint::text END,'offers',(SELECT count(*)::int FROM public.offers o WHERE o.task_id=t.id),'status',t.status,'images',COALESCE((SELECT json_agg(json_build_object('url','/api/tasks/image?id=' || ti.id::text) ORDER BY ti.created_at) FROM public.task_images ti WHERE ti.task_id=t.id),'[]'::json)) ORDER BY t.created_at DESC) FROM public.tasks t LEFT JOIN public.user_profiles p2 ON p2.user_id=t.owner_id WHERE t.owner_id=u.id::text AND t.status='open'), '[]'::json) AS open_tasks
         FROM neon_auth.user u
         LEFT JOIN public.user_profiles p ON p.user_id = u.id::text
         WHERE u.id::text = ${publicUserId}
@@ -25,7 +26,8 @@ export async function GET(request: NextRequest) {
         avatarUrl: profile.avatar_url || "",
         district: profile.district || "",
         bio: profile.bio || "",
-        isVerified: profile.is_verified === true
+        isVerified: profile.is_verified === true,
+        openTasks: profile.open_tasks || []
       } });
     } catch (error) {
       console.error("[profile] public profile read failed", error);
