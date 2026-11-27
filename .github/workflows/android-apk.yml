@@ -80,6 +80,7 @@ jobs:
         working-directory: mobile
         run: flutter analyze --no-fatal-infos
       - name: Build release APK
+        working-directory: mobile
         env:
           FIREBASE_API_KEY: AIzaSyCMUcvMVSN0yRnbKgJj2poCXG4_g4sxME
           FIREBASE_APP_ID: 1:55183080653:android:130b21ae53020877c1bd84
