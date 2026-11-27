@@ -14,7 +14,7 @@ export async function GET() {
     const tasks = await db`
       SELECT t.id,t.title,t.description,t.category,t.budget,t.city,t.district AS location,
         COALESCE(to_char(t.scheduled_at,'DD.MM.YYYY HH24:MI'),'Yeni ilan') AS time,
-        t.created_at,t.owner_id,
+        t.created_at,t.owner_id,t.featured_until,
         COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'DOORA üyesi') AS owner,
         CASE WHEN p.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || p.user_id || '&v=' || floor(extract(epoch from p.updated_at)*1000)::bigint::text END AS owner_avatar,
         (SELECT count(*)::int FROM public.offers o WHERE o.task_id=t.id) AS offers,
@@ -23,7 +23,7 @@ export async function GET() {
       LEFT JOIN public.user_profiles p ON p.user_id=t.owner_id
       LEFT JOIN neon_auth.user u ON u.id::text=t.owner_id
       WHERE t.status='open' AND lower(t.district)=lower(${district}) AND t.owner_id<>${user.id}
-      ORDER BY t.created_at DESC LIMIT 12
+      ORDER BY CASE WHEN t.featured_until IS NOT NULL AND t.featured_until > now() THEN 0 ELSE 1 END, t.created_at DESC LIMIT 12
     `;
     return NextResponse.json({ tasks, district });
   } catch (error) {
