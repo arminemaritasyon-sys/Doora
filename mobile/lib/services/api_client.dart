@@ -125,10 +125,11 @@ class DooraApi {
     throw StateError('DOORA sunucusuna ulaşılamadı.');
   }
 
-  Future<List<Map<String, dynamic>>> getTasks({String? query, String? category}) async {
+  Future<List<Map<String, dynamic>>> getTasks({String? query, String? category, String? city}) async {
     final response = await _getWithRetry('/api/tasks', queryParameters: {
       if (query != null && query.trim().isNotEmpty) 'q': query.trim(),
       if (category != null && category != 'Tümü') 'category': category,
+      if (city != null && city.isNotEmpty && city != 'Tüm Türkiye' && city != 'Tüm Antalya') 'city': city,
     });
     final rows = _asMap(response.data)['tasks'];
     if (rows is! List) return [];
@@ -167,6 +168,8 @@ class DooraApi {
     required String category,
     required num budget,
     required String district,
+    String city = 'Antalya',
+    List<String> images = const [],
   }) async {
     final response = await _dio.post('/api/tasks', data: {
       'title': title.trim(),
@@ -174,6 +177,8 @@ class DooraApi {
       'category': category,
       'budget': budget,
       'district': district.trim(),
+      'city': city.trim(),
+      if (images.isNotEmpty) 'images': images,
     });
     return _asMap(_asMap(response.data)['task']);
   }
