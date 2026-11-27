@@ -825,7 +825,7 @@ class _ProfileState extends State<Profile> {
  }
  Future<void> loadMyListings()async{
   if(widget.user==null)return;
-  if(mounted)setState(()=>{loadingListings=true;listingsError=null;});
+  if(mounted)setState((){loadingListings=true;listingsError=null;});
   try{final rows=await DooraApi.instance.getMyTasks();final id=widget.user?['id']?.toString()??'';if(mounted)setState(()=>myListings=rows.map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList());}
   catch(e){if(mounted)setState(()=>listingsError=DooraApi.instance.errorMessage(e));}
   finally{if(mounted)setState(()=>loadingListings=false);}
