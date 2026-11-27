@@ -48,10 +48,10 @@ async function firebaseAccessToken(serviceAccount: { client_email: string; priva
 async function sendPush(userId: string, notificationId: string, input: NotificationInput) {
   try {
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-    if (!raw) return;
+    if (!raw) { console.error("[notifications] FIREBASE_SERVICE_ACCOUNT_JSON is missing"); return; }
     const account = JSON.parse(raw) as { project_id: string; client_email: string; private_key: string; token_uri?: string };
     const devices = await db`SELECT token FROM public.user_notification_devices WHERE user_id = ${userId}`;
-    if (!devices.length) return;
+    if (!devices.length) { console.error("[notifications] no registered devices for recipient"); return; }
     const accessToken = await firebaseAccessToken(account);
     const endpoint = "https://fcm.googleapis.com/v1/projects/" + account.project_id + "/messages:send";
     await Promise.all(devices.map(async (device) => {
@@ -65,11 +65,16 @@ async function sendPush(userId: string, notificationId: string, input: Notificat
           android: { priority: "HIGH", notification: { channel_id: "doora_updates", sound: "default", click_action: "FLUTTER_NOTIFICATION_CLICK" } },
         } }),
       });
-      if (response.status === 404 || response.status === 400) {
+      if (!response.ok) {
         const detail = await response.text().catch(() => "");
-        if (detail.includes("UNREGISTERED") || detail.includes("registration-token-not-registered")) {
-          await db`DELETE FROM public.user_notification_devices WHERE token = ${device.token}`;
+        console.error("[notifications] FCM rejected push", { status: response.status, detail });
+        if (response.status === 404 || response.status === 400) {
+          if (detail.includes("UNREGISTERED") || detail.includes("registration-token-not-registered")) {
+            await db`DELETE FROM public.user_notification_devices WHERE token = ${device.token}`;
+          }
         }
+      } else {
+        console.info("[notifications] FCM accepted push", { status: response.status });
       }
     }));
   } catch (error) {
