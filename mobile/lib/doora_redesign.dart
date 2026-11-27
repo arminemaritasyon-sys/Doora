@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -14,15 +16,52 @@ const bg=Color(0xFFF6F6F2), white=Color(0xFFFAF9F6), ink=Color(0xFF1A1A1A), mute
 const districts=['Muratpaşa','Konyaaltı','Kepez','Aksu','Döşemealtı'];
 const categories=['Alışveriş','Teslimat','Ev işleri','Taşıma','Tamir','Diğer'];
 IconData catIcon(String c){switch(c){case 'Alışveriş':return PhosphorIconsRegular.shoppingBag;case 'Teslimat':return PhosphorIconsRegular.truck;case 'Ev işleri':return PhosphorIconsRegular.broom;case 'Taşıma':return PhosphorIconsRegular.package;case 'Tamir':return PhosphorIconsRegular.wrench;default:return PhosphorIconsRegular.squaresFour;}}
+Route<T> dooraRoute<T>({required WidgetBuilder builder}) => PageRouteBuilder<T>(
+  pageBuilder: (context, animation, secondaryAnimation) => builder(context),
+  transitionDuration: const Duration(milliseconds: 360),
+  reverseTransitionDuration: const Duration(milliseconds: 280),
+  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+    final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic);
+    return FadeTransition(opacity: curved, child: SlideTransition(
+      position: Tween<Offset>(begin: const Offset(.035, .018), end: Offset.zero).animate(curved),
+      child: child,
+    ));
+  },
+);
+
 void main(){WidgetsFlutterBinding.ensureInitialized();SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarColor:Colors.transparent,statusBarIconBrightness:Brightness.dark,systemNavigationBarColor:bg,systemNavigationBarIconBrightness:Brightness.dark));runApp(const DooraApp());}
 
 final GlobalKey<NavigatorState> dooraNavigatorKey=GlobalKey<NavigatorState>();
+
+class TactileTap extends StatefulWidget {
+  const TactileTap({super.key, required this.onTap, required this.child});
+  final VoidCallback onTap;
+  final Widget child;
+  @override State<TactileTap> createState() => _TactileTapState();
+}
+class _TactileTapState extends State<TactileTap> {
+  bool pressed = false;
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTapDown: (_) => setState(() => pressed = true),
+    onTapCancel: () { if (mounted) setState(() => pressed = false); },
+    onTapUp: (_) { if (mounted) setState(() => pressed = false); },
+    onTap: () { HapticFeedback.lightImpact(); widget.onTap(); },
+    child: AnimatedScale(
+      scale: pressed ? .965 : 1,
+      duration: const Duration(milliseconds: 115),
+      curve: Curves.easeOutCubic,
+      child: widget.child,
+    ),
+  );
+}
 
 class DooraApp extends StatefulWidget{const DooraApp({super.key});@override State<DooraApp> createState()=>_DooraAppState();}
 class _DooraAppState extends State<DooraApp>{
  Map<String,dynamic>? user;bool loading=true;
  @override void initState(){super.initState();DooraAuth.instance.restore().then((u){if(mounted)setState((){user=u;loading=false;});});}
- Future<void> login()async{final navigator=dooraNavigatorKey.currentState;if(navigator==null)return;final u=await navigator.push<Map<String,dynamic>>(MaterialPageRoute(builder:(_)=>const AuthPage()));if(u!=null&&mounted)setState(()=>user=u);}
+ Future<void> login()async{final navigator=dooraNavigatorKey.currentState;if(navigator==null)return;final u=await navigator.push<Map<String,dynamic>>(dooraRoute(builder:(_)=>const AuthPage()));if(u!=null&&mounted)setState(()=>user=u);}
  Future<void> logout()async{
   final navContext=dooraNavigatorKey.currentContext;if(navContext==null)return;
   final confirmed=await showDialog<bool>(context:navContext,builder:(dialogContext)=>AlertDialog(
@@ -39,11 +78,112 @@ class _DooraAppState extends State<DooraApp>{
   catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(DooraApi.instance.errorMessage(e))));}
   finally{if(mounted)setState(()=>user=null);}
 }
- @override Widget build(BuildContext c)=>MaterialApp(navigatorKey:dooraNavigatorKey,title:'DOORA',debugShowCheckedModeBanner:false,theme:ThemeData(useMaterial3:true,scaffoldBackgroundColor:bg,colorScheme:ColorScheme.fromSeed(seedColor:green),textTheme:GoogleFonts.plusJakartaSansTextTheme(),appBarTheme:const AppBarTheme(backgroundColor:white,foregroundColor:ink,elevation:0)),home:loading?const Scaffold(body:Center(child:CircularProgressIndicator(color:green))):Shell(user:user,onLogin:login,onLogout:logout,onUser:(u)=>setState(()=>user=u)));
+ @override Widget build(BuildContext c)=>MaterialApp(navigatorKey:dooraNavigatorKey,title:'DOORA',debugShowCheckedModeBanner:false,themeMode: ThemeMode.system,
+  theme: ThemeData(useMaterial3:true,brightness:Brightness.light,scaffoldBackgroundColor:bg,colorScheme:ColorScheme.fromSeed(seedColor:darkGreen,brightness:Brightness.light),textTheme:GoogleFonts.plusJakartaSansTextTheme(),appBarTheme:const AppBarTheme(backgroundColor:white,foregroundColor:ink,elevation:0)),
+  darkTheme: ThemeData(useMaterial3:true,brightness:Brightness.dark,scaffoldBackgroundColor:const Color(0xFF111713),colorScheme:ColorScheme.fromSeed(seedColor:const Color(0xFF9BB8A2),brightness:Brightness.dark),textTheme:GoogleFonts.plusJakartaSansTextTheme(ThemeData.dark().textTheme),appBarTheme:const AppBarTheme(backgroundColor:Color(0xFF171F19),foregroundColor:Color(0xFFF3F4EF),elevation:0)),
+  home:loading?const Scaffold(body:Center(child:CircularProgressIndicator(color:green))):Shell(user:user,onLogin:login,onLogout:logout,onUser:(u)=>setState(()=>user=u)));
 }
 class Shell extends StatefulWidget{const Shell({super.key,required this.user,required this.onLogin,required this.onLogout,required this.onUser});final Map<String,dynamic>? user;final VoidCallback onLogin,onLogout;final ValueChanged<Map<String,dynamic>?> onUser;@override State<Shell> createState()=>_ShellState();}
-class _ShellState extends State<Shell>{int tab=0,refresh=0;Future<void> create()async{if(widget.user==null){widget.onLogin();return;}if(!mounted)return;Navigator.push(context,MaterialPageRoute(builder:(_)=>CreatePage(onDone:(){setState((){refresh++;tab=1;});})));} @override Widget build(BuildContext c){final pages=[Discover(user:widget.user,onLogin:widget.onLogin,onCreate:create,refresh:refresh),MyTasks(user:widget.user,onLogin:widget.onLogin,onCreate:create,refresh:refresh),Saved(user:widget.user,onLogin:widget.onLogin),Profile(user:widget.user,onLogin:widget.onLogin,onLogout:widget.onLogout)];return Scaffold(extendBody:true,body:IndexedStack(index:tab,children:pages),bottomNavigationBar:SafeArea(top:false,minimum:const EdgeInsets.fromLTRB(16,0,16,14),child:Container(height:76,padding:const EdgeInsets.symmetric(horizontal:7,vertical:6),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(40),border:Border.all(color:line.withValues(alpha:.8)),boxShadow:[BoxShadow(color:ink.withValues(alpha:.13),blurRadius:30,spreadRadius:1,offset:const Offset(0,9))]),child:Row(children:[nav(PhosphorIconsRegular.compass,'Keşfet',0),nav(PhosphorIconsRegular.chatCircle,'Mesajlar',1),Expanded(child:Center(child:InkWell(onTap:create,borderRadius:BorderRadius.circular(16),child:Container(width:58,height:58,decoration:BoxDecoration(color:darkGreen,shape:BoxShape.circle,border:Border.all(color:const Color(0xFFD5DFC9),width:3),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.22),blurRadius:17,offset:const Offset(0,6))]),child:const Icon(Icons.add,color:white,size:30))))),nav(PhosphorIconsRegular.heart,'Kaydedilen',2),nav(PhosphorIconsRegular.user,'Hesabım',3)]))));}
- Widget nav(IconData icon,String label,int index)=>Expanded(child:InkWell(onTap:(){HapticFeedback.selectionClick();if(index!=0&&widget.user==null){widget.onLogin();return;}if(index==1){if(widget.user==null){widget.onLogin();return;}Navigator.push(context,MaterialPageRoute(builder:(_)=>MessagesInboxPage(currentUserId:widget.user?['id']?.toString()??'')));return;}setState(()=>tab=index);},child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(tab==index?(index==0?PhosphorIconsFill.compass:index==1?PhosphorIconsFill.chatCircle:index==2?PhosphorIconsFill.heart:PhosphorIconsFill.user):icon,color:const Color(0xFF171B17).withValues(alpha:tab==index?1:.72),size:22),const SizedBox(height:4),Text(label,style:TextStyle(color:const Color(0xFF171B17).withValues(alpha:tab==index?1:.72),fontSize:9,fontWeight:tab==index?FontWeight.w800:FontWeight.w600))])));
+class _ShellState extends State<Shell> {
+  int tab = 0, refresh = 0;
+  Future<void> create() async {
+    if (widget.user == null) { widget.onLogin(); return; }
+    if (!mounted) return;
+    Navigator.push(context, dooraRoute(builder: (_) => CreatePage(
+      onDone: () => setState(() { refresh++; tab = 1; }),
+    )));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pages = [
+      Discover(user: widget.user, onLogin: widget.onLogin, onCreate: create, refresh: refresh),
+      MyTasks(user: widget.user, onLogin: widget.onLogin, onCreate: create, refresh: refresh),
+      Saved(user: widget.user, onLogin: widget.onLogin),
+      Profile(user: widget.user, onLogin: widget.onLogin, onLogout: widget.onLogout),
+    ];
+    return Scaffold(
+      extendBody: true,
+      body: IndexedStack(index: tab, children: pages),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 13),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(34),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            child: Container(
+              height: 76,
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 6),
+              decoration: BoxDecoration(
+                color: white.withValues(alpha: .88),
+                borderRadius: BorderRadius.circular(34),
+                border: Border.all(color: Colors.white.withValues(alpha: .92), width: 1.2),
+                boxShadow: [BoxShadow(color: ink.withValues(alpha: .12), blurRadius: 30, offset: const Offset(0, 9))],
+              ),
+              child: Row(children: [
+                nav(PhosphorIconsRegular.compass, 'Keşfet', 0),
+                nav(PhosphorIconsRegular.chatCircle, 'Mesajlar', 1),
+                Expanded(child: Center(child: TactileTap(
+                  onTap: create,
+                  child: Container(
+                    width: 58, height: 58,
+                    decoration: BoxDecoration(
+                      color: darkGreen, shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFD5DFC9), width: 3),
+                      boxShadow: [BoxShadow(color: darkGreen.withValues(alpha: .25), blurRadius: 19, offset: const Offset(0, 7))],
+                    ),
+                    child: const Icon(Icons.add_rounded, color: white, size: 30),
+                  ),
+                ))),
+                nav(PhosphorIconsRegular.heart, 'Kaydedilen', 2),
+                nav(PhosphorIconsRegular.user, 'Hesabım', 3),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget nav(IconData icon, String label, int index) {
+    final selected = tab == index;
+    final activeIcon = index == 0 ? PhosphorIconsFill.compass
+        : index == 1 ? PhosphorIconsFill.chatCircle
+        : index == 2 ? PhosphorIconsFill.heart : PhosphorIconsFill.user;
+    return Expanded(child: TactileTap(
+      onTap: () {
+        if (index != 0 && widget.user == null) { widget.onLogin(); return; }
+        if (index == 1) {
+          Navigator.push(context, dooraRoute(builder: (_) => MessagesInboxPage(
+            currentUserId: widget.user?['id']?.toString() ?? '',
+          )));
+          return;
+        }
+        setState(() => tab = index);
+      },
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        AnimatedScale(
+          scale: selected ? 1.08 : .96,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutBack,
+          child: Icon(selected ? activeIcon : icon, color: ink.withValues(alpha: selected ? 1 : .62), size: 22),
+        ),
+        const SizedBox(height: 4),
+        AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 180),
+          style: TextStyle(color: ink.withValues(alpha: selected ? 1 : .62), fontSize: 9, fontWeight: selected ? FontWeight.w800 : FontWeight.w600),
+          child: Text(label),
+        ),
+        const SizedBox(height: 2),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: selected ? 13 : 0, height: 3,
+          decoration: BoxDecoration(color: darkGreen, borderRadius: BorderRadius.circular(8)),
+        ),
+      ]),
+    ));
+  }
 }
 
 class Discover extends StatefulWidget {
