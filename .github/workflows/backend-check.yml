@@ -8,6 +8,7 @@ on:
     paths:
       - "app/api/**"
       - "app/admin/**"
+      - "app/hesabim/**"
       - "lib/**"
       - "db/migrations/**"
       - "package.json"
