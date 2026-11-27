@@ -23,7 +23,9 @@ export default async function AccountPage() {
     ]);
 
   const queryResults = await Promise.allSettled([
-    withTimeout(db`SELECT t.id,t.title,t.description,t.category,t.district,t.budget,t.status,t.created_at,t.work_started_at,t.completion_requested_at,o.user_id AS assigned_user_id,
+    withTimeout(db`SELECT t.id,t.title,t.description,t.category,t.district,t.budget,t.status,t.created_at,t.work_started_at,t.completion_requested_at,
+      COALESCE((SELECT json_agg(json_build_object('url','/api/tasks/image?id=' || ti.id::text) ORDER BY ti.created_at) FROM public.task_images ti WHERE ti.task_id=t.id), '[]'::json) AS images,
+      o.user_id AS assigned_user_id,
       COALESCE(NULLIF(ap.display_name,''),NULLIF(au.name,''),'DOORA üyesi') AS assigned_user_name,
       CASE WHEN ap.avatar_url IS NOT NULL THEN '/api/profile/avatar?userId=' || ap.user_id || '&v=' || floor(extract(epoch from ap.updated_at)*1000)::bigint::text END AS assigned_user_avatar,
       EXISTS(SELECT 1 FROM public.task_reviews r WHERE r.task_id=t.id AND r.reviewer_id=${user.id}) AS reviewed
