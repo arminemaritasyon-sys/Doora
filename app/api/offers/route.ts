@@ -66,46 +66,6 @@ import { sendDooraEmail } from "@/lib/mail";
 import { createNotification } from "@/lib/notifications";
 
 
-const responseSchema = z.object({ offerId: z.string().uuid(), action: z.enum(["accept", "reject"]) });
-
-export async function PATCH(request: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });
-  const parsed = responseSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Teklif işlemi geçersiz." }, { status: 400 });
-  const { offerId, action } = parsed.data;
-  try {
-    const rows = await db`
-      WITH chosen AS (
-        UPDATE public.offers o
-        SET status = ${action === "accept" ? "accepted" : "rejected"}, updated_at = now()
-        WHERE o.id = ${offerId}::uuid AND o.status = 'pending'
-          AND EXISTS (SELECT 1 FROM public.tasks t WHERE t.id = o.task_id AND t.owner_id = ${user.id} AND t.status = 'open')
-        RETURNING o.id, o.task_id, o.user_id, o.status
-      ), other_offers AS (
-        UPDATE public.offers o SET status = 'rejected', updated_at = now()
-        WHERE ${action === "accept"}::boolean
-          AND o.task_id = (SELECT task_id FROM chosen)
-          AND o.id <> (SELECT id FROM chosen)
-          AND o.status = 'pending'
-        RETURNING o.id
-      )
-      SELECT c.id, c.task_id, c.user_id, c.status, t.title AS task_title
-      FROM chosen c JOIN public.tasks t ON t.id = c.task_id
-    `;
-    if (!rows.length) return NextResponse.json({ error: "Teklif artık yanıtlanamıyor veya bu ilana erişimin yok." }, { status: 409 });
-    const result = rows[0];
-    await createNotification({ userId: result.user_id, preference: "offer_updates",
-      type: action === "accept" ? "offer_accepted" : "offer_rejected",
-      title: action === "accept" ? "Teklifin kabul edildi" : "Teklifine yanıt verildi",
-      body: result.task_title, href: "/hesabim" });
-    return NextResponse.json({ success: true, offer: result });
-  } catch (error) {
-    console.error("[offers] response failed", error);
-    return NextResponse.json({ error: "Teklif yanıtlanamadı. Tekrar dene." }, { status: 500 });
-  }
-}
-
 const schema = z.object({ taskId: z.string().uuid(), amount: z.coerce.number().positive().max(10000000), message: z.string().trim().max(1000).optional() });
 
 export async function POST(request: NextRequest) {
