@@ -15,12 +15,15 @@ class DooraTask {
     this.imageUrls = const [],
     this.distanceKm = -1,
     this.providerRating = -1,
+    this.featuredUntil,
   });
 
   final String id, ownerId, title, description, category, location, time, owner;
   final String status, ownerAvatar;
   final List<String> imageUrls;
   final num distanceKm, providerRating;
+  final DateTime? featuredUntil;
+  bool get isFeatured => featuredUntil != null && featuredUntil!.isAfter(DateTime.now());
   final num budget;
   final int offers;
 
@@ -40,6 +43,7 @@ class DooraTask {
     imageUrls: _images(json),
     distanceKm: (json['distance_km'] ?? json['distanceKm']) == null ? -1 : _number(json['distance_km'] ?? json['distanceKm']),
     providerRating: (json['provider_rating'] ?? json['providerRating'] ?? json['rating']) == null ? -1 : _number(json['provider_rating'] ?? json['providerRating'] ?? json['rating']),
+    featuredUntil: DateTime.tryParse(json['featured_until']?.toString() ?? json['featuredUntil']?.toString() ?? ''),
   );
 
   static List<String> _images(Map<String, dynamic> json) {
