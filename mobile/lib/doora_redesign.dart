@@ -848,6 +848,25 @@ class _ProfileState extends State<Profile> {
   if(result==true){final amount=num.tryParse(budget.text.replaceAll('.','').replaceAll(',','.'));try{await DooraApi.instance.manageTask(task.id,action:'edit',title:title.text,description:description.text,budget:amount);await loadMyListings();if(mounted)toast(context,'İlanın güncellendi.');}catch(e){if(mounted)toast(context,DooraApi.instance.errorMessage(e));}}
   title.dispose();description.dispose();budget.dispose();
  }
+ Future<void> addListingPhotos(DooraTask task) async {
+  final remaining=4-task.imageUrls.length;
+  if(remaining<=0){toast(context,'Bu ilana en fazla 4 fotoğraf eklenebilir.');return;}
+  final picked=await ImagePicker().pickMultiImage(imageQuality:76,maxWidth:1280);
+  if(picked.isEmpty||!mounted)return;
+  try{
+   final encoded=<String>[];
+   for(final image in picked.take(remaining)){
+    final bytes=await File(image.path).readAsBytes();
+    if(bytes.length>650000)throw StateError('Fotoğraflardan biri çok büyük. Daha küçük görsel seç.');
+    final name=image.name.toLowerCase();
+    final mime=name.endsWith('.png')?'image/png':name.endsWith('.webp')?'image/webp':'image/jpeg';
+    encoded.add('data:$mime;base64,${base64Encode(bytes)}');
+   }
+   await DooraApi.instance.manageTask(task.id,action:'edit',images:encoded);
+   await loadMyListings();
+   if(mounted)toast(context,'Fotoğraflar ilana eklendi.');
+  }catch(e){if(mounted)toast(context,DooraApi.instance.errorMessage(e));}
+ }
  Future<void> loadWallet()async{
   if(widget.user==null)return;setState(()=>loadingWallet=true);walletError=null;
   try{final data=await DooraApi.instance.getWallet();if(mounted)setState(()=>wallet=data);}
@@ -907,6 +926,7 @@ class _ProfileState extends State<Profile> {
      const SizedBox(height:10),Row(children:[
       Expanded(child:OutlinedButton(onPressed:()=>openTask(c,task,widget.user,widget.onLogin,loadMyListings),style:OutlinedButton.styleFrom(foregroundColor:ink,side:const BorderSide(color:line)),child:const Text('İlanı görüntüle',style:TextStyle(fontSize:9,fontWeight:FontWeight.w800)))),
       const SizedBox(width:7),Expanded(child:OutlinedButton(onPressed:()=>editListing(task),style:OutlinedButton.styleFrom(foregroundColor:darkGreen,side:const BorderSide(color:line)),child:const Text('Düzenle',style:TextStyle(fontSize:9,fontWeight:FontWeight.w800)))),
+      if(task.imageUrls.length<4)IconButton(onPressed:()=>addListingPhotos(task),tooltip:'Fotoğraf ekle',icon:const Icon(Icons.add_a_photo_outlined,color:darkGreen,size:18)),
       IconButton(onPressed:()=>changeListingStatus(task),tooltip:task.status=='paused'?'Yayınla':'Duraklat',icon:Icon(task.status=='paused'?Icons.play_arrow_rounded:Icons.pause_rounded,color:ink,size:20)),
      ]),
     ]))),
