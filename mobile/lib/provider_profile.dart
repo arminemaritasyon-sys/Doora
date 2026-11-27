@@ -8,10 +8,10 @@ import 'services/api_client.dart';
 
 const _ink = Color(0xFF20251F);
 const _muted = Color(0xFF7A8474);
-const _line = Color(0xFFE8EDE4);
-const _paper = Color(0xFFF7F8F5);
-const _green = Color(0xFFA9B98E);
-const _forest = Color(0xFF263B2B);
+const _line = Color(0xFFE7ECE5);
+const _paper = Color(0xFFF7F9F5);
+const _green = Color(0xFFB8D0B5);
+const _forest = Color(0xFF86A989);
 
 class ProviderProfilePage extends StatefulWidget {
   const ProviderProfilePage({
@@ -282,13 +282,13 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                               style: const TextStyle(color: _ink, fontSize: 17, fontWeight: FontWeight.w900))),
                             if (verified) ...[
                               const SizedBox(width: 6),
-                              const Icon(Icons.verified, color: Color(0xFF3985C8), size: 18),
+                              const Icon(Icons.verified, color: Color(0xFF86A989), size: 18),
                             ],
                           ]),
                           if (verified) const Padding(
                             padding: EdgeInsets.only(top: 4),
                             child: Text('Doğrulanmış kullanıcı', style: TextStyle(
-                              color: Color(0xFF3985C8), fontSize: 9, fontWeight: FontWeight.w800,
+                              color: Color(0xFF86A989), fontSize: 9, fontWeight: FontWeight.w800,
                             )),
                           ),
                           if (district.isNotEmpty) Padding(
@@ -307,6 +307,17 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                         ]),
                       ),
                       const SizedBox(height: 16),
+                      Row(children: [
+                        Expanded(child: _profileMetric(
+                          'Tamamlanan işler',
+                          (profile['completedTasks'] ?? profile['completed_tasks'] ?? profile['completedCount'] ?? profile['completed_count'] ?? '—').toString(),
+                        )),
+                        const SizedBox(width: 9),
+                        Expanded(child: _profileMetric('Değerlendirme', reviewCount.toString())),
+                        const SizedBox(width: 9),
+                        Expanded(child: _profileMetric('Portföy', portfolio.length.toString())),
+                      ]),
+                      const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.all(15),
                         decoration: BoxDecoration(
@@ -520,3 +531,15 @@ class _ReviewComposerState extends State<ReviewComposer> {
     ),
   );
 }
+
+
+Widget _profileMetric(String label, String value) => Container(
+  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 13),
+  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: _line)),
+  child: Column(children: [
+    Text(value, style: const TextStyle(color: _ink, fontSize: 17, fontWeight: FontWeight.w800)),
+    const SizedBox(height: 4),
+    Text(label, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
+      style: const TextStyle(color: _muted, fontSize: 8, fontWeight: FontWeight.w600)),
+  ]),
+);
