@@ -362,6 +362,15 @@ class DooraWordmark extends StatelessWidget {
  ]);
 }
 
+class _DiscoverStickyHeader extends SliverPersistentHeaderDelegate {
+ _DiscoverStickyHeader({required this.height,required this.child});
+ final double height; final Widget child;
+ @override double get minExtent=>height;
+ @override double get maxExtent=>height;
+ @override Widget build(BuildContext context,double shrinkOffset,bool overlapsContent)=>Material(color:bg,elevation:overlapsContent?2:0,child:child);
+ @override bool shouldRebuild(covariant _DiscoverStickyHeader old)=>old.height!=height||old.child!=child;
+}
+
 class Discover extends StatefulWidget {
  const Discover({super.key,required this.user,required this.onLogin,required this.onCreate,required this.refresh});
  final Map<String,dynamic>? user; final VoidCallback onLogin,onCreate; final int refresh;
@@ -371,8 +380,8 @@ class _DiscoverState extends State<Discover>{
  final search=TextEditingController(); List<DooraTask> tasks=[]; Set<String> saved={};
  int unreadCount=0,unreadMessageCount=0; Timer? badgeTimer,searchDebounce;
  String district='Tüm Türkiye',category='Tümü',sort='En yeni'; double minBudget=0,maxBudget=50000; bool busy=true; String? error;
- static const labels=['Tümü','Ulaşım','Tadilat','Temizlik','Taşıma','Diğer'];
- static const icons=[PhosphorIconsRegular.squaresFour,PhosphorIconsRegular.car,PhosphorIconsRegular.paintRoller,PhosphorIconsRegular.broom,PhosphorIconsRegular.package,PhosphorIconsRegular.dotsThree];
+ static const labels=['Tümü','Ulaşım','Tadilat','Temizlik','Taşıma','Montaj','Bahçe','Özel ders','Evcil hayvan','Diğer'];
+ static const icons=[Icons.grid_view_rounded,Icons.directions_car_outlined,Icons.handyman_outlined,Icons.cleaning_services_outlined,Icons.local_shipping_outlined,Icons.build_outlined,Icons.yard_outlined,Icons.school_outlined,Icons.pets_outlined,Icons.more_horiz_rounded];
  @override void initState(){super.initState();load();badgeTimer=Timer.periodic(const Duration(seconds:12),(_)=>refreshBadges());}
  @override void didUpdateWidget(covariant Discover old){super.didUpdateWidget(old);if(old.refresh!=widget.refresh||old.user!=widget.user)load();}
  @override void dispose(){badgeTimer?.cancel();searchDebounce?.cancel();search.dispose();super.dispose();}
@@ -394,59 +403,47 @@ class _DiscoverState extends State<Discover>{
  Future<void> save(DooraTask t)async{if(widget.user==null){widget.onLogin();return;}final old=saved.contains(t.id);setState(()=>old?saved.remove(t.id):saved.add(t.id));try{final v=await DooraApi.instance.toggleSavedTask(t.id);if(mounted)setState(()=>v?saved.add(t.id):saved.remove(t.id));}catch(e){if(mounted){setState(()=>old?saved.add(t.id):saved.remove(t.id));toast(context,DooraApi.instance.errorMessage(e));}}}
  void openMessages(){if(widget.user==null){widget.onLogin();return;}Navigator.push(context,MaterialPageRoute(builder:(_)=>MessagesInboxPage(currentUserId:widget.user?['id']?.toString()??''))).then((_)=>refreshBadges());}
  void openNotifications(){if(widget.user==null){widget.onLogin();return;}Navigator.push(context,MaterialPageRoute(builder:(_)=>const Notifications()));}
- @override Widget build(BuildContext c)=>SafeArea(bottom:false,child:RefreshIndicator(color:darkGreen,onRefresh:load,child:ListView(physics:const AlwaysScrollableScrollPhysics(),padding:const EdgeInsets.fromLTRB(20,8,20,112),children:[
-  Row(children:[const DooraWordmark(),const Spacer(),Stack(clipBehavior:Clip.none,children:[roundAction(PhosphorIconsRegular.bell,openNotifications),if(unreadCount>0)Positioned(right:-4,top:-4,child:Container(constraints:const BoxConstraints(minWidth:19,minHeight:19),padding:const EdgeInsets.symmetric(horizontal:5),decoration:BoxDecoration(color:const Color(0xFFE34B55),borderRadius:BorderRadius.circular(12),border:Border.all(color:bg,width:1.5)),child:Center(child:Text(unreadCount>99?'99+':'$unreadCount',style:const TextStyle(color:white,fontSize:9,fontWeight:FontWeight.w900)))))] )]),
-  const SizedBox(height:22),
-  const Text('Günlük işlerin,',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),
-  const Text('yakınında çözülür.',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),
-  const SizedBox(height:18),searchView(),const SizedBox(height:14),categoriesView(),const SizedBox(height:20),
-  Row(children:[const Expanded(child:Text('Yakınındaki işler',style:TextStyle(color:ink,fontSize:18,fontWeight:FontWeight.w600,letterSpacing:-.45))),GestureDetector(onTap:()=>Navigator.push(context,dooraRoute(builder:(_)=>AllTasksPage(user:widget.user,onLogin:widget.onLogin))),child:const Row(children:[Text('Tümünü gör',style:TextStyle(color:darkGreen,fontSize:11,fontWeight:FontWeight.w600)),SizedBox(width:4),Icon(Icons.arrow_forward,size:14,color:darkGreen)]))]),
-  const SizedBox(height:11),if(busy)const Skeletons()else if(error!=null)EmptyState(title:'İlanlar yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)else if(tasks.isEmpty)EmptyState(title:'Henüz ilan yok',message:'Bu bölgede listelenecek bir iş bulamadık. İlk ilanı sen oluşturabilirsin.',action:'İlan oluştur',onTap:widget.onCreate)else ...List.generate(tasks.length, (index) {
-    final task = tasks[index];
-    return Padding(
-      key: ValueKey(task.id),
-      padding: const EdgeInsets.only(bottom: 12),
-      child: taskCard(c, task),
-    ).animate(delay: Duration(milliseconds: (index > 8 ? 8 : index) * 55))
-      .fadeIn(duration: const Duration(milliseconds: 360), curve: Curves.easeOutCubic)
-      .slideY(begin: .08, end: 0, duration: const Duration(milliseconds: 360), curve: Curves.easeOutCubic);
-  }),
-  const SizedBox(height:7),banner(),
- ])));
- Widget roundAction(IconData icon,VoidCallback tap)=>Material(color:const Color(0xFFF4F2EE),shape:const CircleBorder(),child:InkWell(onTap:tap,customBorder:const CircleBorder(),child:SizedBox(width:48,height:48,child:Icon(icon,color:ink,size:22))));
- Widget dot()=>Container(width:8,height:8,decoration:const BoxDecoration(color:Color(0xFFAAA9A4),shape:BoxShape.circle));
- Widget categoriesView()=>SizedBox(
-  height:104,
-  child:ListView.separated(
-   scrollDirection:Axis.horizontal,
-   physics:const BouncingScrollPhysics(),
-   padding:const EdgeInsets.symmetric(horizontal:2,vertical:3),
-   itemCount:labels.length,
-   separatorBuilder:(_,__)=>const SizedBox(width:12),
-   itemBuilder:(context,i){
-    final active=category==labels[i];
-    return SizedBox(width:72,child:TactileTap(
-     onTap:(){setState(()=>category=labels[i]);load();},
-     child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[
-      AnimatedContainer(
-       duration:const Duration(milliseconds:190),
-       width:54,height:54,
-       decoration:BoxDecoration(
-        color:active?darkGreen:white,
-        borderRadius:BorderRadius.circular(19),
-        border:Border.all(color:active?darkGreen:const Color(0xFFE9E7DF)),
-        boxShadow:active?[BoxShadow(color:darkGreen.withValues(alpha:.18),blurRadius:14,offset:const Offset(0,5))]:[],
-       ),
-       child:Icon(icons[i],color:active?white:const Color(0xFF6E675F),size:23),
+ @override Widget build(BuildContext c)=>SafeArea(bottom:false,child:RefreshIndicator(color:darkGreen,onRefresh:load,child:CustomScrollView(physics:const AlwaysScrollableScrollPhysics(),slivers:[
+   SliverToBoxAdapter(child:Padding(padding:const EdgeInsets.fromLTRB(20,8,20,0),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    Row(children:[const DooraWordmark(),const Spacer(),Stack(clipBehavior:Clip.none,children:[roundAction(PhosphorIconsRegular.bell,openNotifications),if(unreadCount>0)Positioned(right:-4,top:-4,child:Container(constraints:const BoxConstraints(minWidth:19,minHeight:19),padding:const EdgeInsets.symmetric(horizontal:5),decoration:BoxDecoration(color:const Color(0xFFE34B55),borderRadius:BorderRadius.circular(12),border:Border.all(color:bg,width:1.5)),child:Center(child:Text(unreadCount>99?'99+':'$unreadCount',style:const TextStyle(color:white,fontSize:9,fontWeight:FontWeight.w900)))))] )]),
+    const SizedBox(height:22),
+    const Text('Günlük işlerin,',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),
+    const Text('yakınında çözülür.',style:TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w500,letterSpacing:-1.05,height:1.12)),
+    const SizedBox(height:15),
+   ]))),
+   SliverPersistentHeader(pinned:true,delegate:_DiscoverStickyHeader(height:112,child:Padding(padding:const EdgeInsets.fromLTRB(20,3,20,8),child:Column(mainAxisSize:MainAxisSize.min,children:[searchView(),const SizedBox(height:9),categoriesView()])))),
+   SliverToBoxAdapter(child:Padding(padding:const EdgeInsets.fromLTRB(20,17,20,112),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+    Row(children:[const Expanded(child:Text('Yakınındaki işler',style:TextStyle(color:ink,fontSize:18,fontWeight:FontWeight.w600,letterSpacing:-.45))),GestureDetector(onTap:()=>Navigator.push(context,dooraRoute(builder:(_)=>AllTasksPage(user:widget.user,onLogin:widget.onLogin))),child:const Row(children:[Text('Tümünü gör',style:TextStyle(color:darkGreen,fontSize:11,fontWeight:FontWeight.w600)),SizedBox(width:4),Icon(Icons.arrow_forward,size:14,color:darkGreen)]))]),
+    const SizedBox(height:11),
+    if(busy)const Skeletons()else if(error!=null)EmptyState(title:'İlanlar yüklenemedi',message:error!,action:'Tekrar dene',onTap:load)else if(tasks.isEmpty)EmptyState(title:'Henüz ilan yok',message:'Bu bölgede listelenecek bir iş bulamadık. İlk ilanı sen oluşturabilirsin.',action:'İlan oluştur',onTap:widget.onCreate)else ...List.generate(tasks.length,(index){
+     final task=tasks[index];
+     return Padding(key:ValueKey(task.id),padding:const EdgeInsets.only(bottom:12),child:taskCard(c,task)).animate(delay:Duration(milliseconds:(index>8?8:index)*55)).fadeIn(duration:const Duration(milliseconds:360),curve:Curves.easeOutCubic).slideY(begin:.08,end:0,duration:const Duration(milliseconds:360),curve:Curves.easeOutCubic);
+    }),
+    const SizedBox(height:7),banner(),
+   ]))),
+Widget categoriesView()=>SizedBox(
+   height:40,
+   child:ListView.separated(
+    scrollDirection:Axis.horizontal,
+    physics:const BouncingScrollPhysics(),
+    padding:const EdgeInsets.only(right:2),
+    itemCount:labels.length,
+    separatorBuilder:(_,__)=>const SizedBox(width:8),
+    itemBuilder:(context,i){
+     final active=category==labels[i];
+     return TactileTap(
+      onTap:(){setState(()=>category=labels[i]);load();},
+      child:AnimatedContainer(
+       duration:const Duration(milliseconds:180),
+       padding:const EdgeInsets.symmetric(horizontal:13,vertical:8),
+       decoration:BoxDecoration(color:active?darkGreen:white,borderRadius:BorderRadius.circular(15),border:Border.all(color:active?darkGreen:const Color(0xFFE8E5DD)),boxShadow:active?[BoxShadow(color:darkGreen.withValues(alpha:.12),blurRadius:10,offset:const Offset(0,3))]:[]),
+       child:Row(mainAxisSize:MainAxisSize.min,children:[Icon(icons[i],color:active?white:const Color(0xFF6E675F),size:16),const SizedBox(width:7),Text(labels[i],style:TextStyle(color:active?white:ink,fontSize:11,fontWeight:active?FontWeight.w800:FontWeight.w600))]),
       ),
-      const SizedBox(height:8),
-      Text(labels[i],maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(color:ink,fontSize:10,fontWeight:active?FontWeight.w900:FontWeight.w700)),
-     ]),
-    ));
-   },
-  ),
- );
- Widget searchView()=>Container(height:49,padding:const EdgeInsets.symmetric(horizontal:17),decoration:BoxDecoration(color:const Color(0xFFF8F6F2),borderRadius:BorderRadius.circular(24),border:Border.all(color:white,width:1.2),boxShadow:[BoxShadow(color:ink.withValues(alpha:.055),blurRadius:19,offset:const Offset(0,7))]),child:Row(children:[const Icon(Icons.search,color:ink,size:24),const SizedBox(width:13),Expanded(child:TextField(controller:search,onChanged:(_){searchDebounce?.cancel();searchDebounce=Timer(const Duration(milliseconds:320),load);},onSubmitted:(_)=>load(),textInputAction:TextInputAction.search,decoration:const InputDecoration(border:InputBorder.none,hintText:'İlan, hizmet veya kelime ara',hintStyle:TextStyle(color:Color(0xFF59635A),fontSize:15)))),IconButton(onPressed:()=>showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(_)=>ProvinceSheet(value:district,onSelect:(v){setState(()=>district=v);load();})),icon:const Icon(Icons.tune,color:ink,size:22))]));
+     );
+    },
+   ),
+  );
+  Widget searchView()=>Container(height:49,padding:const EdgeInsets.symmetric(horizontal:17),decoration:BoxDecoration(color:const Color(0xFFF8F6F2),borderRadius:BorderRadius.circular(24),border:Border.all(color:white,width:1.2),boxShadow:[BoxShadow(color:ink.withValues(alpha:.055),blurRadius:19,offset:const Offset(0,7))]),child:Row(children:[const Icon(Icons.search,color:ink,size:24),const SizedBox(width:13),Expanded(child:TextField(controller:search,onChanged:(_){searchDebounce?.cancel();searchDebounce=Timer(const Duration(milliseconds:320),load);},onSubmitted:(_)=>load(),textInputAction:TextInputAction.search,decoration:const InputDecoration(border:InputBorder.none,hintText:'İlan, hizmet veya kelime ara',hintStyle:TextStyle(color:Color(0xFF59635A),fontSize:15)))),IconButton(onPressed:()=>showModalBottomSheet(context:context,backgroundColor:white,showDragHandle:true,builder:(_)=>ProvinceSheet(value:district,onSelect:(v){setState(()=>district=v);load();})),icon:const Icon(Icons.tune,color:ink,size:22))]));
  Widget sortSheet()=>SafeArea(child:Padding(padding:const EdgeInsets.all(20),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Sıralama',style:TextStyle(color:ink,fontSize:18,fontWeight:FontWeight.w800)),...['En yeni','En düşük bütçe','En yüksek bütçe'].map((v)=>ListTile(title:Text(v),trailing:v==sort?const Icon(Icons.check,color:darkGreen):null,onTap:(){Navigator.pop(context);setState(()=>sort=v);load();})),ListTile(title:const Text('Filtreler'),leading:const Icon(Icons.tune,color:darkGreen),onTap:(){Navigator.pop(context);budgetFilter();})])));
  Future<void> openOffer(DooraTask task) async {
   if(widget.user==null){widget.onLogin();return;}
