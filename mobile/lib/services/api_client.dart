@@ -209,7 +209,13 @@ class DooraApi {
   }
 
   Future<void> respondToOffer({required String offerId, required String action}) async {
-    await _dio.patch('/api/offers', data: {'offerId': offerId, 'action': action});
+    if (action == 'accept') {
+      await _dio.post('/api/offers/$offerId/accept');
+    } else if (action == 'reject') {
+      await _dio.post('/api/offers/$offerId/reject', data: {'reason': ''});
+    } else {
+      throw ArgumentError.value(action, 'action', 'Desteklenmeyen teklif işlemi');
+    }
   }
 
   Future<Map<String, dynamic>> createOffer({
