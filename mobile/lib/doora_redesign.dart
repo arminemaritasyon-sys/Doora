@@ -271,10 +271,10 @@ class _DiscoverState extends State<Discover>{
         border:Border.all(color:active?darkGreen:const Color(0xFFE9E7DF)),
         boxShadow:active?[BoxShadow(color:darkGreen.withValues(alpha:.18),blurRadius:14,offset:const Offset(0,5))]:[],
        ),
-       child:Icon(icons[i],color:active?white:const Color(0xFF555D52),size:23),
+       child:Icon(icons[i],color:active?white:const Color(0xFF6E675F),size:23),
       ),
       const SizedBox(height:8),
-      Text(labels[i],maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(color:active?darkGreen:const Color(0xFF555750),fontSize:10,fontWeight:active?FontWeight.w800:FontWeight.w600)),
+      Text(labels[i],maxLines:1,overflow:TextOverflow.ellipsis,style:TextStyle(color:active?darkGreen:const Color(0xFF716A62),fontSize:10,fontWeight:active?FontWeight.w800:FontWeight.w600)),
      ]),
     ));
    },
@@ -301,14 +301,14 @@ class _DiscoverState extends State<Discover>{
      _TaskAvatar(name:t.owner,url:t.ownerAvatar,radius:11),
      const SizedBox(width:5),
      Expanded(child:Text(t.owner,maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(color:muted,fontSize:8))),
-     Container(padding:const EdgeInsets.symmetric(horizontal:8,vertical:6),decoration:BoxDecoration(color:const Color(0xFFECEDE3),borderRadius:BorderRadius.circular(10)),child:Text(t.formattedBudget,style:const TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w800))),
+     Container(padding:const EdgeInsets.symmetric(horizontal:8,vertical:6),decoration:BoxDecoration(color:const Color(0xFFF0EAE3),borderRadius:BorderRadius.circular(10)),child:Text(t.formattedBudget,style:const TextStyle(color:ink,fontSize:10,fontWeight:FontWeight.w800))),
      const SizedBox(width:6),
      SizedBox(height:29,child:FilledButton(onPressed:()=>openTask(c,t,widget.user,widget.onLogin,load),style:FilledButton.styleFrom(backgroundColor:const Color(0xFF171918),foregroundColor:white,shape:const StadiumBorder(),padding:const EdgeInsets.symmetric(horizontal:14),elevation:0),child:const Text('Teklif Ver',style:TextStyle(fontSize:9,fontWeight:FontWeight.w700))))
     ])
    ]))
   ])
  );
- Widget banner()=>Container(height:104,padding:const EdgeInsets.symmetric(horizontal:22,vertical:17),decoration:BoxDecoration(borderRadius:BorderRadius.circular(28),gradient:const LinearGradient(colors:[Color(0xFF101711),Color(0xFF263B2B),Color(0xFF101711)],begin:Alignment.topLeft,end:Alignment.bottomRight),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.17),blurRadius:18,offset:const Offset(0,8))]),child:Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.center,children:[Text('DOORA’da',style:TextStyle(color:white,fontSize:20,fontWeight:FontWeight.w400,letterSpacing:-.4)),Text('her şey daha kolay.',style:TextStyle(color:white,fontSize:20,fontWeight:FontWeight.w400,letterSpacing:-.5)),SizedBox(height:5),Text('Hemen keşfet  →',style:TextStyle(color:Color(0xFFB9C3B2),fontSize:11))])),Transform.rotate(angle:-.12,child:Container(width:70,height:70,decoration:BoxDecoration(color:const Color(0xFF17221A),borderRadius:BorderRadius.circular(19),border:Border.all(color:const Color(0xFF53654E)),boxShadow:[BoxShadow(color:Colors.black.withValues(alpha:.35),blurRadius:16,offset:const Offset(0,7))]),child:const Center(child:Text('d.',style:TextStyle(color:white,fontSize:45,fontWeight:FontWeight.w400,letterSpacing:-3))))) ]));
+ Widget banner()=>Container(height:104,padding:const EdgeInsets.symmetric(horizontal:22,vertical:17),decoration:BoxDecoration(borderRadius:BorderRadius.circular(28),gradient:const LinearGradient(colors:[Color(0xFF302B27),Color(0xFF5B463B),Color(0xFF302B27)],begin:Alignment.topLeft,end:Alignment.bottomRight),boxShadow:[BoxShadow(color:darkGreen.withValues(alpha:.17),blurRadius:18,offset:const Offset(0,8))]),child:Row(children:[const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisAlignment:MainAxisAlignment.center,children:[Text('DOORA’da',style:TextStyle(color:white,fontSize:20,fontWeight:FontWeight.w400,letterSpacing:-.4)),Text('her şey daha kolay.',style:TextStyle(color:white,fontSize:20,fontWeight:FontWeight.w400,letterSpacing:-.5)),SizedBox(height:5),Text('Hemen keşfet  →',style:TextStyle(color:Color(0xFFB9C3B2),fontSize:11))])),Transform.rotate(angle:-.12,child:Container(width:70,height:70,decoration:BoxDecoration(color:const Color(0xFF17221A),borderRadius:BorderRadius.circular(19),border:Border.all(color:const Color(0xFF53654E)),boxShadow:[BoxShadow(color:Colors.black.withValues(alpha:.35),blurRadius:16,offset:const Offset(0,7))]),child:const Center(child:Text('d.',style:TextStyle(color:white,fontSize:45,fontWeight:FontWeight.w400,letterSpacing:-3))))) ]));
  Future<void> budgetFilter()async{var draft=RangeValues(minBudget,maxBudget);final result=await showModalBottomSheet<RangeValues>(context:context,backgroundColor:white,showDragHandle:true,builder:(sheetContext)=>StatefulBuilder(builder:(context,setSheet)=>Padding(padding:const EdgeInsets.fromLTRB(20,8,20,22),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Bütçe aralığı',style:TextStyle(color:ink,fontSize:17,fontWeight:FontWeight.w900)),const SizedBox(height:6),Text(draft.start.round().toString()+' ₺ – '+draft.end.round().toString()+' ₺',style:const TextStyle(color:darkGreen,fontSize:13,fontWeight:FontWeight.w800)),RangeSlider(values:draft,min:0,max:50000,divisions:100,activeColor:darkGreen,labels:RangeLabels(draft.start.round().toString(),draft.end.round().toString()),onChanged:(v)=>setSheet(()=>draft=v)),Row(children:[TextButton(onPressed:()=>setSheet(()=>draft=const RangeValues(0,50000)),child:const Text('Sıfırla')),const Spacer(),FilledButton(onPressed:()=>Navigator.pop(sheetContext,draft),style:FilledButton.styleFrom(backgroundColor:darkGreen),child:const Text('Uygula'))])]))));if(result!=null&&mounted){setState((){minBudget=result.start;maxBudget=result.end;});load();}}
 }
 class AllTasksPage extends StatefulWidget {
@@ -486,7 +486,7 @@ class _CreatePageState extends State<CreatePage>{final title=TextEditingControll
    appBar:AppBar(backgroundColor:bg,scrolledUnderElevation:0,title:const Text('İlan oluştur',style:TextStyle(fontSize:16,fontWeight:FontWeight.w900,color:ink)),leading:IconButton(onPressed:()=>Navigator.pop(c),icon:const Icon(Icons.arrow_back_ios_new,size:17,color:ink))),
    bottomNavigationBar:SafeArea(top:false,child:Padding(padding:const EdgeInsets.fromLTRB(18,8,18,14),child:SizedBox(height:52,child:FilledButton(onPressed:busy?null:submit,style:FilledButton.styleFrom(backgroundColor:darkGreen,foregroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(16)),elevation:0),child:Row(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(busy?Icons.hourglass_top_rounded:Icons.arrow_upward_rounded,size:18),const SizedBox(width:9),Text(busy?'Yayınlanıyor…':'İlanı yayınla',style:const TextStyle(fontSize:13,fontWeight:FontWeight.w800))]))))),
    body:SafeArea(child:ListView(padding:const EdgeInsets.fromLTRB(18,8,18,22),children:[
-    Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFFEAF0E2),Color(0xFFF7F8F5)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(22),border:Border.all(color:line)),child:Row(children:[Container(width:46,height:46,decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(15)),child:const Icon(Icons.auto_awesome_outlined,color:darkGreen,size:23)),const SizedBox(width:13),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('İhtiyacını paylaş.',style:TextStyle(color:ink,fontSize:20,fontWeight:FontWeight.w900,letterSpacing:-.5)),SizedBox(height:4),Text('Yakınındaki kişilerden teklif al, işini kolayca çözüme kavuştur.',style:TextStyle(color:muted,fontSize:10,height:1.45))]))])),
+    Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFFF2EAE3),Color(0xFFF7F8F5)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(22),border:Border.all(color:line)),child:Row(children:[Container(width:46,height:46,decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(15)),child:const Icon(Icons.auto_awesome_outlined,color:darkGreen,size:23)),const SizedBox(width:13),const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('İhtiyacını paylaş.',style:TextStyle(color:ink,fontSize:20,fontWeight:FontWeight.w900,letterSpacing:-.5)),SizedBox(height:4),Text('Yakınındaki kişilerden teklif al, işini kolayca çözüme kavuştur.',style:TextStyle(color:muted,fontSize:10,height:1.45))]))])),
     const SizedBox(height:20),
     Container(padding:const EdgeInsets.all(16),decoration:BoxDecoration(color:white,borderRadius:BorderRadius.circular(20),border:Border.all(color:line)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
      const FormLabel('Hangi konuda yardıma ihtiyacın var?'),const SizedBox(height:12),
@@ -891,7 +891,7 @@ class _NotificationsState extends State<Notifications> {
   final children=<Widget>[
    Container(
     padding:const EdgeInsets.all(18),
-    decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF263B2B),Color(0xFF506B4C)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(21)),
+    decoration:BoxDecoration(gradient:const LinearGradient(colors:[Color(0xFF514139),Color(0xFF9A705B)],begin:Alignment.topLeft,end:Alignment.bottomRight),borderRadius:BorderRadius.circular(21)),
     child:Row(children:[
      Container(width:44,height:44,decoration:BoxDecoration(color:white.withValues(alpha:.14),borderRadius:BorderRadius.circular(14)),child:const Icon(PhosphorIconsFill.bell,color:white,size:22)),
      const SizedBox(width:13),
@@ -986,7 +986,7 @@ class _AuthPageState extends State<AuthPage>{
    constraints:const BoxConstraints(maxWidth:480),
    child:ListView(padding:const EdgeInsets.fromLTRB(22,12,22,30),children:[
     Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(
-     color:const Color(0xFFEAF0E2),borderRadius:BorderRadius.circular(20),border:Border.all(color:const Color(0xFFDCE5D2))),
+     color:const Color(0xFFEAF0E2),borderRadius:BorderRadius.circular(20),border:Border.all(color:const Color(0xFFE9DCD2))),
      child:Row(children:[
       Container(width:46,height:46,decoration:BoxDecoration(color:darkGreen,borderRadius:BorderRadius.circular(15)),
        child:const Center(child:Text('d',style:TextStyle(color:white,fontSize:29,fontWeight:FontWeight.w900)))),
