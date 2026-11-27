@@ -794,7 +794,7 @@ class _MyTasksState extends State<MyTasks> {
   try {
    final results=await Future.wait<List<Map<String,dynamic>>>([DooraApi.instance.getMyTasks(),DooraApi.instance.getMyIncomingOffers(),DooraApi.instance.getMyOffers()]);
    final id=widget.user?['id']?.toString()??'';
-   final nextTasks=(results[0] as List<Map<String,dynamic>>).map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList();
+   final nextTasks=results[0].map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList();
    if(mounted)setState(() { tasks=nextTasks; incoming=results[1]; sent=results[2]; error=null; busy=false; });
   } catch(e){if(mounted)setState(() { error=DooraApi.instance.errorMessage(e); busy=false; });}
  }
