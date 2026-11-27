@@ -12,10 +12,12 @@ class DooraTask {
     required this.offers,
     this.status = 'open',
     this.ownerAvatar = '',
+    this.imageUrls = const [],
   });
 
   final String id, ownerId, title, description, category, location, time, owner;
   final String status, ownerAvatar;
+  final List<String> imageUrls;
   final num budget;
   final int offers;
 
@@ -32,7 +34,19 @@ class DooraTask {
     offers: _number(json['offers']).toInt(),
     status: json['status']?.toString() ?? 'open',
     ownerAvatar: json['owner_avatar']?.toString() ?? '',
+    imageUrls: _images(json),
   );
+
+  static List<String> _images(Map<String, dynamic> json) {
+    final raw = json['images'] ?? json['photos'] ?? json['attachments'];
+    final values = raw is List ? raw : <dynamic>[];
+    final urls = values.map((v) => v is Map
+      ? (v['url'] ?? v['image_url'] ?? v['imageUrl'] ?? v['src'] ?? '').toString()
+      : v.toString()).where((v) => v.startsWith('http') || v.startsWith('/')).toList();
+    final single = (json['image_url'] ?? json['imageUrl'] ?? json['photo_url'] ?? json['cover_image'] ?? '').toString();
+    if (single.isNotEmpty && !urls.contains(single)) urls.insert(0, single);
+    return urls;
+  }
 
   static num _number(dynamic value) {
     if (value is num) return value;
