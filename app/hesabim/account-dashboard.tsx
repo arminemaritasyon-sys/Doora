@@ -2,7 +2,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { ArrowDownLeft, ArrowUpRight, ArrowLeft, ChevronRight, Ban, Check, Clock3, Flag, Pause, Play, Plus, ShieldCheck, Star, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
-type TaskRow={id:string;title:string;description?:string|null;category?:string|null;district?:string|null;budget:string|number;status:string;created_at:string;assigned_user_id?:string|null;assigned_user_name?:string|null;assigned_user_avatar?:string|null;reviewed?:boolean;work_started_at?:string|null;completion_requested_at?:string|null};
+type TaskRow={id:string;title:string;images?:{url:string}[]|null;description?:string|null;category?:string|null;district?:string|null;budget:string|number;status:string;created_at:string;assigned_user_id?:string|null;assigned_user_name?:string|null;assigned_user_avatar?:string|null;reviewed?:boolean;work_started_at?:string|null;completion_requested_at?:string|null};
 type AssignedRow={id:string;title:string;description?:string|null;budget:string|number;status:string;owner_id:string;owner_name:string;avatar_url?:string|null;reviewed?:boolean;work_started_at?:string|null;completion_requested_at?:string|null};
 type OfferRow={id:string;task_id:string;amount:string|number;status:string;created_at:string;title:string;bidder:string;bidder_id:string;avatar_url?:string|null;district?:string|null;rating?:number|string|null;review_count?:number|string|null;is_verified?:boolean;rejection_reason?:string|null;message?:string|null};
 type Props={name:string;email:string;walletInitialData:WalletData|null;walletInitialError:string;tasks:TaskRow[];assigned:AssignedRow[];received:OfferRow[];sentOffers:OfferRow[];taskCount:number;receivedCount:number;pendingOfferCount:number};
