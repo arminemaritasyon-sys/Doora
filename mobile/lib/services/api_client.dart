@@ -455,7 +455,10 @@ class DooraApi {
       if (normalized.contains('too many')) return 'Çok fazla deneme yaptın. Biraz bekleyip tekrar dene.';
       if (error.response?.statusCode == 401) return 'Oturumun sona ermiş. Yeniden giriş yap.';
       if (error.response?.statusCode == 403) return 'Bu işlem için yetkin bulunmuyor.';
-      if (error.response?.statusCode == 404) return 'Aradığın kayıt bulunamadı.';
+      if (error.response?.statusCode == 404) {
+        if (message.isNotEmpty && !normalized.contains('not found')) return message;
+        return 'Kayıt veya işlem adresi sunucuda bulunamadı. Sunucu yayını güncel olmayabilir.';
+      }
       if (error.response?.statusCode == 429) return 'Çok fazla istek gönderdin. Biraz bekleyip tekrar dene.';
       if (message.isNotEmpty && !normalized.contains('internal_server_error')) return message;
       if (error.type == DioExceptionType.connectionTimeout) {
