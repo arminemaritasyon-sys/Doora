@@ -1064,7 +1064,7 @@ class _SavedState extends State<Saved> {
  @override void didUpdateWidget(covariant Saved old){super.didUpdateWidget(old);if(old.user!=widget.user)load();}
  Future<void> load() async {
   if(widget.user==null){if(mounted)setState(()=>busy=false);return;}
-  if(mounted)setState(()=>{busy=true;error=null;});
+  if(mounted)setState(() {busy=true;error=null;});
   try{
    final rows=await DooraApi.instance.getSavedTasks();
    final parsed=rows.map(DooraTask.fromJson).where((task)=>task.id.isNotEmpty).toList();
