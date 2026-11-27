@@ -1178,23 +1178,15 @@ class _AuthPageState extends State<AuthPage>{
   body:SafeArea(child:Center(child:ConstrainedBox(
    constraints:const BoxConstraints(maxWidth:480),
    child:ListView(shrinkWrap:true,physics:const ClampingScrollPhysics(),padding:const EdgeInsets.fromLTRB(22,12,22,30),children:[
-    Container(padding:const EdgeInsets.all(17),decoration:BoxDecoration(
-     color:const Color(0xFFEDF4EB),borderRadius:BorderRadius.circular(20),border:Border.all(color:const Color(0xFFE9DCD2))),
-     child:Row(children:[
-      Container(width:46,height:46,decoration:BoxDecoration(color:darkGreen,borderRadius:BorderRadius.circular(15)),
-       child:const Center(child:Text('d',style:TextStyle(color:white,fontSize:29,fontWeight:FontWeight.w900)))),
-      const SizedBox(width:13),
-      Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-       const Text('DOORA',style:TextStyle(color:darkGreen,fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1.5)),
-       const SizedBox(height:4),
-       Text(verify?'E-posta adresini doğrula':signup?'Aramıza katıl.':'Tekrar hoş geldin.',
-        style:const TextStyle(color:ink,fontSize:19,fontWeight:FontWeight.w900,letterSpacing:-.5)),
-       const SizedBox(height:3),
-       Text(verify?'Gelen 6 haneli kodu gir.':'İşlerini kolayca hallet, doğru kişilerle buluş.',
-        style:const TextStyle(color:muted,fontSize:9.5)),
-      ])),
-     ]),
-    ),
+    Padding(padding:const EdgeInsets.fromLTRB(3,8,3,10),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+     Text(verify?'HESAP GÜVENLİĞİ':signup?'DOORA’YA KATIL':'DOORA ÜYELİĞİ',style:const TextStyle(color:darkGreen,fontSize:10,fontWeight:FontWeight.w900,letterSpacing:1.8)),
+     const SizedBox(height:12),
+     Text(verify?'E-posta adresini doğrula':signup?'İyi iş, doğru insanla başlar.':'Tekrar hoş geldin.',
+      style:const TextStyle(color:ink,fontSize:27,fontWeight:FontWeight.w600,letterSpacing:-1.1,height:1.12)),
+     const SizedBox(height:8),
+     Text(verify?'E-postana gönderdiğimiz 6 haneli kodu gir.':'İşlerini kolayca hallet, doğru kişilerle buluş.',
+      style:const TextStyle(color:muted,fontSize:12,height:1.45)),
+    ])),
     const SizedBox(height:18),
     if(!verify)Container(padding:const EdgeInsets.all(4),decoration:BoxDecoration(color:const Color(0xFFECEFE7),borderRadius:BorderRadius.circular(14)),child:Row(children:[
      Expanded(child:_modeButton('Giriş yap',false)),
