@@ -208,14 +208,29 @@ class DooraApi {
     return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
-  Future<void> respondToOffer({required String offerId, required String action}) async {
+  Future<List<Map<String, dynamic>>> getMyAcceptedJobs() async {
+    final response = await _dio.get('/api/offers', queryParameters: {'assigned': '1'});
+    final rows = _asMap(response.data)['offers'];
+    if (rows is! List) return [];
+    return rows.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
+  Future<void> respondToOffer({required String offerId, required String action, String reason = ''}) async {
     if (action == 'accept') {
       await _dio.post('/api/offers/$offerId/accept');
     } else if (action == 'reject') {
-      await _dio.post('/api/offers/$offerId/reject', data: {'reason': ''});
+      await _dio.post('/api/offers/$offerId/reject', data: {'reason': reason.trim()});
     } else {
       throw ArgumentError.value(action, 'action', 'Desteklenmeyen teklif işlemi');
     }
+  }
+
+  Future<Map<String, dynamic>> updateTaskWorkflow({required String taskId, required String action, String reason = ''}) async {
+    final response = await _dio.post('/api/tasks/$taskId/workflow', data: {
+      'action': action,
+      if (reason.trim().isNotEmpty) 'reason': reason.trim(),
+    });
+    return _asMap(response.data);
   }
 
   Future<Map<String, dynamic>> createOffer({
