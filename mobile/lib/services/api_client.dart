@@ -304,7 +304,7 @@ class DooraApi {
     await _dio.delete('/api/portfolio', queryParameters: {'id': id});
   }
 
-  Future<Map<String, dynamic>> getWallet() async {
+  Future<Map<String, dynamic>> promoteTask(String taskId, String idempotencyKey) async {\n    final response = await _dio.post('/api/tasks/$taskId/feature', data: {'idempotencyKey': idempotencyKey});\n    return _asMap(response.data);\n  }\n\n  Future<Map<String, dynamic>> getWallet() async {
     final response = await _dio.get('/api/wallet');
     final data = _asMap(response.data);
     if (data['account'] is! Map) {
