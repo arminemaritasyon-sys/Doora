@@ -37,7 +37,7 @@ jobs:
           for name in permissions:
               if name not in source:
                   permission = f'    <uses-permission android:name="{name}" />' + chr(10)
-                  source = re.sub(r'(<manifest[^>]*>\\s*)', lambda match: match.group(1) + permission, source, count=1)
+                  source = re.sub(r'(<manifest[^>]*>\s*)', lambda match: match.group(1) + permission, source, count=1)
           manifest.write_text(source)
           import xml.etree.ElementTree as ET
           ET.parse(manifest)
