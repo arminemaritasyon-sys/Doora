@@ -23,18 +23,24 @@ class DooraPushNotifications {
   static Future<void> initialize(String userId) async {
     if (_initializing) return;
     _initializing = true;
+    var stage = 'başlatma';
     try {
       if (userId.isEmpty) { _report('Bildirim kurulamadı: kullanıcı oturumu bulunamadı.'); return; }
       if (!isConfigured) { _report('Firebase yapılandırması eksik. APK Firebase ayarları olmadan derlenmiş.'); return; }
+      stage = 'Firebase çekirdeği';
       _report('Firebase başlatılıyor…');
       if (Firebase.apps.isEmpty) { await Firebase.initializeApp(options: const FirebaseOptions(apiKey: _apiKey, appId: _appId, messagingSenderId: _senderId, projectId: _projectId)); }
+      stage = 'Firebase bildirim servisi';
       final messaging = FirebaseMessaging.instance;
+      stage = 'bildirim izni';
       final permission = await messaging.requestPermission(alert: true, badge: true, sound: true, provisional: false);
       if (permission.authorizationStatus == AuthorizationStatus.denied) { _report('Bildirim izni kapalı. Telefon ayarlarından DOORA bildirimlerini aç.'); return; }
+      stage = 'FCM cihaz anahtarı üretimi';
       _report('Firebase cihaz anahtarı alınıyor…');
       final token = await messaging.getToken();
       if (token == null || token.isEmpty) { _report('Firebase cihaz anahtarı üretmedi. Firebase Android yapılandırması kontrol edilmeli.'); return; }
       _activeToken = token;
+      stage = 'DOORA sunucusuna cihaz kaydı';
       _report('Cihaz anahtarı alındı; DOORA hesabına kaydediliyor…');
       await DooraApi.instance.registerPushToken(token, platform: Platform.isIOS ? 'ios' : 'android');
       _report('Bildirimler hazır. Cihaz sunucuya başarıyla kaydedildi.');
@@ -43,7 +49,7 @@ class DooraPushNotifications {
       FirebaseMessaging.onMessageOpenedApp.listen((message) => onNotificationOpened?.call(message));
       final initialMessage = await messaging.getInitialMessage();
       if (initialMessage != null) onNotificationOpened?.call(initialMessage);
-    } catch (error, stack) { debugPrint('[DOORA PUSH] initialize failed: $error\n$stack'); _report(_apiError('Bildirim kurulumu başarısız', error)); }
+    } catch (error, stack) { debugPrint('[DOORA PUSH] initialize failed at $stage: $error\n$stack'); final detail = error.toString().replaceAll(RegExp(r'\\s+'), ' ').trim(); final visible = detail.length > 260 ? '${detail.substring(0, 260)}…' : detail; _report('Bildirim hatası ($stage): $visible'); }
     finally { _initializing = false; }
   }
 
