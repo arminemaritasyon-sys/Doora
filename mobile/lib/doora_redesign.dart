@@ -59,7 +59,8 @@ class _ShellState extends State<Shell>{int tab=0,refresh=0;Future<void> create()
    ]),
   ),
  )));
-
+ }
+}
 
 class Discover extends StatefulWidget{const Discover({super.key,required this.user,required this.onLogin,required this.onCreate,required this.refresh});final Map<String,dynamic>? user;final VoidCallback onLogin,onCreate;final int refresh;@override State<Discover> createState()=>_DiscoverState();}
 class _DiscoverState extends State<Discover>{final search=TextEditingController();List<DooraTask> tasks=[];Set<String> saved={};int unreadCount=0,unreadMessageCount=0;Timer? badgeTimer;String district='Tüm Antalya',category='Tümü',sort='En yeni';double minBudget=0,maxBudget=50000;bool busy=true;String? error;
