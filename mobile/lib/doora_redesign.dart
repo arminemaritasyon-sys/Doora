@@ -209,7 +209,6 @@ class _DiscoverState extends State<Discover>{
  String district='Tüm Antalya',category='Tümü',sort='En yeni'; double minBudget=0,maxBudget=50000; bool busy=true; String? error;
  static const labels=['Tümü','Ulaşım','Tadilat','Temizlik','Taşıma','Diğer'];
  static const icons=[PhosphorIconsRegular.squaresFour,PhosphorIconsRegular.car,PhosphorIconsRegular.paintRoller,PhosphorIconsRegular.broom,PhosphorIconsRegular.package,PhosphorIconsRegular.dotsThree];
- static const heroUrl='https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1100&q=88';
  static const taskUrl='https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=600&q=85';
  static const avatarUrl='https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=85';
  @override void initState(){super.initState();load();badgeTimer=Timer.periodic(const Duration(seconds:12),(_)=>refreshBadges());}
@@ -368,10 +367,6 @@ class _AllTasksPageState extends State<AllTasksPage> {
  );
 }
 
-class _DooraHeroClipper extends CustomClipper<Path>{
- @override Path getClip(Size s)=>Path()..moveTo(s.width*.2,0)..lineTo(s.width,0)..lineTo(s.width,s.height)..lineTo(0,s.height)..cubicTo(s.width*.2,s.height*.68,s.width*.02,s.height*.26,s.width*.2,0)..close();
- @override bool shouldReclip(covariant CustomClipper<Path> oldClipper)=>false;
-}
 Widget circle(IconData icon,VoidCallback tap)=>Material(color:white,shape:const CircleBorder(),child:InkWell(onTap:tap,customBorder:const CircleBorder(),child:Container(width:36,height:36,decoration:BoxDecoration(shape:BoxShape.circle,border:Border.all(color:line)),child:Icon(icon,color:ink,size:17))));
 class DistrictSheet extends StatelessWidget{const DistrictSheet({super.key,required this.value,required this.onSelect});final String value;final ValueChanged<String> onSelect;@override Widget build(BuildContext c)=>SafeArea(child:Padding(padding:const EdgeInsets.all(20),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Bölge seç',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800)),...['Tüm Antalya',...districts].map((d)=>ListTile(title:Text(d),trailing:d==value?const Icon(Icons.check_circle,color:green):null,onTap:(){onSelect(d);Navigator.pop(c);} ))])));}
 class _TaskAvatar extends StatelessWidget {
