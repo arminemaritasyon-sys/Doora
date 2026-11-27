@@ -802,35 +802,77 @@ class MyTasks extends StatefulWidget {
  @override State<MyTasks> createState()=>_MyTasksState();
 }
 class _MyTasksState extends State<MyTasks> {
- List<DooraTask> tasks=[]; List<Map<String,dynamic>> incoming=[],sent=[];
+ List<DooraTask> tasks=[]; List<Map<String,dynamic>> incoming=[],acceptedJobs=[];
  bool busy=true,responding=false; String? error; Timer? _poll;
  @override void initState(){super.initState();load();_poll=Timer.periodic(const Duration(seconds:15),(_)=>load(silent:true));}
  @override void didUpdateWidget(covariant MyTasks old){super.didUpdateWidget(old);if(old.refresh!=widget.refresh||old.user?['id']!=widget.user?['id'])load();}
  @override void dispose(){_poll?.cancel();super.dispose();}
  Future<void> load({bool silent=false}) async {
-  if(widget.user==null){if(mounted)setState(() { tasks=[]; incoming=[]; sent=[]; busy=false; });return;}
+  if(widget.user==null){if(mounted)setState(() { tasks=[]; incoming=[]; acceptedJobs=[]; busy=false; });return;}
   if(!silent&&mounted)setState(()=>busy=true);
   try {
-   final results=await Future.wait<List<Map<String,dynamic>>>([DooraApi.instance.getMyTasks(),DooraApi.instance.getMyIncomingOffers(),DooraApi.instance.getMyOffers()]);
+   final results=await Future.wait<List<Map<String,dynamic>>>([DooraApi.instance.getMyTasks(),DooraApi.instance.getMyIncomingOffers(),DooraApi.instance.getMyAcceptedJobs()]);
    final id=widget.user?['id']?.toString()??'';
    final nextTasks=results[0].map(DooraTask.fromJson).where((t)=>t.ownerId==id).toList();
-   if(mounted)setState(() { tasks=nextTasks; incoming=results[1]; sent=results[2]; error=null; busy=false; });
+   final ownTaskIds=nextTasks.map((t)=>t.id).toSet();
+   // Defensive client-side ownership filter: never show offers for another user's listing.
+   final ownIncoming=results[1].where((o)=>ownTaskIds.contains(o['task_id']?.toString())).toList();
+   if(mounted)setState(() { tasks=nextTasks; incoming=ownIncoming; acceptedJobs=results[2]; error=null; busy=false; });
   } catch(e){if(mounted)setState(() { error=DooraApi.instance.errorMessage(e); busy=false; });}
  }
  int get pendingCount=>incoming.where((o)=>(o['status']?.toString()??'pending')=='pending').length;
+ Future<String?> rejectionReason() async {
+  const reasons=['Bütçemle uyuşmuyor','İhtiyacım farklı','Zamanlama uygun değil','Teklif detayları yetersiz','Başka biriyle anlaştım','Diğer'];
+  String selected=reasons.first;
+  final custom=TextEditingController();
+  final result=await showDialog<String>(context:context,builder:(ctx)=>StatefulBuilder(builder:(ctx,setDialog)=>AlertDialog(
+   backgroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(20)),
+   title:const Text('Red nedenini seç',style:TextStyle(color:ink,fontWeight:FontWeight.w900)),
+   content:SingleChildScrollView(child:Column(mainAxisSize:MainAxisSize.min,children:[
+    const Text('Teklif sahibine nedenini bildireceğiz.',style:TextStyle(color:muted,fontSize:11)),
+    const SizedBox(height:8),
+    ...reasons.map((reason)=>RadioListTile<String>(dense:true,contentPadding:EdgeInsets.zero,activeColor:darkGreen,title:Text(reason,style:const TextStyle(color:ink,fontSize:12)),value:reason,groupValue:selected,onChanged:(value)=>setDialog(()=>selected=value??selected))),
+    if(selected=='Diğer')TextField(controller:custom,maxLines:2,decoration:const InputDecoration(hintText:'Red nedenini yaz…',isDense:true)),
+   ])),
+   actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Vazgeç')),FilledButton(onPressed:(){final value=selected=='Diğer'?custom.text.trim():selected;if(value.isEmpty){toast(ctx,'Lütfen red nedenini yaz.');return;}Navigator.pop(ctx,value);},style:FilledButton.styleFrom(backgroundColor:const Color(0xFFB94C48)),child:const Text('Nedeni gönder'))],
+  )));
+  custom.dispose();
+  return result;
+ }
  Future<void> respond(Map<String,dynamic> offer,String action) async {
   final id=offer['id']?.toString()??''; if(id.isEmpty||responding)return;
   final accept=action=='accept';
-  final confirmed=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
-   backgroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(20)),
-   title:Text(accept?'Teklifi kabul et?':'Teklifi reddet?',style:const TextStyle(color:ink,fontWeight:FontWeight.w900)),
-   content:Text(accept?'Bu teklifi kabul ettiğinde aynı ilana gelen diğer bekleyen teklifler reddedilecek.':'Bu teklif sahibine olumsuz yanıt gönderilecek.',style:const TextStyle(color:muted,fontSize:13)),
-   actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Vazgeç')),FilledButton(onPressed:()=>Navigator.pop(ctx,true),style:FilledButton.styleFrom(backgroundColor:accept?darkGreen:const Color(0xFFB94C48)),child:Text(accept?'Kabul et':'Reddet'))],
-  ));
-  if(confirmed!=true)return; setState(()=>responding=true);
-  try{await DooraApi.instance.respondToOffer(offerId:id,action:action);toast(context,accept?'Teklif kabul edildi.':'Teklif reddedildi.');await load(silent:true);}
+  String? reason;
+  if(!accept){reason=await rejectionReason();if(reason==null)return;}
+  else {
+   final confirmed=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(
+    backgroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(20)),
+    title:const Text('Teklifi kabul et?',style:TextStyle(color:ink,fontWeight:FontWeight.w900)),
+    content:const Text('Bu teklifi kabul ettiğinde aynı ilana gelen diğer bekleyen teklifler otomatik reddedilecek ve iş karşılıklı takip sürecine geçecek.',style:TextStyle(color:muted,fontSize:13)),
+    actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Vazgeç')),FilledButton(onPressed:()=>Navigator.pop(ctx,true),style:FilledButton.styleFrom(backgroundColor:darkGreen),child:const Text('Kabul et'))],
+   ));
+   if(confirmed!=true)return;
+  }
+  setState(()=>responding=true);
+  try{await DooraApi.instance.respondToOffer(offerId:id,action:action,reason:reason??'');toast(context,accept?'Teklif kabul edildi. Hizmet veren işe başlayabilir.':'Teklif nedeni ile birlikte reddedildi.');await load(silent:true);}
   catch(e){if(mounted)toast(context,DooraApi.instance.errorMessage(e));}
   finally{if(mounted)setState(()=>responding=false);}
+ }
+ Future<void> runWorkflow(String taskId,String action,{String reason=''}) async {
+  if(responding)return;setState(()=>responding=true);
+  try{await DooraApi.instance.updateTaskWorkflow(taskId:taskId,action:action,reason:reason);toast(context,action=='start'?'İşe başladığın bildirildi.':action=='mark_done'?'Tamamlanma bildirimi gönderildi.':action=='confirm_complete'?'İş tamamlandı olarak onaylandı.':'Sorun bildirimi gönderildi.');await load(silent:true);}
+  catch(e){if(mounted)toast(context,DooraApi.instance.errorMessage(e));}
+  finally{if(mounted)setState(()=>responding=false);}
+ }
+ Future<void> confirmNotDone(String taskId) async {
+  final controller=TextEditingController();
+  final reason=await showDialog<String>(context:context,builder:(ctx)=>AlertDialog(
+   backgroundColor:white,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(20)),
+   title:const Text('Sorunu bildir',style:TextStyle(color:ink,fontWeight:FontWeight.w900)),
+   content:TextField(controller:controller,minLines:2,maxLines:4,decoration:const InputDecoration(hintText:'İş neden tamamlanmadı? En az 5 karakter yaz.'),),
+   actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Vazgeç')),FilledButton(onPressed:()=>Navigator.pop(ctx,controller.text.trim()),child:const Text('Bildir'))],
+  ));
+  controller.dispose();if(reason==null||reason.trim().length<5){if(reason!=null)toast(context,'Lütfen sorunu en az 5 karakterle açıkla.');return;}await runWorkflow(taskId,'not_done',reason:reason);
  }
  String money(dynamic value){final n=num.tryParse(value?.toString()??'0')??0;return n.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'),(m)=>'.')+' ₺';}
  Widget incomingCard(Map<String,dynamic> o){
