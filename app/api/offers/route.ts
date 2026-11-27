@@ -2,7 +2,25 @@ export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });
   const taskId = request.nextUrl.searchParams.get("taskId");
+  const incoming = request.nextUrl.searchParams.get("incoming") === "1";
   try {
+    if (incoming) {
+      const offers = await db`
+        SELECT o.id, o.task_id, o.user_id, o.amount, o.message, o.status, o.created_at,
+          t.title AS task_title, t.district, t.budget AS task_budget, t.status AS task_status,
+          COALESCE(NULLIF(p.display_name, ''), NULLIF(u.name, ''), 'DOORA üyesi') AS provider_name,
+          p.avatar_url AS provider_avatar,
+          COALESCE(p.is_verified, false) AS provider_verified
+        FROM public.offers o
+        JOIN public.tasks t ON t.id = o.task_id
+        LEFT JOIN public.user_profiles p ON p.user_id = o.user_id
+        LEFT JOIN neon_auth.user u ON u.id::text = o.user_id
+        WHERE t.owner_id = ${user.id}
+        ORDER BY CASE WHEN o.status = 'pending' THEN 0 ELSE 1 END, o.created_at DESC
+        LIMIT 100
+      `;
+      return NextResponse.json({ offers });
+    }
     if (taskId) {
       const [task] = await db`SELECT id FROM public.tasks WHERE id = ${taskId}::uuid AND owner_id = ${user.id} LIMIT 1`;
       if (!task) return NextResponse.json({ error: "Bu ilanı görüntüleme yetkin yok." }, { status: 403 });
@@ -47,6 +65,47 @@ import { getCurrentUser } from "@/lib/auth/server";
 import { sendDooraEmail } from "@/lib/mail";
 import { createNotification } from "@/lib/notifications";
 
+
+const responseSchema = z.object({ offerId: z.string().uuid(), action: z.enum(["accept", "reject"]) });
+
+export async function PATCH(request: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Oturum gerekli." }, { status: 401 });
+  const parsed = responseSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Teklif işlemi geçersiz." }, { status: 400 });
+  const { offerId, action } = parsed.data;
+  try {
+    const rows = await db`
+      WITH chosen AS (
+        UPDATE public.offers o
+        SET status = ${action === "accept" ? "accepted" : "rejected"}, updated_at = now()
+        WHERE o.id = ${offerId}::uuid AND o.status = 'pending'
+          AND EXISTS (SELECT 1 FROM public.tasks t WHERE t.id = o.task_id AND t.owner_id = ${user.id} AND t.status = 'open')
+        RETURNING o.id, o.task_id, o.user_id, o.status
+      ), other_offers AS (
+        UPDATE public.offers o SET status = 'rejected', updated_at = now()
+        WHERE ${action === "accept"}::boolean
+          AND o.task_id = (SELECT task_id FROM chosen)
+          AND o.id <> (SELECT id FROM chosen)
+          AND o.status = 'pending'
+        RETURNING o.id
+      )
+      SELECT c.id, c.task_id, c.user_id, c.status, t.title AS task_title
+      FROM chosen c JOIN public.tasks t ON t.id = c.task_id
+    `;
+    if (!rows.length) return NextResponse.json({ error: "Teklif artık yanıtlanamıyor veya bu ilana erişimin yok." }, { status: 409 });
+    const result = rows[0];
+    await createNotification({ userId: result.user_id, preference: "offer_updates",
+      type: action === "accept" ? "offer_accepted" : "offer_rejected",
+      title: action === "accept" ? "Teklifin kabul edildi" : "Teklifine yanıt verildi",
+      body: result.task_title, href: "/hesabim" });
+    return NextResponse.json({ success: true, offer: result });
+  } catch (error) {
+    console.error("[offers] response failed", error);
+    return NextResponse.json({ error: "Teklif yanıtlanamadı. Tekrar dene." }, { status: 500 });
+  }
+}
+
 const schema = z.object({ taskId: z.string().uuid(), amount: z.coerce.number().positive().max(10000000), message: z.string().trim().max(1000).optional() });
 
 export async function POST(request: NextRequest) {
@@ -57,6 +116,8 @@ export async function POST(request: NextRequest) {
   const { taskId, amount, message = "" } = parsed.data;
   const [task] = await db`SELECT id, owner_id, title FROM public.tasks WHERE id=${taskId} AND status='open' LIMIT 1`;
   if (!task) return NextResponse.json({ error: "İlan bulunamadı veya artık açık değil." }, { status: 404 });
+  const [acceptedOffer] = await db`SELECT 1 FROM public.offers WHERE task_id = ${taskId} AND status = 'accepted' LIMIT 1`;
+  if (acceptedOffer) return NextResponse.json({ error: "Bu iş için teklif kabul edildi; yeni teklif alınmıyor." }, { status: 409 });
   if (task.owner_id === user.id) return NextResponse.json({ error: "Kendi ilanına teklif veremezsin." }, { status: 400 });
   const blocked = await db`SELECT 1 FROM public.user_blocks WHERE (blocker_id=${user.id} AND blocked_id=${task.owner_id}) OR (blocker_id=${task.owner_id} AND blocked_id=${user.id}) LIMIT 1`;
   if (blocked.length) return NextResponse.json({ error: "Bu kullanıcıyla aranızda engelleme bulunduğu için teklif veremezsin." }, { status: 403 });
