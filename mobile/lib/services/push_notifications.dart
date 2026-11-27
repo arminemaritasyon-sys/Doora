@@ -7,7 +7,6 @@ class DooraPushNotifications {
   DooraPushNotifications._();
   static void Function(RemoteMessage message)? onForegroundMessage;
   static void Function(RemoteMessage message)? onNotificationOpened;
-  static void Function(RemoteMessage message)? onNotificationOpened;
   static String? _activeToken;
 
   static const String _apiKey = String.fromEnvironment('FIREBASE_API_KEY');
@@ -16,8 +15,7 @@ class DooraPushNotifications {
   static const String _projectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
 
   static Future<void> initialize(String userId) async {
-    if (userId.isEmpty || _apiKey.isEmpty || _appId.isEmpty ||
-        _senderId.isEmpty || _projectId.isEmpty) return;
+    if (userId.isEmpty || !isConfigured) return;
     try {
       if (Firebase.apps.isEmpty) {
         await Firebase.initializeApp(options: const FirebaseOptions(
@@ -34,24 +32,28 @@ class DooraPushNotifications {
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null && token.isNotEmpty) {
         _activeToken = token;
-        await DooraApi.instance.registerPushToken(token, platform: Platform.isIOS ? 'ios' : 'android');
+        await DooraApi.instance.registerPushToken(
+          token, platform: Platform.isIOS ? 'ios' : 'android',
+        );
       }
       FirebaseMessaging.instance.onTokenRefresh.listen((next) async {
         _activeToken = next;
         try {
-          await DooraApi.instance.registerPushToken(next, platform: Platform.isIOS ? 'ios' : 'android');
+          await DooraApi.instance.registerPushToken(
+            next, platform: Platform.isIOS ? 'ios' : 'android',
+          );
         } catch (_) {}
       });
-      FirebaseMessaging.onMessage.listen((message) => onForegroundMessage?.call(message));
-      FirebaseMessaging.onMessageOpenedApp.listen((message) => onNotificationOpened?.call(message));
+      FirebaseMessaging.onMessage.listen(
+        (message) => onForegroundMessage?.call(message),
+      );
+      FirebaseMessaging.onMessageOpenedApp.listen(
+        (message) => onNotificationOpened?.call(message),
+      );
       final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
       if (initialMessage != null) onNotificationOpened?.call(initialMessage);
-      FirebaseMessaging.onMessageOpenedApp.listen((message) => onNotificationOpened?.call(message));
-      final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-      if (initialMessage != null) onNotificationOpened?.call(initialMessage);
-
-    } catch (_) {
-      // Push is optional until the Firebase project keys are configured.
+    } catch (error) {
+      // Keep sign-in usable if push permission or Firebase setup is unavailable.
     }
   }
 
